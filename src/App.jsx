@@ -28,7 +28,7 @@ import {
   CartesianGrid,
 } from "recharts";
 
-const STORAGE_KEY = "mindform_dashboard_v1";
+const STORAGE_KEY = "habit_tracker_v1";
 const MONTHS = [
   "January",
   "February",
@@ -383,7 +383,7 @@ export default function MindFormDashboardApp() {
 
   const exportMonthJSON = () => {
     downloadBlob(
-      `mindform-${monthKey}.json`,
+      `habit-tracker-${monthKey}.json`,
       JSON.stringify(monthlySummary, null, 2),
       "application/json",
     );
@@ -409,7 +409,7 @@ export default function MindFormDashboardApp() {
       ]),
     ];
     downloadBlob(
-      `mindform-${monthKey}.csv`,
+      `habit-tracker-${monthKey}.csv`,
       toCSV(rows),
       "text/csv;charset=utf-8;",
     );
@@ -417,7 +417,7 @@ export default function MindFormDashboardApp() {
 
   const exportFullBackup = () => {
     downloadBlob(
-      "mindform-full-backup.json",
+      "habit-tracker-full-backup.json",
       JSON.stringify(db, null, 2),
       "application/json",
     );
@@ -445,7 +445,7 @@ export default function MindFormDashboardApp() {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
-          Loading MindForm dashboard...
+          Loading Habit Tracker...
         </div>
       </div>
     );
@@ -465,10 +465,9 @@ export default function MindFormDashboardApp() {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-              MindForm Habit Dashboard
+              Habit Tracker
             </h1>
-            <p className="mt-2 text-sm md:text-base text-neutral-400">
-            </p>
+            <p className="mt-2 text-sm md:text-base text-neutral-400"></p>
           </div>
 
           <div className="flex flex-wrap gap-3">
@@ -981,9 +980,7 @@ export default function MindFormDashboardApp() {
           <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
               <div className="text-lg font-semibold">Project status</div>
-              <div className="text-sm text-neutral-400 mt-1">
-               
-              </div>
+              <div className="text-sm text-neutral-400 mt-1"></div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm min-w-full lg:min-w-[650px]">
