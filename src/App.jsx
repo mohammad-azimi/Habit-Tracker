@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, Plus } from "lucide-react";
 
+import { getMonthData, saveMonthData } from "./lib/api";
 import defaultHabits from "./data/defaultHabits";
 import {
   MONTHS,
@@ -74,6 +75,8 @@ export default function App() {
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [loadedMonthKey, setLoadedMonthKey] = useState(null);
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
@@ -91,30 +94,98 @@ export default function App() {
 
   useEffect(() => {
     if (!isLoaded) return;
+    if (loadedMonthKey !== monthKey) return;
 
-    setDb((prev) => {
-      if (prev.months?.[monthKey]) {
-        return {
+    const currentMonth = db.months?.[monthKey];
+    if (!currentMonth) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setIsSyncing(true);
+
+        await saveMonthData(
+          Number(selectedYear),
+          selectedMonthIndex + 1,
+          ensureMonthShape(currentMonth, selectedYear, selectedMonthIndex),
+        );
+      } catch (error) {
+        console.error("Failed to save month to API:", error);
+      } finally {
+        setIsSyncing(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    db,
+    isLoaded,
+    loadedMonthKey,
+    monthKey,
+    selectedYear,
+    selectedMonthIndex,
+  ]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    let cancelled = false;
+
+    async function loadMonthFromApi() {
+      try {
+        setIsSyncing(true);
+
+        const response = await getMonthData(
+          Number(selectedYear),
+          selectedMonthIndex + 1,
+        );
+
+        const nextMonthData = response?.data
+          ? ensureMonthShape(response.data, selectedYear, selectedMonthIndex)
+          : buildDefaultMonthData(selectedYear, selectedMonthIndex);
+
+        if (cancelled) return;
+
+        setDb((prev) => ({
           ...prev,
           months: {
             ...prev.months,
-            [monthKey]: ensureMonthShape(
-              prev.months[monthKey],
-              selectedYear,
-              selectedMonthIndex,
-            ),
+            [monthKey]: nextMonthData,
           },
-        };
-      }
+        }));
 
-      return {
-        ...prev,
-        months: {
-          ...prev.months,
-          [monthKey]: buildDefaultMonthData(selectedYear, selectedMonthIndex),
-        },
-      };
-    });
+        setLoadedMonthKey(monthKey);
+      } catch (error) {
+        console.error("Failed to load month from API:", error);
+
+        if (cancelled) return;
+
+        setDb((prev) => ({
+          ...prev,
+          months: {
+            ...prev.months,
+            [monthKey]: prev.months?.[monthKey]
+              ? ensureMonthShape(
+                  prev.months[monthKey],
+                  selectedYear,
+                  selectedMonthIndex,
+                )
+              : buildDefaultMonthData(selectedYear, selectedMonthIndex),
+          },
+        }));
+
+        setLoadedMonthKey(monthKey);
+      } finally {
+        if (!cancelled) {
+          setIsSyncing(false);
+        }
+      }
+    }
+
+    loadMonthFromApi();
+
+    return () => {
+      cancelled = true;
+    };
   }, [monthKey, isLoaded, selectedYear, selectedMonthIndex]);
 
   const monthData = useMemo(() => {
@@ -380,6 +451,10 @@ export default function App() {
           onExportBackup={exportFullBackup}
           onImportBackup={importBackup}
         />
+
+        <div className="text-sm text-neutral-400">
+          {isSyncing ? "Syncing with server..." : "Connected to PostgreSQL API"}
+        </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
           <section className="xl:col-span-3 space-y-4">
