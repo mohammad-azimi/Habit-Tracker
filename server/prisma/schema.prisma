@@ -8,10 +8,13 @@ datasource db {
 
 model DashboardMonth {
   id        Int      @id @default(autoincrement())
+  userId    String
   year      Int
   month     Int
-  monthKey  String   @unique
+  monthKey  String
   data      Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, monthKey])
 }
