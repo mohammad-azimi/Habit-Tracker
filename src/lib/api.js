@@ -1,8 +1,17 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
 
+const DEFAULT_USER_ID = import.meta.env.VITE_USER_ID || "mohammad";
+
 async function request(path, options = {}) {
-  const response = await fetch(`${API_BASE_URL}${path}`, options);
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      "x-user-id": DEFAULT_USER_ID,
+    },
+  });
+
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
