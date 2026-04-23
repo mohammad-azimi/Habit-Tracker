@@ -9,7 +9,6 @@ import {
   getDaysInMonth,
   getWeekRanges,
 } from "./lib/date";
-
 import { downloadBlob, toCSV } from "./lib/export";
 import {
   getCurrentUser,
@@ -84,12 +83,14 @@ export default function App() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(
     currentDate.getMonth(),
   );
+
   const [isMonthLoaded, setIsMonthLoaded] = useState(false);
+  const [monthData, setMonthData] = useState(null);
+  const [loadedMonthKey, setLoadedMonthKey] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
-  const [monthData, setMonthData] = useState(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [loadedMonthKey, setLoadedMonthKey] = useState(null);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
@@ -98,6 +99,7 @@ export default function App() {
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
+
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
@@ -192,7 +194,7 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [authChecked, currentUser, selectedYear, selectedMonthIndex]);
+  }, [authChecked, currentUser, selectedYear, selectedMonthIndex, monthKey]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -219,17 +221,17 @@ export default function App() {
 
     return () => clearTimeout(timeoutId);
   }, [
-    monthData,
-    safeMonthData,
     authChecked,
     currentUser,
     isMonthLoaded,
+    monthData,
+    safeMonthData,
     loadedMonthKey,
     monthKey,
     selectedYear,
     selectedMonthIndex,
   ]);
-  
+
   const updateMonth = (updater) => {
     setMonthData((prev) =>
       updater(ensureMonthShape(prev, selectedYear, selectedMonthIndex)),
