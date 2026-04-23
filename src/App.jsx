@@ -9,7 +9,7 @@ import {
   getDaysInMonth,
   getWeekRanges,
 } from "./lib/date";
-import { loadDashboardData, saveDashboardData } from "./lib/storage";
+
 import { downloadBlob, toCSV } from "./lib/export";
 import {
   getCurrentUser,
@@ -84,10 +84,10 @@ export default function App() {
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(
     currentDate.getMonth(),
   );
-  const [db, setDb] = useState({ months: {} });
+  const [isMonthLoaded, setIsMonthLoaded] = useState(false);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [monthData, setMonthData] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
 
@@ -98,12 +98,9 @@ export default function App() {
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
-
-  useEffect(() => {
-    const data = loadDashboardData();
-    setDb(data);
-    setIsLoaded(true);
-  }, []);
+  const safeMonthData = useMemo(() => {
+    return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
+  }, [monthData, selectedYear, selectedMonthIndex]);
 
   useEffect(() => {
     let cancelled = false;
@@ -151,12 +148,6 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!isLoaded) return;
-    saveDashboardData(db);
-  }, [db, isLoaded]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
     if (!authChecked) return;
     if (!currentUser) return;
 
@@ -165,6 +156,8 @@ export default function App() {
     async function loadMonthFromApi() {
       try {
         setIsSyncing(true);
+        setIsMonthLoaded(false);
+        setLoadedMonthKey(null);
 
         const response = await getMonthData(
           Number(selectedYear),
@@ -177,38 +170,19 @@ export default function App() {
 
         if (cancelled) return;
 
-        setDb((prev) => ({
-          ...prev,
-          months: {
-            ...prev.months,
-            [monthKey]: nextMonthData,
-          },
-        }));
-
+        setMonthData(nextMonthData);
         setLoadedMonthKey(monthKey);
       } catch (error) {
         console.error("Failed to load month from API:", error);
 
         if (cancelled) return;
 
-        setDb((prev) => ({
-          ...prev,
-          months: {
-            ...prev.months,
-            [monthKey]: prev.months?.[monthKey]
-              ? ensureMonthShape(
-                  prev.months[monthKey],
-                  selectedYear,
-                  selectedMonthIndex,
-                )
-              : buildDefaultMonthData(selectedYear, selectedMonthIndex),
-          },
-        }));
-
+        setMonthData(buildDefaultMonthData(selectedYear, selectedMonthIndex));
         setLoadedMonthKey(monthKey);
       } finally {
         if (!cancelled) {
           setIsSyncing(false);
+          setIsMonthLoaded(true);
         }
       }
     }
@@ -218,23 +192,14 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [
-    monthKey,
-    isLoaded,
-    authChecked,
-    currentUser,
-    selectedYear,
-    selectedMonthIndex,
-  ]);
+  }, [authChecked, currentUser, selectedYear, selectedMonthIndex]);
 
   useEffect(() => {
-    if (!isLoaded) return;
     if (!authChecked) return;
     if (!currentUser) return;
+    if (!isMonthLoaded) return;
+    if (!monthData) return;
     if (loadedMonthKey !== monthKey) return;
-
-    const currentMonth = db.months?.[monthKey];
-    if (!currentMonth) return;
 
     const timeoutId = setTimeout(async () => {
       try {
@@ -243,7 +208,7 @@ export default function App() {
         await saveMonthData(
           Number(selectedYear),
           selectedMonthIndex + 1,
-          ensureMonthShape(currentMonth, selectedYear, selectedMonthIndex),
+          safeMonthData,
         );
       } catch (error) {
         console.error("Failed to save month to API:", error);
@@ -254,38 +219,21 @@ export default function App() {
 
     return () => clearTimeout(timeoutId);
   }, [
-    db,
-    isLoaded,
+    monthData,
+    safeMonthData,
     authChecked,
     currentUser,
+    isMonthLoaded,
     loadedMonthKey,
     monthKey,
     selectedYear,
     selectedMonthIndex,
   ]);
-
-  const monthData = useMemo(() => {
-    return ensureMonthShape(
-      db.months?.[monthKey],
-      selectedYear,
-      selectedMonthIndex,
-    );
-  }, [db, monthKey, selectedYear, selectedMonthIndex]);
-
+  
   const updateMonth = (updater) => {
-    setDb((prev) => ({
-      ...prev,
-      months: {
-        ...prev.months,
-        [monthKey]: updater(
-          ensureMonthShape(
-            prev.months?.[monthKey],
-            selectedYear,
-            selectedMonthIndex,
-          ),
-        ),
-      },
-    }));
+    setMonthData((prev) =>
+      updater(ensureMonthShape(prev, selectedYear, selectedMonthIndex)),
+    );
   };
 
   const toggleHabitDay = (habitId, dayIndex) => {
@@ -346,13 +294,7 @@ export default function App() {
   };
 
   const resetCurrentMonth = () => {
-    setDb((prev) => ({
-      ...prev,
-      months: {
-        ...prev.months,
-        [monthKey]: buildDefaultMonthData(selectedYear, selectedMonthIndex),
-      },
-    }));
+    setMonthData(buildDefaultMonthData(selectedYear, selectedMonthIndex));
   };
 
   const handleRegister = async ({ username, email, password }) => {
@@ -364,6 +306,8 @@ export default function App() {
 
       saveAuthSession(response);
       setCurrentUser(response.user);
+      setMonthData(null);
+      setIsMonthLoaded(false);
       setLoadedMonthKey(null);
     } catch (error) {
       setAuthError(error.message || "Failed to register");
@@ -381,6 +325,8 @@ export default function App() {
 
       saveAuthSession(response);
       setCurrentUser(response.user);
+      setMonthData(null);
+      setIsMonthLoaded(false);
       setLoadedMonthKey(null);
     } catch (error) {
       setAuthError(error.message || "Failed to login");
@@ -392,14 +338,17 @@ export default function App() {
   const handleLogout = () => {
     clearAuthSession();
     setCurrentUser(null);
+    setMonthData(null);
+    setIsMonthLoaded(false);
     setLoadedMonthKey(null);
+    setIsSyncing(false);
     setAuthError("");
   };
 
   const analysisRows = useMemo(() => {
     const weekRanges = getWeekRanges(daysInMonth);
 
-    return monthData.habits.map((habit) => {
+    return safeMonthData.habits.map((habit) => {
       const actual = habit.checks.filter(Boolean).length;
       const goal = daysInMonth;
       const left = goal - actual;
@@ -426,21 +375,21 @@ export default function App() {
         weekly,
       };
     });
-  }, [monthData, daysInMonth]);
+  }, [safeMonthData, daysInMonth]);
 
   const dailyProgress = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => {
-      const completed = monthData.habits.filter(
+      const completed = safeMonthData.habits.filter(
         (habit) => habit.checks[dayIndex],
       ).length;
-      const total = monthData.habits.length || 1;
+      const total = safeMonthData.habits.length || 1;
 
       return {
         day: dayIndex + 1,
         value: Math.round((completed / total) * 100),
       };
     });
-  }, [monthData, daysInMonth]);
+  }, [safeMonthData, daysInMonth]);
 
   const weeklyProgress = useMemo(() => {
     return getWeekRanges(daysInMonth).map(([start, end], idx) => {
@@ -453,7 +402,7 @@ export default function App() {
     });
   }, [dailyProgress, daysInMonth]);
 
-  const totalGoal = daysInMonth * monthData.habits.length;
+  const totalGoal = daysInMonth * safeMonthData.habits.length;
   const totalCompleted = analysisRows.reduce((sum, row) => sum + row.actual, 0);
   const totalLeft = Math.max(totalGoal - totalCompleted, 0);
   const completionPercent = totalGoal
@@ -467,10 +416,10 @@ export default function App() {
   const mentalStateData = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => ({
       day: dayIndex + 1,
-      Mood: Number(monthData.mood[dayIndex] || 1),
-      Motivation: Number(monthData.motivation[dayIndex] || 1),
+      Mood: Number(safeMonthData.mood[dayIndex] || 1),
+      Motivation: Number(safeMonthData.motivation[dayIndex] || 1),
     }));
-  }, [monthData, daysInMonth]);
+  }, [safeMonthData, daysInMonth]);
 
   const monthlySummary = {
     year: selectedYear,
@@ -481,13 +430,13 @@ export default function App() {
     totalCompleted,
     totalLeft,
     completionPercent,
-    moodAverage: average(monthData.mood).toFixed(1),
-    motivationAverage: average(monthData.motivation).toFixed(1),
+    moodAverage: average(safeMonthData.mood).toFixed(1),
+    motivationAverage: average(safeMonthData.motivation).toFixed(1),
     habits: analysisRows,
     dailyProgress,
     weeklyProgress,
     mentalStateData,
-    notes: monthData.notes,
+    notes: safeMonthData.notes,
   };
 
   const exportMonthJSON = () => {
@@ -512,8 +461,8 @@ export default function App() {
       ["Day", "Mood", "Motivation", "Daily Progress %"],
       ...Array.from({ length: daysInMonth }, (_, dayIndex) => [
         dayIndex + 1,
-        monthData.mood[dayIndex],
-        monthData.motivation[dayIndex],
+        safeMonthData.mood[dayIndex],
+        safeMonthData.motivation[dayIndex],
         dailyProgress[dayIndex]?.value ?? 0,
       ]),
     ];
@@ -527,8 +476,8 @@ export default function App() {
 
   const exportFullBackup = () => {
     downloadBlob(
-      "habit-tracker-full-backup.json",
-      JSON.stringify(db, null, 2),
+      `habit-tracker-${monthKey}-backup.json`,
+      JSON.stringify(safeMonthData, null, 2),
       "application/json",
     );
   };
@@ -542,14 +491,14 @@ export default function App() {
         throw new Error("Invalid backup file");
       }
 
-      setDb(parsed);
+      setMonthData(ensureMonthShape(parsed, selectedYear, selectedMonthIndex));
     } catch (error) {
       alert("Backup file is not valid JSON.");
       console.error(error);
     }
   };
 
-  if (!authChecked || !isLoaded) {
+  if (!authChecked) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
@@ -567,6 +516,16 @@ export default function App() {
         isSubmitting={authLoading}
         errorMessage={authError}
       />
+    );
+  }
+
+  if (currentUser && !isMonthLoaded) {
+    return (
+      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
+        <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
+          Loading your dashboard...
+        </div>
+      </div>
     );
   }
 
@@ -693,7 +652,7 @@ export default function App() {
             />
 
             <HabitGrid
-              habits={monthData.habits}
+              habits={safeMonthData.habits}
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
               onToggleHabitDay={toggleHabitDay}
@@ -702,8 +661,8 @@ export default function App() {
 
             <MentalStateSection
               daysInMonth={daysInMonth}
-              mood={monthData.mood}
-              motivation={monthData.motivation}
+              mood={safeMonthData.mood}
+              motivation={safeMonthData.motivation}
               mentalStateData={mentalStateData}
               onSetMentalMetric={setMentalMetric}
             />
