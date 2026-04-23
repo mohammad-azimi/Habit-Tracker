@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, Plus } from "lucide-react";
+import { CalendarDays, LogOut, Plus } from "lucide-react";
 
-import { getMonthData, saveMonthData } from "./lib/api";
 import defaultHabits from "./data/defaultHabits";
 import {
   MONTHS,
@@ -12,6 +11,19 @@ import {
 } from "./lib/date";
 import { loadDashboardData, saveDashboardData } from "./lib/storage";
 import { downloadBlob, toCSV } from "./lib/export";
+import {
+  getCurrentUser,
+  getMonthData,
+  loginUser,
+  registerUser,
+  saveMonthData,
+} from "./lib/api";
+import {
+  clearAuthSession,
+  getAuthToken,
+  getAuthUser,
+  saveAuthSession,
+} from "./lib/auth";
 
 import DashboardHeader from "./components/DashboardHeader";
 import ProgressCharts from "./components/ProgressCharts";
@@ -19,6 +31,7 @@ import HabitGrid from "./components/HabitGrid";
 import MentalStateSection from "./components/MentalStateSection";
 import AnalysisPanel from "./components/AnalysisPanel";
 import TopHabitsCard from "./components/TopHabitsCard";
+import AuthScreen from "./components/AuthScreen";
 
 function buildDefaultMonthData(year, monthIndex) {
   const days = getDaysInMonth(year, monthIndex);
@@ -78,6 +91,11 @@ export default function App() {
   const [isSyncing, setIsSyncing] = useState(false);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
 
+  const [currentUser, setCurrentUser] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
 
@@ -88,45 +106,59 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    async function bootstrapAuth() {
+      const token = getAuthToken();
+      const savedUser = getAuthUser();
+
+      if (!token) {
+        if (!cancelled) {
+          setCurrentUser(null);
+          setAuthChecked(true);
+        }
+        return;
+      }
+
+      if (savedUser && !cancelled) {
+        setCurrentUser(savedUser);
+      }
+
+      try {
+        const response = await getCurrentUser();
+
+        if (cancelled) return;
+
+        setCurrentUser(response.user);
+      } catch (error) {
+        clearAuthSession();
+
+        if (cancelled) return;
+
+        setCurrentUser(null);
+      } finally {
+        if (!cancelled) {
+          setAuthChecked(true);
+        }
+      }
+    }
+
+    bootstrapAuth();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
     if (!isLoaded) return;
     saveDashboardData(db);
   }, [db, isLoaded]);
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (loadedMonthKey !== monthKey) return;
-
-    const currentMonth = db.months?.[monthKey];
-    if (!currentMonth) return;
-
-    const timeoutId = setTimeout(async () => {
-      try {
-        setIsSyncing(true);
-
-        await saveMonthData(
-          Number(selectedYear),
-          selectedMonthIndex + 1,
-          ensureMonthShape(currentMonth, selectedYear, selectedMonthIndex),
-        );
-      } catch (error) {
-        console.error("Failed to save month to API:", error);
-      } finally {
-        setIsSyncing(false);
-      }
-    }, 600);
-
-    return () => clearTimeout(timeoutId);
-  }, [
-    db,
-    isLoaded,
-    loadedMonthKey,
-    monthKey,
-    selectedYear,
-    selectedMonthIndex,
-  ]);
-
-  useEffect(() => {
-    if (!isLoaded) return;
+    if (!authChecked) return;
+    if (!currentUser) return;
 
     let cancelled = false;
 
@@ -186,7 +218,51 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [monthKey, isLoaded, selectedYear, selectedMonthIndex]);
+  }, [
+    monthKey,
+    isLoaded,
+    authChecked,
+    currentUser,
+    selectedYear,
+    selectedMonthIndex,
+  ]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    if (!authChecked) return;
+    if (!currentUser) return;
+    if (loadedMonthKey !== monthKey) return;
+
+    const currentMonth = db.months?.[monthKey];
+    if (!currentMonth) return;
+
+    const timeoutId = setTimeout(async () => {
+      try {
+        setIsSyncing(true);
+
+        await saveMonthData(
+          Number(selectedYear),
+          selectedMonthIndex + 1,
+          ensureMonthShape(currentMonth, selectedYear, selectedMonthIndex),
+        );
+      } catch (error) {
+        console.error("Failed to save month to API:", error);
+      } finally {
+        setIsSyncing(false);
+      }
+    }, 600);
+
+    return () => clearTimeout(timeoutId);
+  }, [
+    db,
+    isLoaded,
+    authChecked,
+    currentUser,
+    loadedMonthKey,
+    monthKey,
+    selectedYear,
+    selectedMonthIndex,
+  ]);
 
   const monthData = useMemo(() => {
     return ensureMonthShape(
@@ -277,6 +353,47 @@ export default function App() {
         [monthKey]: buildDefaultMonthData(selectedYear, selectedMonthIndex),
       },
     }));
+  };
+
+  const handleRegister = async ({ username, email, password }) => {
+    try {
+      setAuthLoading(true);
+      setAuthError("");
+
+      const response = await registerUser({ username, email, password });
+
+      saveAuthSession(response);
+      setCurrentUser(response.user);
+      setLoadedMonthKey(null);
+    } catch (error) {
+      setAuthError(error.message || "Failed to register");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogin = async ({ identifier, password }) => {
+    try {
+      setAuthLoading(true);
+      setAuthError("");
+
+      const response = await loginUser({ identifier, password });
+
+      saveAuthSession(response);
+      setCurrentUser(response.user);
+      setLoadedMonthKey(null);
+    } catch (error) {
+      setAuthError(error.message || "Failed to login");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    clearAuthSession();
+    setCurrentUser(null);
+    setLoadedMonthKey(null);
+    setAuthError("");
   };
 
   const analysisRows = useMemo(() => {
@@ -432,13 +549,24 @@ export default function App() {
     }
   };
 
-  if (!isLoaded) {
+  if (!authChecked || !isLoaded) {
     return (
       <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
         <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
           Loading Habit Tracker...
         </div>
       </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <AuthScreen
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        isSubmitting={authLoading}
+        errorMessage={authError}
+      />
     );
   }
 
@@ -452,8 +580,20 @@ export default function App() {
           onImportBackup={importBackup}
         />
 
-        <div className="text-sm text-neutral-400">
-          {isSyncing ? "Syncing with server..." : "Connected to PostgreSQL API"}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="text-sm text-neutral-400">
+            {isSyncing
+              ? "Syncing with server..."
+              : `Logged in as ${currentUser.username} • Connected to PostgreSQL API`}
+          </div>
+
+          <button
+            onClick={handleLogout}
+            className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Logout
+          </button>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">

@@ -1,14 +1,16 @@
+import { getAuthToken } from "./auth";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
 
-const DEFAULT_USER_ID = import.meta.env.VITE_USER_ID || "mohammad";
-
 async function request(path, options = {}) {
+  const token = getAuthToken();
+
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
       ...(options.headers || {}),
-      "x-user-id": DEFAULT_USER_ID,
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
   });
 
@@ -21,8 +23,28 @@ async function request(path, options = {}) {
   return data;
 }
 
-export function getHealth() {
-  return request("/health");
+export function registerUser(payload) {
+  return request("/auth/register", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function loginUser(payload) {
+  return request("/auth/login", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getCurrentUser() {
+  return request("/auth/me");
 }
 
 export function getMonthData(year, month) {
