@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import dashboardRoutes from "./routes/dashboard.js";
+import authRoutes from "./routes/auth.js";
+import { requireAuth } from "./middleware/requireAuth.js";
 
 dotenv.config();
 
@@ -24,7 +26,8 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", requireAuth, dashboardRoutes);
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
