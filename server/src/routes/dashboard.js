@@ -22,23 +22,9 @@ function createMonthKey(year, month) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
-function getUserId(req) {
-  const userId = req.query.userId || req.headers["x-user-id"];
-
-  if (!userId || typeof userId !== "string") {
-    return null;
-  }
-
-  return userId.trim();
-}
-
 router.get("/", async (req, res) => {
   try {
-    const userId = getUserId(req);
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
+    const userId = req.user.id;
 
     const records = await prisma.dashboardMonth.findMany({
       where: { userId },
@@ -54,12 +40,7 @@ router.get("/", async (req, res) => {
 
 router.get("/:year/:month", async (req, res) => {
   try {
-    const userId = getUserId(req);
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
+    const userId = req.user.id;
     const parsed = parseYearMonth(req.params.year, req.params.month);
 
     if (!parsed) {
@@ -96,12 +77,7 @@ router.get("/:year/:month", async (req, res) => {
 
 router.put("/:year/:month", async (req, res) => {
   try {
-    const userId = getUserId(req);
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
+    const userId = req.user.id;
     const parsed = parseYearMonth(req.params.year, req.params.month);
 
     if (!parsed) {
@@ -146,12 +122,7 @@ router.put("/:year/:month", async (req, res) => {
 
 router.delete("/:year/:month", async (req, res) => {
   try {
-    const userId = getUserId(req);
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
+    const userId = req.user.id;
     const parsed = parseYearMonth(req.params.year, req.params.month);
 
     if (!parsed) {
