@@ -3,21 +3,24 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
-  "dev": "vite",
-  "build": "node ./node_modules/vite/bin/vite.js build",
-  "preview": "node ./node_modules/vite/bin/vite.js preview"
-},
+    "dev": "vite",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview"
+  },
   "dependencies": {
-    "lucide-react": "^1.9.0",
-    "react": "^19.2.5",
-    "react-dom": "^19.2.5",
-    "recharts": "^3.8.1"
+    "lucide-react": "^0.542.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "recharts": "^3.1.2"
   },
   "devDependencies": {
-    "@tailwindcss/vite": "^4.2.4",
-    "@vitejs/plugin-react": "^6.0.1",
-    "tailwindcss": "^4.2.4",
-    "vite": "^8.0.10"
+    "@tailwindcss/vite": "^4.1.12",
+    "@vitejs/plugin-react": "^5.0.0",
+    "tailwindcss": "^4.1.12",
+    "vite": "^7.1.3"
   }
 }
