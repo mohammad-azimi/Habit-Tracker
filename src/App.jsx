@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import EditHabitModal from "./components/EditHabitModal";
 import UserProfileCard from "./components/UserProfileCard";
 import OverallStatsCard from "./components/OverallStatsCard";
 import defaultHabits from "./data/defaultHabits";
@@ -86,6 +87,9 @@ export default function App() {
     currentDate.getMonth(),
   );
 
+  const [editingHabit, setEditingHabit] = useState(null);
+  const [editingHabitName, setEditingHabitName] = useState("");
+  const [editingHabitIcon, setEditingHabitIcon] = useState("✅");
   const [isMonthLoaded, setIsMonthLoaded] = useState(false);
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
@@ -295,6 +299,39 @@ export default function App() {
       ...month,
       habits: month.habits.filter((habit) => habit.id !== habitId),
     }));
+  };
+
+  const startEditHabit = (habit) => {
+    setEditingHabit(habit);
+    setEditingHabitName(habit.name || "");
+    setEditingHabitIcon(habit.icon || "✅");
+  };
+
+  const closeEditHabit = () => {
+    setEditingHabit(null);
+    setEditingHabitName("");
+    setEditingHabitIcon("✅");
+  };
+
+  const saveEditedHabit = () => {
+    const trimmedName = editingHabitName.trim();
+
+    if (!editingHabit || !trimmedName) return;
+
+    updateMonth((month) => ({
+      ...month,
+      habits: month.habits.map((habit) =>
+        habit.id === editingHabit.id
+          ? {
+              ...habit,
+              name: trimmedName,
+              icon: editingHabitIcon || "✅",
+            }
+          : habit,
+      ),
+    }));
+
+    closeEditHabit();
   };
 
   const resetCurrentMonth = () => {
@@ -575,7 +612,7 @@ export default function App() {
               </div>
 
               <UserProfileCard user={currentUser} />
-              
+
               <div>
                 <label className="text-xs text-neutral-500 mb-2 block">
                   Year
@@ -663,6 +700,7 @@ export default function App() {
               weekdayLabels={WEEKDAY_LABELS}
               onToggleHabitDay={toggleHabitDay}
               onDeleteHabit={deleteHabit}
+              onStartEditHabit={startEditHabit}
             />
 
             <MentalStateSection
@@ -688,6 +726,16 @@ export default function App() {
               totalLeft={totalLeft}
               completionPercent={completionPercent}
               analysisRows={analysisRows}
+            />
+
+            <EditHabitModal
+              isOpen={Boolean(editingHabit)}
+              habitName={editingHabitName}
+              habitIcon={editingHabitIcon}
+              onChangeName={setEditingHabitName}
+              onChangeIcon={setEditingHabitIcon}
+              onClose={closeEditHabit}
+              onSave={saveEditedHabit}
             />
           </div>
         </div>
