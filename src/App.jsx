@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import OverallStatsCard from "./components/OverallStatsCard";
 import defaultHabits from "./data/defaultHabits";
 import {
   MONTHS,
@@ -670,13 +671,22 @@ export default function App() {
             />
           </section>
 
-          <AnalysisPanel
-            totalGoal={totalGoal}
-            totalCompleted={totalCompleted}
-            totalLeft={totalLeft}
-            completionPercent={completionPercent}
-            analysisRows={analysisRows}
-          />
+          <div className="xl:col-span-3 space-y-4">
+            <OverallStatsCard
+              totalGoal={totalGoal}
+              totalCompleted={totalCompleted}
+              totalLeft={totalLeft}
+              completionPercent={completionPercent}
+            />
+
+            <AnalysisPanel
+              totalGoal={totalGoal}
+              totalCompleted={totalCompleted}
+              totalLeft={totalLeft}
+              completionPercent={completionPercent}
+              analysisRows={analysisRows}
+            />
+          </div>
         </div>
       </div>
     </div>
