@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import UserProfileCard from "./components/UserProfileCard";
 import OverallStatsCard from "./components/OverallStatsCard";
 import defaultHabits from "./data/defaultHabits";
 import {
@@ -573,6 +574,8 @@ export default function App() {
                 Calendar Settings
               </div>
 
+              <UserProfileCard user={currentUser} />
+              
               <div>
                 <label className="text-xs text-neutral-500 mb-2 block">
                   Year
