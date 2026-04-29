@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LogIn, UserPlus } from "lucide-react";
+import { Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
 
 export default function AuthScreen({
   onLogin,
@@ -12,6 +12,13 @@ export default function AuthScreen({
   const [email, setEmail] = useState("");
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const handleSwitchMode = (nextMode) => {
+    setMode(nextMode);
+    setShowPassword(false);
+    setPassword("");
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -46,7 +53,7 @@ export default function AuthScreen({
         <div className="grid grid-cols-2 gap-2 mb-6">
           <button
             type="button"
-            onClick={() => setMode("login")}
+            onClick={() => handleSwitchMode("login")}
             className={`rounded-2xl px-4 py-3 text-sm font-medium ${
               mode === "login"
                 ? "bg-white text-black"
@@ -61,7 +68,7 @@ export default function AuthScreen({
 
           <button
             type="button"
-            onClick={() => setMode("register")}
+            onClick={() => handleSwitchMode("register")}
             className={`rounded-2xl px-4 py-3 text-sm font-medium ${
               mode === "register"
                 ? "bg-white text-black"
@@ -126,14 +133,29 @@ export default function AuthScreen({
             <label className="block text-xs text-neutral-500 mb-2">
               Password
             </label>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              type="password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-4 py-3 text-sm outline-none"
-              placeholder="••••••••"
-              required
-            />
+
+            <div className="relative">
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                type={showPassword ? "text" : "password"}
+                className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-4 pr-12 py-3 text-sm outline-none"
+                placeholder="••••••••"
+                required
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-1 text-neutral-400 hover:bg-white/5 hover:text-white"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
 
           {errorMessage ? (
