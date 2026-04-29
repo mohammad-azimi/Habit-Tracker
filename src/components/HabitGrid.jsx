@@ -1,5 +1,6 @@
 import React from "react";
 import {
+  ArchiveX,
   ArrowDown,
   ArrowUp,
   Flame,
@@ -17,11 +18,12 @@ export default function HabitGrid({
   onStartEditHabit,
   onMoveHabitUp,
   onMoveHabitDown,
+  onArchiveHabit,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
       <div className="min-w-[1080px]">
-        <div className="grid grid-cols-[420px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
+        <div className="grid grid-cols-[450px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
           <div className="text-sm font-semibold text-neutral-300 px-2">
             My Habits
           </div>
@@ -33,7 +35,7 @@ export default function HabitGrid({
           ))}
         </div>
 
-        <div className="grid grid-cols-[420px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
+        <div className="grid grid-cols-[450px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
           <div></div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
@@ -47,7 +49,7 @@ export default function HabitGrid({
           {habits.map((habit, habitIndex) => (
             <div
               key={habit.id}
-              className="grid grid-cols-[420px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
+              className="grid grid-cols-[450px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
             >
               <div className="px-2 py-2 rounded-xl bg-neutral-800 text-sm text-neutral-200 flex items-center justify-between gap-2">
                 <div className="min-w-0 flex-1">
@@ -93,6 +95,14 @@ export default function HabitGrid({
                     title="Edit habit"
                   >
                     <Pencil className="h-3.5 w-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => onArchiveHabit(habit.id)}
+                    className="rounded-lg bg-neutral-700 hover:bg-amber-700 p-1.5"
+                    title="Archive habit"
+                  >
+                    <ArchiveX className="h-3.5 w-3.5" />
                   </button>
 
                   <button
