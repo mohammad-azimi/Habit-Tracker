@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import MonthlySummaryCard from "./components/MonthlySummaryCard";
 import MonthlyNotesPanel from "./components/MonthlyNotesPanel";
 import EditHabitModal from "./components/EditHabitModal";
 import UserProfileCard from "./components/UserProfileCard";
@@ -571,6 +572,22 @@ export default function App() {
     notes: safeMonthData.notes,
   };
 
+  const monthlyInsights = useMemo(() => {
+    const sortedByProgress = [...analysisRows].sort(
+      (a, b) => b.progress - a.progress,
+    );
+    const sortedByCurrentStreak = [...analysisRows].sort(
+      (a, b) => (b.currentStreak || 0) - (a.currentStreak || 0),
+    );
+
+    return {
+      bestHabit: sortedByProgress[0] || null,
+      needsAttentionHabit:
+        sortedByProgress[sortedByProgress.length - 1] || null,
+      strongestCurrentStreakHabit: sortedByCurrentStreak[0] || null,
+    };
+  }, [analysisRows]);
+
   const exportMonthJSON = () => {
     downloadBlob(
       `habit-tracker-${monthKey}.json`,
@@ -816,6 +833,19 @@ export default function App() {
               totalCompleted={totalCompleted}
               totalLeft={totalLeft}
               completionPercent={completionPercent}
+            />
+
+            <MonthlySummaryCard
+              selectedYear={selectedYear}
+              selectedMonthName={MONTHS[selectedMonthIndex]}
+              completionPercent={completionPercent}
+              moodAverage={average(safeMonthData.mood).toFixed(1)}
+              motivationAverage={average(safeMonthData.motivation).toFixed(1)}
+              bestHabit={monthlyInsights.bestHabit}
+              needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+              strongestCurrentStreakHabit={
+                monthlyInsights.strongestCurrentStreakHabit
+              }
             />
 
             <AnalysisPanel
