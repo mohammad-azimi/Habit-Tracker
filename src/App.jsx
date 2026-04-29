@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import MonthlyNotesPanel from "./components/MonthlyNotesPanel";
 import EditHabitModal from "./components/EditHabitModal";
 import UserProfileCard from "./components/UserProfileCard";
 import OverallStatsCard from "./components/OverallStatsCard";
@@ -313,6 +314,13 @@ export default function App() {
       [type]: month[type].map((item, idx) =>
         idx === dayIndex ? safeValue : item,
       ),
+    }));
+  };
+
+  const setMonthlyNotes = (value) => {
+    updateMonth((month) => ({
+      ...month,
+      notes: value,
     }));
   };
 
@@ -794,6 +802,11 @@ export default function App() {
               motivation={safeMonthData.motivation}
               mentalStateData={mentalStateData}
               onSetMentalMetric={setMentalMetric}
+            />
+
+            <MonthlyNotesPanel
+              notes={safeMonthData.notes}
+              onChangeNotes={setMonthlyNotes}
             />
           </section>
 
