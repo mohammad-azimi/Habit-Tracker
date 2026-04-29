@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import ChangePasswordCard from "./components/ChangePasswordCard";
 import ArchivedHabitsPanel from "./components/ArchivedHabitsPanel";
 import HabitFilters from "./components/HabitFilters";
 import ToastNotice from "./components/ToastNotice";
@@ -19,6 +20,7 @@ import {
 } from "./lib/date";
 import { downloadBlob, toCSV } from "./lib/export";
 import {
+  changePassword,
   getCurrentUser,
   getMonthData,
   loginUser,
@@ -310,6 +312,7 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [habitSearchTerm, setHabitSearchTerm] = useState("");
   const [habitFilterMode, setHabitFilterMode] = useState("all");
   const [toast, setToast] = useState(null);
@@ -713,6 +716,29 @@ export default function App() {
     setAuthError("");
   };
 
+  const handleChangePassword = async ({ currentPassword, newPassword }) => {
+    try {
+      setIsChangingPassword(true);
+
+      await changePassword({
+        currentPassword,
+        newPassword,
+      });
+
+      showToast("Password changed successfully.", "success");
+      return { ok: true };
+    } catch (error) {
+      const message = error.message || "Failed to change password";
+      showToast(message, "error");
+      return {
+        ok: false,
+        message,
+      };
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const analysisRows = useMemo(() => {
     const weekRanges = getWeekRanges(daysInMonth);
 
@@ -1030,6 +1056,11 @@ export default function App() {
               </div>
 
               <UserProfileCard user={currentUser} />
+
+              <ChangePasswordCard
+                onSubmit={handleChangePassword}
+                isSubmitting={isChangingPassword}
+              />
 
               <div>
                 <label className="text-xs text-neutral-500 mb-2 block">
