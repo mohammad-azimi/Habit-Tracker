@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import HabitFilters from "./components/HabitFilters";
 import ToastNotice from "./components/ToastNotice";
 import MonthlySummaryCard from "./components/MonthlySummaryCard";
 import MonthlyNotesPanel from "./components/MonthlyNotesPanel";
@@ -307,6 +308,8 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [habitSearchTerm, setHabitSearchTerm] = useState("");
+  const [habitFilterMode, setHabitFilterMode] = useState("all");
   const [toast, setToast] = useState(null);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
@@ -713,6 +716,30 @@ export default function App() {
     });
   }, [safeMonthData, daysInMonth, activeDayCount]);
 
+  const filteredAnalysisRows = useMemo(() => {
+    return analysisRows.filter((habit) => {
+      const matchesSearch = habit.name
+        .toLowerCase()
+        .includes(habitSearchTerm.trim().toLowerCase());
+
+      if (!matchesSearch) return false;
+
+      if (habitFilterMode === "completed") {
+        return habit.progress === 100;
+      }
+
+      if (habitFilterMode === "in-progress") {
+        return habit.progress > 0 && habit.progress < 100;
+      }
+
+      if (habitFilterMode === "not-started") {
+        return habit.actual === 0;
+      }
+
+      return true;
+    });
+  }, [analysisRows, habitSearchTerm, habitFilterMode]);
+
   const dailyProgress = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => {
       const completed = safeMonthData.habits.filter(
@@ -1042,8 +1069,15 @@ export default function App() {
               weeklyProgress={weeklyProgress}
             />
 
+            <HabitFilters
+              searchTerm={habitSearchTerm}
+              onChangeSearchTerm={setHabitSearchTerm}
+              filterMode={habitFilterMode}
+              onChangeFilterMode={setHabitFilterMode}
+            />
+
             <HabitGrid
-              habits={analysisRows}
+              habits={filteredAnalysisRows}
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
               onToggleHabitDay={toggleHabitDay}
@@ -1108,7 +1142,7 @@ export default function App() {
           </div>
         </div>
       </div>
-      
+
       <ToastNotice toast={toast} onClose={closeToast} />
     </div>
   );
