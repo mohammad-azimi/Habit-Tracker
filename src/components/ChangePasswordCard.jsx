@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { KeyRound, LockKeyhole, Save } from "lucide-react";
+import { Eye, EyeOff, KeyRound, LockKeyhole, Save } from "lucide-react";
 
 export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [localError, setLocalError] = useState("");
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -41,10 +45,23 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
       setNewPassword("");
       setConfirmPassword("");
       setLocalError("");
+      setShowCurrentPassword(false);
+      setShowNewPassword(false);
+      setShowConfirmPassword(false);
     } else if (result?.message) {
       setLocalError(result.message);
     }
   };
+
+  const renderVisibilityButton = (visible, onToggle) => (
+    <button
+      type="button"
+      onClick={onToggle}
+      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-1 text-neutral-400 hover:bg-white/5 hover:text-white"
+    >
+      {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+    </button>
+  );
 
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
@@ -63,12 +80,15 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
           <div className="relative">
             <LockKeyhole className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
-              type="password"
+              type={showCurrentPassword ? "text" : "password"}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Current password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-3 text-sm outline-none"
+              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
             />
+            {renderVisibilityButton(showCurrentPassword, () =>
+              setShowCurrentPassword((prev) => !prev),
+            )}
           </div>
         </div>
 
@@ -79,12 +99,15 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
           <div className="relative">
             <KeyRound className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
-              type="password"
+              type={showNewPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="New password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-3 text-sm outline-none"
+              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
             />
+            {renderVisibilityButton(showNewPassword, () =>
+              setShowNewPassword((prev) => !prev),
+            )}
           </div>
         </div>
 
@@ -95,12 +118,15 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
           <div className="relative">
             <KeyRound className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-4 py-3 text-sm outline-none"
+              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
             />
+            {renderVisibilityButton(showConfirmPassword, () =>
+              setShowConfirmPassword((prev) => !prev),
+            )}
           </div>
         </div>
 
