@@ -77,6 +77,38 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function calculateCurrentStreak(checks) {
+  let streak = 0;
+  let i = checks.length - 1;
+
+  while (i >= 0 && !checks[i]) {
+    i -= 1;
+  }
+
+  while (i >= 0 && checks[i]) {
+    streak += 1;
+    i -= 1;
+  }
+
+  return streak;
+}
+
+function calculateBestStreak(checks) {
+  let best = 0;
+  let current = 0;
+
+  checks.forEach((checked) => {
+    if (checked) {
+      current += 1;
+      best = Math.max(best, current);
+    } else {
+      current = 0;
+    }
+  });
+
+  return best;
+}
+
 export default function App() {
   const currentDate = new Date();
 
@@ -109,6 +141,19 @@ export default function App() {
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
+
+  const activeDayCount = useMemo(() => {
+    const now = new Date();
+    const year = Number(selectedYear);
+
+    if (year < now.getFullYear()) return daysInMonth;
+    if (year > now.getFullYear()) return 0;
+
+    if (selectedMonthIndex < now.getMonth()) return daysInMonth;
+    if (selectedMonthIndex > now.getMonth()) return 0;
+
+    return Math.min(now.getDate(), daysInMonth);
+  }, [selectedYear, selectedMonthIndex, daysInMonth]);
 
   useEffect(() => {
     let cancelled = false;
@@ -427,6 +472,10 @@ export default function App() {
       const left = goal - actual;
       const progress = goal ? Math.round((actual / goal) * 100) : 0;
 
+      const trackedChecks = habit.checks.slice(0, activeDayCount);
+      const currentStreak = calculateCurrentStreak(trackedChecks);
+      const bestStreak = calculateBestStreak(trackedChecks);
+
       const weekly = weekRanges.map(([start, end], idx) => {
         const slice = habit.checks.slice(start, end);
         const rate = slice.length
@@ -445,10 +494,12 @@ export default function App() {
         actual,
         left,
         progress,
+        currentStreak,
+        bestStreak,
         weekly,
       };
     });
-  }, [safeMonthData, daysInMonth]);
+  }, [safeMonthData, daysInMonth, activeDayCount]);
 
   const dailyProgress = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => {
