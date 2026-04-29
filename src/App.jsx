@@ -337,16 +337,43 @@ export default function App() {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
 
-  const showToast = (message, type = "success") => {
+  const showToast = (
+    message,
+    type = "success",
+    actionLabel = null,
+    onAction = null,
+  ) => {
     setToast({
       id: Date.now(),
       message,
       type,
+      actionLabel,
+      onAction,
     });
   };
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const restoreDeletedHabit = (habitSnapshot, originalIndex) => {
+    updateMonth((month) => {
+      if (month.habits.some((habit) => habit.id === habitSnapshot.id)) {
+        return month;
+      }
+
+      const habits = [...month.habits];
+      const insertIndex = Math.min(originalIndex, habits.length);
+
+      habits.splice(insertIndex, 0, habitSnapshot);
+
+      return {
+        ...month,
+        habits,
+      };
+    });
+
+    showToast("Habit restored.", "success");
   };
 
   const openConfirmModal = ({
@@ -607,8 +634,6 @@ export default function App() {
           : habit,
       ),
     }));
-
-    showToast("Habit archived.", "info");
   };
 
   const requestDeleteHabit = (habit) => {
@@ -617,8 +642,20 @@ export default function App() {
       message: `This will permanently remove "${habit.name}" from the current month.`,
       confirmLabel: "Delete Habit",
       onConfirm: () => {
+        const originalHabit = safeMonthData.habits.find(
+          (item) => item.id === habit.id,
+        );
+        const originalIndex = safeMonthData.habits.findIndex(
+          (item) => item.id === habit.id,
+        );
+
+        if (!originalHabit || originalIndex === -1) return;
+
         deleteHabit(habit.id);
-        showToast("Habit deleted.", "error");
+
+        showToast("Habit deleted.", "error", "Undo", () =>
+          restoreDeletedHabit(originalHabit, originalIndex),
+        );
       },
     });
   };
@@ -630,6 +667,10 @@ export default function App() {
       confirmLabel: "Archive Habit",
       onConfirm: () => {
         archiveHabit(habit.id);
+
+        showToast("Habit archived.", "info", "Undo", () =>
+          restoreHabit(habit.id),
+        );
       },
     });
   };

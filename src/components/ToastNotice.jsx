@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, RotateCcw, X } from "lucide-react";
 
 export default function ToastNotice({ toast, onClose }) {
   if (!toast) return null;
@@ -31,6 +31,16 @@ export default function ToastNotice({ toast, onClose }) {
 
           <div className="min-w-0 flex-1">
             <div className="text-sm font-medium">{toast.message}</div>
+
+            {toast.actionLabel && typeof toast.onAction === "function" ? (
+              <button
+                onClick={toast.onAction}
+                className="mt-2 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium hover:bg-white/10"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {toast.actionLabel}
+              </button>
+            ) : null}
           </div>
 
           <button
