@@ -778,7 +778,7 @@ export default function App() {
             />
 
             <HabitGrid
-              habits={safeMonthData.habits}
+              habits={analysisRows}
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
               onToggleHabitDay={toggleHabitDay}
