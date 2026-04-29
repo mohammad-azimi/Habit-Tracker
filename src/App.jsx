@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import ArchivedHabitsPanel from "./components/ArchivedHabitsPanel";
 import HabitFilters from "./components/HabitFilters";
 import ToastNotice from "./components/ToastNotice";
 import MonthlySummaryCard from "./components/MonthlySummaryCard";
@@ -62,6 +63,7 @@ function ensureMonthShape(monthData, year, monthIndex) {
       id: habit.id || `${habit.name}-${idx}`,
       name: habit.name || `Habit ${idx + 1}`,
       icon: habit.icon || "✅",
+      archived: Boolean(habit.archived),
       checks: Array.from({ length: days }, (_, day) =>
         Boolean(habit.checks?.[day]),
       ),
@@ -543,6 +545,7 @@ export default function App() {
           id: `${safeId}-${Date.now()}`,
           name: trimmed,
           icon: newHabitIcon || "✅",
+          archived: false,
           checks: Array.from({ length: daysInMonth }, () => false),
         },
       ],
@@ -557,6 +560,38 @@ export default function App() {
       ...month,
       habits: month.habits.filter((habit) => habit.id !== habitId),
     }));
+  };
+
+  const archiveHabit = (habitId) => {
+    updateMonth((month) => ({
+      ...month,
+      habits: month.habits.map((habit) =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              archived: true,
+            }
+          : habit,
+      ),
+    }));
+
+    showToast("Habit archived.", "info");
+  };
+
+  const restoreHabit = (habitId) => {
+    updateMonth((month) => ({
+      ...month,
+      habits: month.habits.map((habit) =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              archived: false,
+            }
+          : habit,
+      ),
+    }));
+
+    showToast("Habit restored.", "success");
   };
 
   const moveHabitUp = (habitId) => {
@@ -716,8 +751,16 @@ export default function App() {
     });
   }, [safeMonthData, daysInMonth, activeDayCount]);
 
+  const activeAnalysisRows = useMemo(() => {
+    return analysisRows.filter((habit) => !habit.archived);
+  }, [analysisRows]);
+
+  const archivedAnalysisRows = useMemo(() => {
+    return analysisRows.filter((habit) => habit.archived);
+  }, [analysisRows]);
+
   const filteredAnalysisRows = useMemo(() => {
-    return analysisRows.filter((habit) => {
+    return activeAnalysisRows.filter((habit) => {
       const matchesSearch = habit.name
         .toLowerCase()
         .includes(habitSearchTerm.trim().toLowerCase());
@@ -738,7 +781,7 @@ export default function App() {
 
       return true;
     });
-  }, [analysisRows, habitSearchTerm, habitFilterMode]);
+  }, [activeAnalysisRows, habitSearchTerm, habitFilterMode]);
 
   const dailyProgress = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => {
@@ -772,7 +815,7 @@ export default function App() {
     ? Math.round((totalCompleted / totalGoal) * 100)
     : 0;
 
-  const rankedHabits = [...analysisRows].sort(
+  const rankedHabits = [...activeAnalysisRows].sort(
     (a, b) => b.progress - a.progress,
   );
 
@@ -1061,6 +1104,11 @@ export default function App() {
             </div>
 
             <TopHabitsCard habits={rankedHabits} />
+
+            <ArchivedHabitsPanel
+              archivedHabits={archivedAnalysisRows}
+              onRestoreHabit={restoreHabit}
+            />
           </section>
 
           <section className="xl:col-span-6 space-y-4">
@@ -1085,6 +1133,7 @@ export default function App() {
               onStartEditHabit={startEditHabit}
               onMoveHabitUp={moveHabitUp}
               onMoveHabitDown={moveHabitDown}
+              onArchiveHabit={archiveHabit}
             />
 
             <MentalStateSection
