@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import CopyMonthModal from "./components/CopyMonthModal";
 import ConfirmActionModal from "./components/ConfirmActionModal";
 import DeleteAccountCard from "./components/DeleteAccountCard";
 import ChangePasswordCard from "./components/ChangePasswordCard";
@@ -349,6 +350,13 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [isCopyMonthModalOpen, setIsCopyMonthModalOpen] = useState(false);
+  const [copyTargetYear, setCopyTargetYear] = useState(
+    String(currentDate.getFullYear()),
+  );
+  const [copyTargetMonthIndex, setCopyTargetMonthIndex] = useState(
+    currentDate.getMonth(),
+  );
   const [draggedHabitId, setDraggedHabitId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -1224,6 +1232,59 @@ export default function App() {
     });
   };
 
+  const yearOptions = [2025, 2026, 2027, 2028];
+
+  const openCopyMonthModal = () => {
+    const nextMonth = getNextMonthMeta(selectedYear, selectedMonthIndex);
+
+    setCopyTargetYear(String(nextMonth.year));
+    setCopyTargetMonthIndex(nextMonth.monthIndex);
+    setIsCopyMonthModalOpen(true);
+  };
+
+  const closeCopyMonthModal = () => {
+    setIsCopyMonthModalOpen(false);
+  };
+
+  const copyCurrentMonthToSelectedMonth = async () => {
+    const sameMonth =
+      Number(copyTargetYear) === Number(selectedYear) &&
+      copyTargetMonthIndex === selectedMonthIndex;
+
+    if (sameMonth) {
+      showToast("Choose a different target month.", "error");
+      return;
+    }
+
+    try {
+      setIsSyncing(true);
+
+      const copiedData = buildCopiedMonthData(
+        safeMonthData,
+        Number(copyTargetYear),
+        copyTargetMonthIndex,
+      );
+
+      await saveMonthData(
+        Number(copyTargetYear),
+        copyTargetMonthIndex + 1,
+        copiedData,
+      );
+
+      closeCopyMonthModal();
+
+      showToast(
+        `Copied this setup to ${MONTHS[copyTargetMonthIndex]} ${copyTargetYear}.`,
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to copy month:", error);
+      showToast(error.message || "Failed to copy month.", "error");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const importBackup = async (file) => {
     try {
       const text = await file.text();
@@ -1285,6 +1346,7 @@ export default function App() {
           onImportBackup={importBackup}
           onExportPrintableHTML={exportPrintableHTMLReport}
           onCopyToNextMonth={requestCopyToNextMonth}
+          onOpenCopyToMonth={openCopyMonthModal}
         />
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -1505,6 +1567,21 @@ export default function App() {
         confirmLabel={confirmAction?.confirmLabel || "Confirm"}
         onConfirm={executeConfirmAction}
         onClose={closeConfirmModal}
+      />
+
+      <CopyMonthModal
+        isOpen={isCopyMonthModalOpen}
+        currentYear={selectedYear}
+        currentMonthIndex={selectedMonthIndex}
+        targetYear={copyTargetYear}
+        targetMonthIndex={copyTargetMonthIndex}
+        yearOptions={yearOptions}
+        monthOptions={MONTHS}
+        isSubmitting={isSyncing}
+        onChangeTargetYear={setCopyTargetYear}
+        onChangeTargetMonthIndex={setCopyTargetMonthIndex}
+        onClose={closeCopyMonthModal}
+        onConfirm={copyCurrentMonthToSelectedMonth}
       />
     </div>
   );

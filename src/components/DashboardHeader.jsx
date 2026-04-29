@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import {
+  CalendarDays,
   Copy,
   Download,
   FileSpreadsheet,
@@ -15,6 +16,7 @@ export default function DashboardHeader({
   onImportBackup,
   onExportPrintableHTML,
   onCopyToNextMonth,
+  onOpenCopyToMonth,
 }) {
   const fileInputRef = useRef(null);
 
@@ -72,6 +74,14 @@ export default function DashboardHeader({
         >
           <Copy className="h-4 w-4" />
           Copy to Next Month
+        </button>
+
+        <button
+          onClick={onOpenCopyToMonth}
+          className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
+        >
+          <CalendarDays className="h-4 w-4" />
+          Copy to Any Month
         </button>
 
         <button
