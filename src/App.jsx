@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import ToastNotice from "./components/ToastNotice";
 import MonthlySummaryCard from "./components/MonthlySummaryCard";
 import MonthlyNotesPanel from "./components/MonthlyNotesPanel";
 import EditHabitModal from "./components/EditHabitModal";
@@ -306,6 +307,7 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [toast, setToast] = useState(null);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
 
@@ -320,6 +322,18 @@ export default function App() {
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
+
+  const showToast = (message, type = "success") => {
+    setToast({
+      id: Date.now(),
+      message,
+      type,
+    });
+  };
+
+  const closeToast = () => {
+    setToast(null);
+  };
 
   const activeDayCount = useMemo(() => {
     const now = new Date();
@@ -378,6 +392,16 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+
+    const timeoutId = setTimeout(() => {
+      setToast(null);
+    }, 2800);
+
+    return () => clearTimeout(timeoutId);
+  }, [toast]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -613,6 +637,7 @@ export default function App() {
       setMonthData(null);
       setIsMonthLoaded(false);
       setLoadedMonthKey(null);
+      showToast("Account created successfully.", "success");
     } catch (error) {
       setAuthError(error.message || "Failed to register");
     } finally {
@@ -632,6 +657,7 @@ export default function App() {
       setMonthData(null);
       setIsMonthLoaded(false);
       setLoadedMonthKey(null);
+      showToast("Logged in successfully.", "success");
     } catch (error) {
       setAuthError(error.message || "Failed to login");
     } finally {
@@ -771,6 +797,8 @@ export default function App() {
       JSON.stringify(monthlySummary, null, 2),
       "application/json",
     );
+
+    showToast("JSON report exported successfully.", "success");
   };
 
   const exportMonthCSV = () => {
@@ -798,6 +826,8 @@ export default function App() {
       toCSV(rows),
       "text/csv;charset=utf-8;",
     );
+
+    showToast("CSV report exported successfully.", "success");
   };
 
   const exportFullBackup = () => {
@@ -806,6 +836,8 @@ export default function App() {
       JSON.stringify(safeMonthData, null, 2),
       "application/json",
     );
+
+    showToast("Backup exported successfully.", "success");
   };
 
   const exportPrintableHTMLReport = () => {
@@ -830,6 +862,8 @@ export default function App() {
       html,
       "text/html;charset=utf-8;",
     );
+
+    showToast("Printable HTML report exported.", "success");
   };
 
   const importBackup = async (file) => {
@@ -842,9 +876,10 @@ export default function App() {
       }
 
       setMonthData(ensureMonthShape(parsed, selectedYear, selectedMonthIndex));
+      showToast("Backup imported successfully.", "success");
     } catch (error) {
-      alert("Backup file is not valid JSON.");
       console.error(error);
+      showToast("Backup file is not valid JSON.", "error");
     }
   };
 
@@ -860,12 +895,15 @@ export default function App() {
 
   if (!currentUser) {
     return (
-      <AuthScreen
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        isSubmitting={authLoading}
-        errorMessage={authError}
-      />
+      <>
+        <AuthScreen
+          onLogin={handleLogin}
+          onRegister={handleRegister}
+          isSubmitting={authLoading}
+          errorMessage={authError}
+        />
+        <ToastNotice toast={toast} onClose={closeToast} />
+      </>
     );
   }
 
@@ -1070,6 +1108,8 @@ export default function App() {
           </div>
         </div>
       </div>
+      
+      <ToastNotice toast={toast} onClose={closeToast} />
     </div>
   );
 }
