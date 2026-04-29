@@ -1,13 +1,24 @@
 import React, { useRef } from "react";
-import { Download, FileSpreadsheet, FileText, Upload } from "lucide-react";
+import {
+  Download,
+  FileSpreadsheet,
+  FileText,
+  HardDriveUpload,
+  Printer,
+} from "lucide-react";
 
 export default function DashboardHeader({
   onExportCSV,
   onExportJSON,
   onExportBackup,
   onImportBackup,
+  onExportPrintableHTML,
 }) {
   const fileInputRef = useRef(null);
+
+  const handlePickFile = () => {
+    fileInputRef.current?.click();
+  };
 
   const handleFileChange = async (event) => {
     const file = event.target.files?.[0];
@@ -18,21 +29,13 @@ export default function DashboardHeader({
   };
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/json"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-
+    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
       <div>
         <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
-          Habit Tracker
+          Habit Tracker Dashboard
         </h1>
-        <p className="mt-2 text-sm md:text-base text-neutral-400">
-          Interactive monthly tracking, analytics, and export-ready reports.
+        <p className="text-sm md:text-base text-neutral-400 mt-2">
+          Track habits, analyze progress, and export monthly reports.
         </p>
       </div>
 
@@ -50,7 +53,15 @@ export default function DashboardHeader({
           className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
         >
           <FileText className="h-4 w-4" />
-          Export Month JSON
+          Export JSON
+        </button>
+
+        <button
+          onClick={onExportPrintableHTML}
+          className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
+        >
+          <Printer className="h-4 w-4" />
+          Printable HTML
         </button>
 
         <button
@@ -58,16 +69,24 @@ export default function DashboardHeader({
           className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
         >
           <Download className="h-4 w-4" />
-          Full Backup
+          Backup JSON
         </button>
 
         <button
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handlePickFile}
           className="rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
         >
-          <Upload className="h-4 w-4" />
+          <HardDriveUpload className="h-4 w-4" />
           Import Backup
         </button>
+
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          className="hidden"
+          onChange={handleFileChange}
+        />
       </div>
     </div>
   );
