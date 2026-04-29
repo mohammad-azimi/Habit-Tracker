@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import {
+  Copy,
   Download,
   FileSpreadsheet,
   FileText,
@@ -13,6 +14,7 @@ export default function DashboardHeader({
   onExportBackup,
   onImportBackup,
   onExportPrintableHTML,
+  onCopyToNextMonth,
 }) {
   const fileInputRef = useRef(null);
 
@@ -62,6 +64,14 @@ export default function DashboardHeader({
         >
           <Printer className="h-4 w-4" />
           Printable HTML
+        </button>
+
+        <button
+          onClick={onCopyToNextMonth}
+          className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
+        >
+          <Copy className="h-4 w-4" />
+          Copy to Next Month
         </button>
 
         <button
