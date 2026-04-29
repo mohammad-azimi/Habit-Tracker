@@ -301,6 +301,38 @@ export default function App() {
     }));
   };
 
+  const moveHabitUp = (habitId) => {
+    updateMonth((month) => {
+      const habits = [...month.habits];
+      const index = habits.findIndex((habit) => habit.id === habitId);
+
+      if (index <= 0) return month;
+
+      [habits[index - 1], habits[index]] = [habits[index], habits[index - 1]];
+
+      return {
+        ...month,
+        habits,
+      };
+    });
+  };
+
+  const moveHabitDown = (habitId) => {
+    updateMonth((month) => {
+      const habits = [...month.habits];
+      const index = habits.findIndex((habit) => habit.id === habitId);
+
+      if (index === -1 || index >= habits.length - 1) return month;
+
+      [habits[index], habits[index + 1]] = [habits[index + 1], habits[index]];
+
+      return {
+        ...month,
+        habits,
+      };
+    });
+  };
+  
   const startEditHabit = (habit) => {
     setEditingHabit(habit);
     setEditingHabitName(habit.name || "");
@@ -701,6 +733,8 @@ export default function App() {
               onToggleHabitDay={toggleHabitDay}
               onDeleteHabit={deleteHabit}
               onStartEditHabit={startEditHabit}
+              onMoveHabitUp={moveHabitUp}
+              onMoveHabitDown={moveHabitDown}
             />
 
             <MentalStateSection

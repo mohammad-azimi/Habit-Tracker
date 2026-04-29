@@ -1,5 +1,5 @@
 import React from "react";
-import { Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Pencil, Trash2 } from "lucide-react";
 
 export default function HabitGrid({
   habits,
@@ -8,11 +8,13 @@ export default function HabitGrid({
   onToggleHabitDay,
   onDeleteHabit,
   onStartEditHabit,
+  onMoveHabitUp,
+  onMoveHabitDown,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
       <div className="min-w-[980px]">
-        <div className="grid grid-cols-[320px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
+        <div className="grid grid-cols-[360px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
           <div className="text-sm font-semibold text-neutral-300 px-2">
             My Habits
           </div>
@@ -23,7 +25,7 @@ export default function HabitGrid({
           ))}
         </div>
 
-        <div className="grid grid-cols-[320px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
+        <div className="grid grid-cols-[360px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
           <div></div>
           {Array.from({ length: daysInMonth }, (_, i) => (
             <div key={i} className="text-[10px] text-center text-neutral-600">
@@ -33,10 +35,10 @@ export default function HabitGrid({
         </div>
 
         <div className="space-y-1">
-          {habits.map((habit) => (
+          {habits.map((habit, habitIndex) => (
             <div
               key={habit.id}
-              className="grid grid-cols-[320px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
+              className="grid grid-cols-[360px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
             >
               <div className="px-2 py-2 rounded-xl bg-neutral-800 text-sm text-neutral-200 flex items-center justify-between gap-2">
                 <div className="truncate">
@@ -44,6 +46,24 @@ export default function HabitGrid({
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={() => onMoveHabitUp(habit.id)}
+                    disabled={habitIndex === 0}
+                    className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
+                    title="Move up"
+                  >
+                    <ArrowUp className="h-3.5 w-3.5" />
+                  </button>
+
+                  <button
+                    onClick={() => onMoveHabitDown(habit.id)}
+                    disabled={habitIndex === habits.length - 1}
+                    className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
+                    title="Move down"
+                  >
+                    <ArrowDown className="h-3.5 w-3.5" />
+                  </button>
+
                   <button
                     onClick={() => onStartEditHabit(habit)}
                     className="rounded-lg bg-neutral-700 hover:bg-neutral-600 p-1.5"
