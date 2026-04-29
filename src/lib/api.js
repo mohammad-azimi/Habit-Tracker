@@ -60,6 +60,12 @@ export function changePassword({ currentPassword, newPassword }) {
   });
 }
 
+export function deleteAccount() {
+  return request("/auth/delete-account", {
+    method: "DELETE",
+  });
+}
+
 export function getMonthData(year, month) {
   return request(`/dashboard/${year}/${month}`);
 }
