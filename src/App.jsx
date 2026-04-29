@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import ConfirmActionModal from "./components/ConfirmActionModal";
 import DeleteAccountCard from "./components/DeleteAccountCard";
 import ChangePasswordCard from "./components/ChangePasswordCard";
 import ArchivedHabitsPanel from "./components/ArchivedHabitsPanel";
@@ -314,6 +315,7 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [confirmAction, setConfirmAction] = useState(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [habitSearchTerm, setHabitSearchTerm] = useState("");
@@ -344,6 +346,30 @@ export default function App() {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const openConfirmModal = ({
+    title,
+    message,
+    confirmLabel = "Confirm",
+    onConfirm,
+  }) => {
+    setConfirmAction({
+      title,
+      message,
+      confirmLabel,
+      onConfirm,
+    });
+  };
+
+  const closeConfirmModal = () => {
+    setConfirmAction(null);
+  };
+
+  const executeConfirmAction = () => {
+    if (!confirmAction?.onConfirm) return;
+    confirmAction.onConfirm();
+    closeConfirmModal();
   };
 
   const activeDayCount = useMemo(() => {
@@ -584,6 +610,29 @@ export default function App() {
     showToast("Habit archived.", "info");
   };
 
+  const requestDeleteHabit = (habit) => {
+    openConfirmModal({
+      title: "Delete habit?",
+      message: `This will permanently remove "${habit.name}" from the current month.`,
+      confirmLabel: "Delete Habit",
+      onConfirm: () => {
+        deleteHabit(habit.id);
+        showToast("Habit deleted.", "error");
+      },
+    });
+  };
+
+  const requestArchiveHabit = (habit) => {
+    openConfirmModal({
+      title: "Archive habit?",
+      message: `"${habit.name}" will be removed from the main list and moved to archived habits.`,
+      confirmLabel: "Archive Habit",
+      onConfirm: () => {
+        archiveHabit(habit.id);
+      },
+    });
+  };
+
   const restoreHabit = (habitId) => {
     updateMonth((month) => ({
       ...month,
@@ -667,6 +716,19 @@ export default function App() {
 
   const resetCurrentMonth = () => {
     setMonthData(buildDefaultMonthData(selectedYear, selectedMonthIndex));
+  };
+
+  const requestResetCurrentMonth = () => {
+    openConfirmModal({
+      title: "Reset current month?",
+      message:
+        "This will replace the current month's habits, mood, motivation, and notes with fresh default values.",
+      confirmLabel: "Reset Month",
+      onConfirm: () => {
+        resetCurrentMonth();
+        showToast("Current month has been reset.", "info");
+      },
+    });
   };
 
   const handleRegister = async ({ username, email, password }) => {
@@ -1163,7 +1225,7 @@ export default function App() {
               </button>
 
               <button
-                onClick={resetCurrentMonth}
+                onClick={requestResetCurrentMonth}
                 className="w-full rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium"
               >
                 Reset Current Month
@@ -1196,11 +1258,11 @@ export default function App() {
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
               onToggleHabitDay={toggleHabitDay}
-              onDeleteHabit={deleteHabit}
+              onRequestDeleteHabit={requestDeleteHabit}
               onStartEditHabit={startEditHabit}
               onMoveHabitUp={moveHabitUp}
               onMoveHabitDown={moveHabitDown}
-              onArchiveHabit={archiveHabit}
+              onRequestArchiveHabit={requestArchiveHabit}
             />
 
             <MentalStateSection
@@ -1260,6 +1322,15 @@ export default function App() {
       </div>
 
       <ToastNotice toast={toast} onClose={closeToast} />
+
+      <ConfirmActionModal
+        isOpen={Boolean(confirmAction)}
+        title={confirmAction?.title || ""}
+        message={confirmAction?.message || ""}
+        confirmLabel={confirmAction?.confirmLabel || "Confirm"}
+        onConfirm={executeConfirmAction}
+        onClose={closeConfirmModal}
+      />
     </div>
   );
 }
