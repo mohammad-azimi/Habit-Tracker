@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import DeleteAccountCard from "./components/DeleteAccountCard";
 import ChangePasswordCard from "./components/ChangePasswordCard";
 import ArchivedHabitsPanel from "./components/ArchivedHabitsPanel";
 import HabitFilters from "./components/HabitFilters";
@@ -21,6 +22,7 @@ import {
 import { downloadBlob, toCSV } from "./lib/export";
 import {
   changePassword,
+  deleteAccount,
   getCurrentUser,
   getMonthData,
   loginUser,
@@ -312,6 +314,7 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [habitSearchTerm, setHabitSearchTerm] = useState("");
   const [habitFilterMode, setHabitFilterMode] = useState("all");
@@ -739,6 +742,34 @@ export default function App() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeletingAccount(true);
+
+      await deleteAccount();
+
+      clearAuthSession();
+      setCurrentUser(null);
+      setMonthData(null);
+      setIsMonthLoaded(false);
+      setLoadedMonthKey(null);
+      setAuthError("");
+
+      showToast("Account deleted successfully.", "success");
+
+      return { ok: true };
+    } catch (error) {
+      const message = error.message || "Failed to delete account";
+      showToast(message, "error");
+      return {
+        ok: false,
+        message,
+      };
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const analysisRows = useMemo(() => {
     const weekRanges = getWeekRanges(daysInMonth);
 
@@ -1060,6 +1091,11 @@ export default function App() {
               <ChangePasswordCard
                 onSubmit={handleChangePassword}
                 isSubmitting={isChangingPassword}
+              />
+
+              <DeleteAccountCard
+                onDeleteAccount={handleDeleteAccount}
+                isDeleting={isDeletingAccount}
               />
 
               <div>

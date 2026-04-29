@@ -203,4 +203,28 @@ router.put("/change-password", requireAuth, async (req, res) => {
   }
 });
 
+router.delete("/delete-account", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await prisma.$transaction([
+      prisma.dashboardMonth.deleteMany({
+        where: { userId },
+      }),
+      prisma.user.delete({
+        where: { id: userId },
+      }),
+    ]);
+
+    return res.json({
+      message: "Account deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    return res.status(500).json({
+      error: "Failed to delete account",
+    });
+  }
+});
+
 export default router;
