@@ -14,11 +14,11 @@ export default function HabitGrid({
   daysInMonth,
   weekdayLabels,
   onToggleHabitDay,
-  onDeleteHabit,
+  onRequestDeleteHabit,
   onStartEditHabit,
   onMoveHabitUp,
   onMoveHabitDown,
-  onArchiveHabit,
+  onRequestArchiveHabit,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
@@ -98,7 +98,7 @@ export default function HabitGrid({
                   </button>
 
                   <button
-                    onClick={() => onArchiveHabit(habit.id)}
+                    onClick={() => onRequestArchiveHabit(habit)}
                     className="rounded-lg bg-neutral-700 hover:bg-amber-700 p-1.5"
                     title="Archive habit"
                   >
@@ -106,7 +106,7 @@ export default function HabitGrid({
                   </button>
 
                   <button
-                    onClick={() => onDeleteHabit(habit.id)}
+                    onClick={() => onRequestDeleteHabit(habit)}
                     className="rounded-lg bg-neutral-700 hover:bg-red-700 p-1.5"
                     title="Delete habit"
                   >
