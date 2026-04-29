@@ -79,6 +79,183 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function buildPrintableReportHTML({
+  selectedYear,
+  selectedMonthName,
+  completionPercent,
+  totalGoal,
+  totalCompleted,
+  totalLeft,
+  moodAverage,
+  motivationAverage,
+  bestHabit,
+  needsAttentionHabit,
+  strongestCurrentStreakHabit,
+  analysisRows,
+  notes,
+}) {
+  const habitRows = analysisRows
+    .map(
+      (row) => `
+        <tr>
+          <td>${row.name} ${row.icon || ""}</td>
+          <td>${row.goal}</td>
+          <td>${row.actual}</td>
+          <td>${row.left}</td>
+          <td>${row.progress}%</td>
+          <td>${row.currentStreak || 0}</td>
+          <td>${row.bestStreak || 0}</td>
+        </tr>
+      `,
+    )
+    .join("");
+
+  return `
+    <!doctype html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <title>Habit Tracker Report - ${selectedMonthName} ${selectedYear}</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            margin: 32px;
+            color: #111;
+            background: #fff;
+          }
+          h1, h2 {
+            margin-bottom: 8px;
+          }
+          .muted {
+            color: #666;
+            margin-bottom: 24px;
+          }
+          .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 24px;
+          }
+          .card {
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            padding: 16px;
+            background: #fafafa;
+          }
+          .label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+          }
+          .value {
+            font-size: 24px;
+            font-weight: bold;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 16px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+          }
+          th {
+            background: #f3f3f3;
+          }
+          .section {
+            margin-top: 28px;
+          }
+          .notes {
+            border: 1px solid #ddd;
+            border-radius: 14px;
+            padding: 16px;
+            background: #fafafa;
+            white-space: pre-wrap;
+          }
+        </style>
+      </head>
+      <body>
+        <h1>Habit Tracker Monthly Report</h1>
+        <div class="muted">${selectedMonthName} ${selectedYear}</div>
+
+        <div class="grid">
+          <div class="card">
+            <div class="label">Completion</div>
+            <div class="value">${completionPercent}%</div>
+          </div>
+          <div class="card">
+            <div class="label">Total Goal</div>
+            <div class="value">${totalGoal}</div>
+          </div>
+          <div class="card">
+            <div class="label">Completed</div>
+            <div class="value">${totalCompleted}</div>
+          </div>
+          <div class="card">
+            <div class="label">Left</div>
+            <div class="value">${totalLeft}</div>
+          </div>
+          <div class="card">
+            <div class="label">Mood Avg</div>
+            <div class="value">${moodAverage}</div>
+          </div>
+          <div class="card">
+            <div class="label">Motivation Avg</div>
+            <div class="value">${motivationAverage}</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Highlights</h2>
+          <div class="grid">
+            <div class="card">
+              <div class="label">Best Habit</div>
+              <div>${bestHabit ? `${bestHabit.name} ${bestHabit.icon || ""} (${bestHabit.progress}%)` : "No data"}</div>
+            </div>
+            <div class="card">
+              <div class="label">Needs Attention</div>
+              <div>${needsAttentionHabit ? `${needsAttentionHabit.name} ${needsAttentionHabit.icon || ""} (${needsAttentionHabit.progress}%)` : "No data"}</div>
+            </div>
+            <div class="card">
+              <div class="label">Streak Leader</div>
+              <div>${strongestCurrentStreakHabit ? `${strongestCurrentStreakHabit.name} ${strongestCurrentStreakHabit.icon || ""} (${strongestCurrentStreakHabit.currentStreak} days)` : "No data"}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Habit Breakdown</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Habit</th>
+                <th>Goal</th>
+                <th>Completed</th>
+                <th>Left</th>
+                <th>Progress</th>
+                <th>Current Streak</th>
+                <th>Best Streak</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${habitRows}
+            </tbody>
+          </table>
+        </div>
+
+        <div class="section">
+          <h2>Monthly Notes</h2>
+          <div class="notes">${notes || "No notes for this month."}</div>
+        </div>
+      </body>
+    </html>
+  `;
+}
+
 function calculateCurrentStreak(checks) {
   let streak = 0;
   let i = checks.length - 1;
@@ -631,6 +808,30 @@ export default function App() {
     );
   };
 
+  const exportPrintableHTMLReport = () => {
+    const html = buildPrintableReportHTML({
+      selectedYear,
+      selectedMonthName: MONTHS[selectedMonthIndex],
+      completionPercent,
+      totalGoal,
+      totalCompleted,
+      totalLeft,
+      moodAverage: average(safeMonthData.mood).toFixed(1),
+      motivationAverage: average(safeMonthData.motivation).toFixed(1),
+      bestHabit: monthlyInsights.bestHabit,
+      needsAttentionHabit: monthlyInsights.needsAttentionHabit,
+      strongestCurrentStreakHabit: monthlyInsights.strongestCurrentStreakHabit,
+      analysisRows,
+      notes: safeMonthData.notes,
+    });
+
+    downloadBlob(
+      `habit-tracker-${monthKey}-report.html`,
+      html,
+      "text/html;charset=utf-8;",
+    );
+  };
+
   const importBackup = async (file) => {
     try {
       const text = await file.text();
@@ -686,6 +887,7 @@ export default function App() {
           onExportJSON={exportMonthJSON}
           onExportBackup={exportFullBackup}
           onImportBackup={importBackup}
+          onExportPrintableHTML={exportPrintableHTMLReport}
         />
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
