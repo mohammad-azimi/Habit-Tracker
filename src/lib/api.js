@@ -47,6 +47,19 @@ export function getCurrentUser() {
   return request("/auth/me");
 }
 
+export function changePassword({ currentPassword, newPassword }) {
+  return request("/auth/change-password", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      currentPassword,
+      newPassword,
+    }),
+  });
+}
+
 export function getMonthData(year, month) {
   return request(`/dashboard/${year}/${month}`);
 }
