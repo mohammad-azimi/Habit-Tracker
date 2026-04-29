@@ -88,6 +88,40 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function getNextMonthMeta(selectedYear, selectedMonthIndex) {
+  const year = Number(selectedYear);
+
+  if (selectedMonthIndex === 11) {
+    return {
+      year: year + 1,
+      monthIndex: 0,
+    };
+  }
+
+  return {
+    year,
+    monthIndex: selectedMonthIndex + 1,
+  };
+}
+
+function buildCopiedMonthData(monthData, nextYear, nextMonthIndex) {
+  const nextDays = getDaysInMonth(nextYear, nextMonthIndex);
+  const safe = ensureMonthShape(monthData, nextYear, nextMonthIndex);
+
+  return {
+    habits: safe.habits.map((habit) => ({
+      id: habit.id,
+      name: habit.name,
+      icon: habit.icon,
+      archived: Boolean(habit.archived),
+      checks: Array.from({ length: nextDays }, () => false),
+    })),
+    mood: Array.from({ length: nextDays }, () => 5),
+    motivation: Array.from({ length: nextDays }, () => 5),
+    notes: "",
+  };
+}
+
 function buildPrintableReportHTML({
   selectedYear,
   selectedMonthName,
@@ -1149,6 +1183,47 @@ export default function App() {
     showToast("Printable HTML report exported.", "success");
   };
 
+  const copyCurrentMonthToNextMonth = async () => {
+    try {
+      setIsSyncing(true);
+
+      const nextMonth = getNextMonthMeta(selectedYear, selectedMonthIndex);
+      const copiedData = buildCopiedMonthData(
+        safeMonthData,
+        nextMonth.year,
+        nextMonth.monthIndex,
+      );
+
+      await saveMonthData(nextMonth.year, nextMonth.monthIndex + 1, copiedData);
+
+      showToast(
+        `Copied this setup to ${MONTHS[nextMonth.monthIndex]} ${nextMonth.year}.`,
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to copy month:", error);
+      showToast(
+        error.message || "Failed to copy month to next month.",
+        "error",
+      );
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const requestCopyToNextMonth = () => {
+    const nextMonth = getNextMonthMeta(selectedYear, selectedMonthIndex);
+
+    openConfirmModal({
+      title: "Copy current month to next month?",
+      message: `This will create or overwrite ${MONTHS[nextMonth.monthIndex]} ${nextMonth.year} with the current habit setup. Daily progress, mood, motivation, and notes will be reset.`,
+      confirmLabel: "Copy Month",
+      onConfirm: () => {
+        copyCurrentMonthToNextMonth();
+      },
+    });
+  };
+
   const importBackup = async (file) => {
     try {
       const text = await file.text();
@@ -1209,6 +1284,7 @@ export default function App() {
           onExportBackup={exportFullBackup}
           onImportBackup={importBackup}
           onExportPrintableHTML={exportPrintableHTMLReport}
+          onCopyToNextMonth={requestCopyToNextMonth}
         />
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
