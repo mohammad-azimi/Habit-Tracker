@@ -315,6 +315,7 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [draggedHabitId, setDraggedHabitId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -679,6 +680,58 @@ export default function App() {
         habits,
       };
     });
+  };
+
+  const reorderHabitByIds = (sourceHabitId, targetHabitId) => {
+    updateMonth((month) => {
+      const habits = [...month.habits];
+
+      const sourceIndex = habits.findIndex(
+        (habit) => habit.id === sourceHabitId,
+      );
+      const targetIndex = habits.findIndex(
+        (habit) => habit.id === targetHabitId,
+      );
+
+      if (
+        sourceIndex === -1 ||
+        targetIndex === -1 ||
+        sourceIndex === targetIndex
+      ) {
+        return month;
+      }
+
+      const [movedHabit] = habits.splice(sourceIndex, 1);
+      habits.splice(targetIndex, 0, movedHabit);
+
+      return {
+        ...month,
+        habits,
+      };
+    });
+  };
+
+  const handleHabitDragStart = (habitId) => {
+    setDraggedHabitId(habitId);
+  };
+
+  const handleHabitDragOver = (event) => {
+    event.preventDefault();
+  };
+
+  const handleHabitDrop = (targetHabitId) => {
+    if (!draggedHabitId) return;
+
+    if (draggedHabitId !== targetHabitId) {
+      reorderHabitByIds(draggedHabitId, targetHabitId);
+      showToast("Habit order updated.", "success");
+    }
+
+    setDraggedHabitId(null);
+  };
+
+  const handleHabitDragEnd = () => {
+    setDraggedHabitId(null);
   };
   
   const startEditHabit = (habit) => {
@@ -1257,12 +1310,17 @@ export default function App() {
               habits={filteredAnalysisRows}
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
+              draggedHabitId={draggedHabitId}
               onToggleHabitDay={toggleHabitDay}
               onRequestDeleteHabit={requestDeleteHabit}
               onStartEditHabit={startEditHabit}
               onMoveHabitUp={moveHabitUp}
               onMoveHabitDown={moveHabitDown}
               onRequestArchiveHabit={requestArchiveHabit}
+              onHabitDragStart={handleHabitDragStart}
+              onHabitDragOver={handleHabitDragOver}
+              onHabitDrop={handleHabitDrop}
+              onHabitDragEnd={handleHabitDragEnd}
             />
 
             <MentalStateSection

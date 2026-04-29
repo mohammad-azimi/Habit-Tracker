@@ -4,6 +4,7 @@ import {
   ArrowDown,
   ArrowUp,
   Flame,
+  GripVertical,
   Pencil,
   Trash2,
   Trophy,
@@ -13,16 +14,21 @@ export default function HabitGrid({
   habits,
   daysInMonth,
   weekdayLabels,
+  draggedHabitId,
   onToggleHabitDay,
   onRequestDeleteHabit,
   onStartEditHabit,
   onMoveHabitUp,
   onMoveHabitDown,
   onRequestArchiveHabit,
+  onHabitDragStart,
+  onHabitDragOver,
+  onHabitDrop,
+  onHabitDragEnd,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
-      <div className="min-w-[1080px]">
+      <div className="min-w-[450px] sm:min-w-[1080px]">
         <div className="grid grid-cols-[450px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
           <div className="text-sm font-semibold text-neutral-300 px-2">
             My Habits
@@ -51,21 +57,38 @@ export default function HabitGrid({
               key={habit.id}
               className="grid grid-cols-[450px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
             >
-              <div className="px-2 py-2 rounded-xl bg-neutral-800 text-sm text-neutral-200 flex items-center justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="truncate font-medium">
-                    {habit.name} <span className="ml-1">{habit.icon}</span>
+              <div
+                draggable
+                onDragStart={() => onHabitDragStart(habit.id)}
+                onDragOver={(event) => onHabitDragOver(event)}
+                onDrop={() => onHabitDrop(habit.id)}
+                onDragEnd={onHabitDragEnd}
+                className={`px-2 py-2 rounded-xl text-sm text-neutral-200 flex items-center justify-between gap-2 transition ${
+                  draggedHabitId === habit.id
+                    ? "bg-neutral-700 opacity-60"
+                    : "bg-neutral-800"
+                }`}
+              >
+                <div className="flex items-start gap-2 min-w-0 flex-1">
+                  <div className="mt-1 text-neutral-500 cursor-grab">
+                    <GripVertical className="h-4 w-4" />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 mt-2">
-                    <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
-                      <Flame className="h-3.5 w-3.5 text-neutral-400" />
-                      Current: {habit.currentStreak ?? 0}d
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium">
+                      {habit.name} <span className="ml-1">{habit.icon}</span>
                     </div>
 
-                    <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
-                      <Trophy className="h-3.5 w-3.5 text-neutral-400" />
-                      Best: {habit.bestStreak ?? 0}d
+                    <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                        <Flame className="h-3.5 w-3.5 text-neutral-400" />
+                        Current: {habit.currentStreak ?? 0}d
+                      </div>
+
+                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                        <Trophy className="h-3.5 w-3.5 text-neutral-400" />
+                        Best: {habit.bestStreak ?? 0}d
+                      </div>
                     </div>
                   </div>
                 </div>
