@@ -71,7 +71,7 @@ function getHighlightCardTheme(progress) {
       borderColor: [187, 247, 208],
       badgeFill: [220, 252, 231],
       badgeText: [22, 101, 52],
-      backgroundColor: [255, 255, 255],
+      backgroundColor: [245, 252, 247],
     };
   }
 
@@ -81,7 +81,7 @@ function getHighlightCardTheme(progress) {
       borderColor: [253, 186, 116],
       badgeFill: [255, 237, 213],
       badgeText: [194, 65, 12],
-      backgroundColor: [255, 255, 255],
+      backgroundColor: [255, 250, 245],
     };
   }
 
@@ -90,7 +90,7 @@ function getHighlightCardTheme(progress) {
     borderColor: [252, 165, 165],
     badgeFill: [254, 226, 226],
     badgeText: [185, 28, 28],
-    backgroundColor: [255, 255, 255],
+    backgroundColor: [255, 247, 247],
   };
 }
 
@@ -135,6 +135,13 @@ function drawCard(
   const safeValue = pdfSafeText(value);
   const safeSubtitle = pdfSafeText(subtitle);
 
+  const isCompact = h <= 18;
+  const titleY = y + 4.8;
+  const valueY = isCompact ? y + 11.2 : y + 13;
+  const subtitleY = y + h - 2.8;
+  const valueFont = isCompact ? 13 : 15;
+  const subtitleFont = isCompact ? 6.8 : 7.5;
+
   doc.setFillColor(...fillColor);
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(0.3);
@@ -143,19 +150,19 @@ function drawCard(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(...titleColor);
-  doc.text(safeTitle, x + 4, y + 5);
+  doc.text(safeTitle, x + 4, titleY);
 
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
+  doc.setFontSize(valueFont);
   doc.setTextColor(...valueColor);
-  doc.text(safeValue, x + 4, y + 13);
+  doc.text(safeValue, x + 4, valueY);
 
   if (safeSubtitle) {
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(subtitleFont);
     doc.setTextColor(100, 116, 139);
     const lines = doc.splitTextToSize(safeSubtitle, w - 8);
-    doc.text(lines.slice(0, 2), x + 4, y + 18);
+    doc.text(lines.slice(0, 1), x + 4, subtitleY);
   }
 }
 
@@ -206,7 +213,7 @@ function drawProgressBar(doc, x, y, w, h, label, value) {
 
 function drawStatusPill(doc, x, y, text, fillColor, textColor) {
   const safeText = pdfSafeText(text);
-  const paddingX = 4;
+  const paddingX = 4.5;
   const pillH = 7;
   const textWidth = doc.getTextWidth(safeText);
   const pillW = textWidth + paddingX * 2;
@@ -234,8 +241,8 @@ function drawHighlightCard(
     subtitle,
     statusLabel,
     borderColor = [229, 231, 235],
-    badgeFill = [34, 197, 94],
-    badgeText = [255, 255, 255],
+    badgeFill = [255, 237, 213],
+    badgeText = [194, 65, 12],
     backgroundColor = [255, 255, 255],
   },
 ) {
@@ -245,35 +252,21 @@ function drawHighlightCard(
   const safeStatusLabel = pdfSafeText(statusLabel);
 
   const padX = 6;
-  const topPad = 5;
 
   doc.setFillColor(...backgroundColor);
   doc.setDrawColor(...borderColor);
-  doc.setLineWidth(0.35);
+  doc.setLineWidth(0.4);
   doc.roundedRect(x, y, w, h, 5, 5, "FD");
 
-  // Title
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(107, 114, 128);
-  doc.text(safeTitle, x + padX, y + topPad + 2);
+  doc.text(safeTitle, x + padX, y + 7);
 
-  // Badge
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7.5);
-  const badgePaddingX = 5;
-  const badgeH = 7;
-  const badgeW = doc.getTextWidth(safeStatusLabel) + badgePaddingX * 2;
-  const badgeX = x + w - badgeW - padX;
-  const badgeY = y + 4.5;
+  const pillW = doc.getTextWidth(safeStatusLabel) + 9;
+  const pillX = x + w - pillW - padX;
+  drawStatusPill(doc, pillX, y + 4.5, safeStatusLabel, badgeFill, badgeText);
 
-  doc.setFillColor(...badgeFill);
-  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 3.5, 3.5, "F");
-
-  doc.setTextColor(...badgeText);
-  doc.text(safeStatusLabel, badgeX + badgePaddingX, badgeY + 4.7);
-
-  // Main value
   let mainFontSize = 16;
   if (safeMainValue.length > 18) mainFontSize = 14;
   if (safeMainValue.length > 28) mainFontSize = 12.5;
@@ -285,16 +278,16 @@ function drawHighlightCard(
   const mainLines = doc
     .splitTextToSize(safeMainValue, w - padX * 2)
     .slice(0, 2);
+
   doc.text(mainLines, x + padX, y + 18);
 
-  // Subtitle fixed near bottom
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100, 116, 139);
 
   const subtitleLines = doc
     .splitTextToSize(safeSubtitle, w - padX * 2)
-    .slice(0, 2);
+    .slice(0, 1);
 
   doc.text(subtitleLines, x + padX, y + h - 5.5);
 }
