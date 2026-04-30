@@ -16,6 +16,39 @@ function pdfSafeHabitName(name) {
   return pdfSafeText(name || "Untitled Habit");
 }
 
+function getProgressTheme(progress) {
+  if (progress >= 80) {
+    return {
+      fill: [236, 253, 245],
+      border: [167, 243, 208],
+      accent: [22, 163, 74],
+      badgeFill: [34, 197, 94],
+      badgeText: [255, 255, 255],
+      label: "Excellent",
+    };
+  }
+
+  if (progress >= 40) {
+    return {
+      fill: [255, 247, 237],
+      border: [254, 215, 170],
+      accent: [234, 88, 12],
+      badgeFill: [249, 115, 22],
+      badgeText: [255, 255, 255],
+      label: "In Progress",
+    };
+  }
+
+  return {
+    fill: [254, 242, 242],
+    border: [252, 165, 165],
+    accent: [220, 38, 38],
+    badgeFill: [239, 68, 68],
+    badgeText: [255, 255, 255],
+    label: "Needs Focus",
+  };
+}
+
 function drawCard(
   doc,
   {
@@ -81,6 +114,7 @@ function drawSectionTitle(doc, title, subtitle, y, pageWidth, margin) {
 function drawProgressBar(doc, x, y, w, h, label, value) {
   const safeLabel = pdfSafeText(label);
   const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
+  const theme = getProgressTheme(safeValue);
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
@@ -91,13 +125,62 @@ function drawProgressBar(doc, x, y, w, h, label, value) {
   doc.setFillColor(243, 244, 246);
   doc.roundedRect(x, y, w, h, 2, 2, "FD");
 
-  doc.setFillColor(17, 24, 39);
+  doc.setFillColor(...theme.accent);
   doc.roundedRect(x, y, (w * safeValue) / 100, h, 2, 2, "F");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(17, 24, 39);
   doc.text(`${safeValue}%`, x + w, y + h - 0.5, { align: "right" });
+}
+
+function drawBadge(doc, x, y, text, fillColor, textColor) {
+  const safeText = pdfSafeText(text);
+  const paddingX = 3.2;
+  const paddingY = 2.3;
+  const textWidth = doc.getTextWidth(safeText);
+  const badgeW = textWidth + paddingX * 2;
+  const badgeH = 6.2;
+
+  doc.setFillColor(...fillColor);
+  doc.roundedRect(x, y, badgeW, badgeH, 3, 3, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...textColor);
+  doc.text(safeText, x + paddingX, y + 4.1);
+
+  return badgeW;
+}
+
+function drawHighlightCard(
+  doc,
+  { x, y, w, h, title, habitName, subtitle, progress },
+) {
+  const theme = getProgressTheme(progress ?? 0);
+
+  doc.setFillColor(...theme.fill);
+  doc.setDrawColor(...theme.border);
+  doc.roundedRect(x, y, w, h, 4, 4, "FD");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(107, 114, 128);
+  doc.text(pdfSafeText(title), x + 4, y + 5);
+
+  drawBadge(doc, x + 4, y + 8, theme.label, theme.badgeFill, theme.badgeText);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(17, 24, 39);
+  const titleLines = doc.splitTextToSize(pdfSafeHabitName(habitName), w - 8);
+  doc.text(titleLines.slice(0, 2), x + 4, y + 18);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  const subtitleLines = doc.splitTextToSize(pdfSafeText(subtitle), w - 8);
+  doc.text(subtitleLines.slice(0, 2), x + 4, y + h - 4);
 }
 
 function getBestHabit(habits) {
@@ -152,7 +235,6 @@ export function exportDashboardPdf(summary) {
   const safeYear = pdfSafeText(summary.year);
   const safeMonthKey = pdfSafeText(summary.monthKey);
 
-  // Header
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(17, 24, 39);
@@ -166,14 +248,11 @@ export function exportDashboardPdf(summary) {
     `Generated: ${pdfSafeText(new Date().toLocaleDateString())}`,
     pageWidth - margin,
     y + 6,
-    {
-      align: "right",
-    },
+    { align: "right" },
   );
 
   y += 12;
 
-  // Top summary cards
   const cardW = (contentWidth - gap * 2) / 3;
   const cardH = 22;
 
@@ -225,7 +304,6 @@ export function exportDashboardPdf(summary) {
 
   y += cardH * 2 + gap + 8;
 
-  // Highlights
   y = drawSectionTitle(
     doc,
     "Monthly Highlights",
@@ -235,47 +313,49 @@ export function exportDashboardPdf(summary) {
     margin,
   );
 
-  const highlightH = 24;
+  const highlightH = 28;
 
-  drawCard(doc, {
+  drawHighlightCard(doc, {
     x: margin,
     y: y + 3,
     w: cardW,
     h: highlightH,
     title: "Best Habit",
-    value: bestHabit ? pdfSafeHabitName(bestHabit.name) : "-",
+    habitName: bestHabit ? bestHabit.name : "-",
     subtitle: bestHabit
       ? `${bestHabit.actual}/${bestHabit.goal} completed - ${bestHabit.progress}%`
       : "No habit data available",
+    progress: bestHabit?.progress ?? 0,
   });
 
-  drawCard(doc, {
+  drawHighlightCard(doc, {
     x: margin + cardW + gap,
     y: y + 3,
     w: cardW,
     h: highlightH,
     title: "Needs Attention",
-    value: weakestHabit ? pdfSafeHabitName(weakestHabit.name) : "-",
+    habitName: weakestHabit ? weakestHabit.name : "-",
     subtitle: weakestHabit
       ? `${weakestHabit.actual}/${weakestHabit.goal} completed - ${weakestHabit.progress}%`
       : "No habit data available",
+    progress: weakestHabit?.progress ?? 0,
   });
 
-  drawCard(doc, {
+  drawHighlightCard(doc, {
     x: margin + (cardW + gap) * 2,
     y: y + 3,
     w: cardW,
     h: highlightH,
     title: "Best Week",
-    value: bestWeek ? pdfSafeText(bestWeek.label) : "-",
+    habitName: bestWeek ? bestWeek.label : "-",
     subtitle: bestWeek
       ? `${bestWeek.value}% average completion`
       : "No weekly data available",
+    progress: bestWeek?.value ?? 0,
   });
 
   y += highlightH + 12;
 
-  // Weekly progress
   y = drawSectionTitle(
     doc,
     "Weekly Progress",
@@ -301,7 +381,6 @@ export function exportDashboardPdf(summary) {
 
   y = weeklyY + 2;
 
-  // Habit table
   y = ensurePageSpace(doc, y, 75, margin);
 
   y = drawSectionTitle(
@@ -344,7 +423,6 @@ export function exportDashboardPdf(summary) {
 
   y = doc.lastAutoTable.finalY + 8;
 
-  // Notes
   y = ensurePageSpace(doc, y, 35, margin);
 
   y = drawSectionTitle(doc, "Monthly Notes", "", y, pageWidth, margin);
@@ -365,7 +443,6 @@ export function exportDashboardPdf(summary) {
   doc.setTextColor(55, 65, 81);
   doc.text(noteLines, margin + 4, y + 10);
 
-  // Footer
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(148, 163, 184);
