@@ -212,37 +212,59 @@ function drawHighlightCard(
   const safeSubtitle = pdfSafeText(subtitle);
   const safeStatusLabel = pdfSafeText(statusLabel);
 
+  const padX = 6;
+  const topPad = 5;
+
   doc.setFillColor(...backgroundColor);
   doc.setDrawColor(...borderColor);
   doc.setLineWidth(0.35);
   doc.roundedRect(x, y, w, h, 5, 5, "FD");
 
+  // Title
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(107, 114, 128);
-  doc.text(safeTitle, x + 5, y + 7);
+  doc.text(safeTitle, x + padX, y + topPad + 2);
 
+  // Badge
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
-  const badgeW = doc.getTextWidth(safeStatusLabel) + 8;
-  const badgeX = x + w - badgeW - 5;
-  drawStatusPill(doc, badgeX, y + 4.5, safeStatusLabel, badgeFill, badgeText);
+  const badgePaddingX = 5;
+  const badgeH = 7;
+  const badgeW = doc.getTextWidth(safeStatusLabel) + badgePaddingX * 2;
+  const badgeX = x + w - badgeW - padX;
+  const badgeY = y + 4.5;
 
-  let mainFontSize = 15;
-  if (safeMainValue.length > 18) mainFontSize = 13;
-  if (safeMainValue.length > 26) mainFontSize = 11.5;
+  doc.setFillColor(...badgeFill);
+  doc.roundedRect(badgeX, badgeY, badgeW, badgeH, 3.5, 3.5, "F");
+
+  doc.setTextColor(...badgeText);
+  doc.text(safeStatusLabel, badgeX + badgePaddingX, badgeY + 4.7);
+
+  // Main value
+  let mainFontSize = 16;
+  if (safeMainValue.length > 18) mainFontSize = 14;
+  if (safeMainValue.length > 28) mainFontSize = 12.5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(mainFontSize);
   doc.setTextColor(17, 24, 39);
-  const mainLines = doc.splitTextToSize(safeMainValue, w - 10);
-  doc.text(mainLines.slice(0, 2), x + 5, y + 18);
 
+  const mainLines = doc
+    .splitTextToSize(safeMainValue, w - padX * 2)
+    .slice(0, 2);
+  doc.text(mainLines, x + padX, y + 18);
+
+  // Subtitle fixed near bottom
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(100, 116, 139);
-  const subtitleLines = doc.splitTextToSize(safeSubtitle, w - 10);
-  doc.text(subtitleLines.slice(0, 2), x + 5, y + h - 5);
+
+  const subtitleLines = doc
+    .splitTextToSize(safeSubtitle, w - padX * 2)
+    .slice(0, 2);
+
+  doc.text(subtitleLines, x + padX, y + h - 5.5);
 }
 
 function drawSparklineCard(doc, { x, y, w, h, title, data }) {
@@ -566,7 +588,7 @@ export function exportDashboardPdf(summary) {
     margin,
   );
 
-  const highlightH = 26;
+  const highlightH = 30;
 
   const bestHabitTheme = getProgressTheme(bestHabit?.progress ?? 0);
   const weakestHabitTheme = getProgressTheme(weakestHabit?.progress ?? 0);
@@ -586,7 +608,7 @@ export function exportDashboardPdf(summary) {
     borderColor: bestHabitTheme.border,
     badgeFill: bestHabitTheme.badgeFill,
     badgeText: bestHabitTheme.badgeText,
-    backgroundColor: [255, 255, 255],
+    backgroundColor: bestHabitTheme.fill,
   });
 
   drawHighlightCard(doc, {
@@ -603,7 +625,7 @@ export function exportDashboardPdf(summary) {
     borderColor: weakestHabitTheme.border,
     badgeFill: weakestHabitTheme.badgeFill,
     badgeText: weakestHabitTheme.badgeText,
-    backgroundColor: [255, 255, 255],
+    backgroundColor: weakestHabitTheme.fill,
   });
 
   drawHighlightCard(doc, {
@@ -620,7 +642,7 @@ export function exportDashboardPdf(summary) {
     borderColor: bestWeekTheme.border,
     badgeFill: bestWeekTheme.badgeFill,
     badgeText: bestWeekTheme.badgeText,
-    backgroundColor: [255, 255, 255],
+    backgroundColor: bestWeekTheme.fill,
   });
 
   y += highlightH + 10;
