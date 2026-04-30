@@ -1,8 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { exportDashboardPdf } from "./lib/pdfReport";
 import CopyMonthModal from "./components/CopyMonthModal";
 import ConfirmActionModal from "./components/ConfirmActionModal";
 import DeleteAccountCard from "./components/DeleteAccountCard";
@@ -1157,6 +1156,10 @@ export default function App() {
     showToast("CSV report exported successfully.", "success");
   };
 
+  const exportMonthPDF = () => {
+    exportDashboardPdf(monthlySummary);
+  };
+
   const exportFullBackup = () => {
     downloadBlob(
       `habit-tracker-${monthKey}-backup.json`,
@@ -1194,109 +1197,7 @@ export default function App() {
   };
 
   const exportPDFReport = () => {
-    const doc = new jsPDF();
-
-    const monthName = MONTHS[selectedMonthIndex];
-    const moodAverage = average(safeMonthData.mood).toFixed(1);
-    const motivationAverage = average(safeMonthData.motivation).toFixed(1);
-
-    doc.setFontSize(18);
-    doc.text("Habit Tracker Monthly Report", 14, 18);
-
-    doc.setFontSize(11);
-    doc.text(`${monthName} ${selectedYear}`, 14, 26);
-
-    doc.setFontSize(13);
-    doc.text("Summary", 14, 38);
-
-    doc.setFontSize(10);
-    doc.text(`Completion Rate: ${completionPercent}%`, 14, 46);
-    doc.text(`Total Goal: ${totalGoal}`, 14, 52);
-    doc.text(`Total Completed: ${totalCompleted}`, 14, 58);
-    doc.text(`Total Left: ${totalLeft}`, 14, 64);
-    doc.text(`Mood Average: ${moodAverage}`, 90, 46);
-    doc.text(`Motivation Average: ${motivationAverage}`, 90, 52);
-
-    doc.setFontSize(13);
-    doc.text("Highlights", 14, 76);
-
-    doc.setFontSize(10);
-    doc.text(
-      `Best Habit: ${
-        monthlyInsights.bestHabit
-          ? `${monthlyInsights.bestHabit.name} (${monthlyInsights.bestHabit.progress}%)`
-          : "No data"
-      }`,
-      14,
-      84,
-    );
-
-    doc.text(
-      `Needs Attention: ${
-        monthlyInsights.needsAttentionHabit
-          ? `${monthlyInsights.needsAttentionHabit.name} (${monthlyInsights.needsAttentionHabit.progress}%)`
-          : "No data"
-      }`,
-      14,
-      90,
-    );
-
-    doc.text(
-      `Streak Leader: ${
-        monthlyInsights.strongestCurrentStreakHabit
-          ? `${monthlyInsights.strongestCurrentStreakHabit.name} (${monthlyInsights.strongestCurrentStreakHabit.currentStreak} days)`
-          : "No data"
-      }`,
-      14,
-      96,
-    );
-
-    autoTable(doc, {
-      startY: 106,
-      head: [
-        [
-          "Habit",
-          "Goal",
-          "Completed",
-          "Left",
-          "Progress %",
-          "Current Streak",
-          "Best Streak",
-        ],
-      ],
-      body: analysisRows.map((row) => [
-        row.name,
-        row.goal,
-        row.actual,
-        row.left,
-        `${row.progress}%`,
-        row.currentStreak ?? 0,
-        row.bestStreak ?? 0,
-      ]),
-      styles: {
-        fontSize: 9,
-        cellPadding: 3,
-      },
-      headStyles: {
-        fillColor: [40, 40, 40],
-      },
-    });
-
-    const finalY = doc.lastAutoTable?.finalY || 120;
-
-    doc.setFontSize(13);
-    doc.text("Monthly Notes", 14, finalY + 14);
-
-    doc.setFontSize(10);
-    const notesText = safeMonthData.notes?.trim()
-      ? safeMonthData.notes
-      : "No notes for this month.";
-
-    const splitNotes = doc.splitTextToSize(notesText, 180);
-    doc.text(splitNotes, 14, finalY + 22);
-
-    doc.save(`habit-tracker-${monthKey}-report.pdf`);
-
+    exportDashboardPdf(monthlySummary);
     showToast("PDF report exported successfully.", "success");
   };
 
