@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import MonthComparisonCard from "./components/MonthComparisonCard";
 import MonthlyReviewCard from "./components/MonthlyReviewCard";
 import { exportDashboardPdf } from "./lib/pdfReport";
 import CopyMonthModal from "./components/CopyMonthModal";
@@ -100,6 +101,22 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
+function getPreviousMonthMeta(selectedYear, selectedMonthIndex) {
+  const year = Number(selectedYear);
+
+  if (selectedMonthIndex === 0) {
+    return {
+      year: year - 1,
+      monthIndex: 11,
+    };
+  }
+
+  return {
+    year,
+    monthIndex: selectedMonthIndex - 1,
+  };
+}
+
 function getNextMonthMeta(selectedYear, selectedMonthIndex) {
   const year = Number(selectedYear);
 
@@ -131,6 +148,11 @@ function buildCopiedMonthData(monthData, nextYear, nextMonthIndex) {
     mood: Array.from({ length: nextDays }, () => 5),
     motivation: Array.from({ length: nextDays }, () => 5),
     notes: "",
+    review: {
+      wins: "",
+      blockers: "",
+      nextFocus: "",
+    },
   };
 }
 
@@ -361,6 +383,8 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [previousMonthData, setPreviousMonthData] = useState(null);
+  const [isPreviousMonthLoading, setIsPreviousMonthLoading] = useState(false);
   const [isCopyMonthModalOpen, setIsCopyMonthModalOpen] = useState(false);
   const [copyTargetYear, setCopyTargetYear] = useState(
     String(currentDate.getFullYear()),
@@ -385,6 +409,12 @@ export default function App() {
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
+
+  const previousMonthMeta = useMemo(() => {
+    return getPreviousMonthMeta(selectedYear, selectedMonthIndex);
+  }, [selectedYear, selectedMonthIndex]);
+
+  const previousMonthLabel = `${MONTHS[previousMonthMeta.monthIndex]} ${previousMonthMeta.year}`;
 
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
@@ -567,6 +597,46 @@ export default function App() {
       cancelled = true;
     };
   }, [authChecked, currentUser, selectedYear, selectedMonthIndex, monthKey]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPreviousMonth = async () => {
+      if (!currentUser) return;
+
+      setIsPreviousMonthLoading(true);
+
+      try {
+        const response = await getMonthData(
+          previousMonthMeta.year,
+          previousMonthMeta.monthIndex + 1,
+        );
+
+        if (cancelled) return;
+
+        setPreviousMonthData(
+          ensureMonthShape(
+            response?.data,
+            previousMonthMeta.year,
+            previousMonthMeta.monthIndex,
+          ),
+        );
+      } catch (error) {
+        if (cancelled) return;
+        setPreviousMonthData(null);
+      } finally {
+        if (!cancelled) {
+          setIsPreviousMonthLoading(false);
+        }
+      }
+    };
+
+    loadPreviousMonth();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, previousMonthMeta]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -1103,6 +1173,45 @@ export default function App() {
     }));
   }, [safeMonthData, daysInMonth]);
 
+  const previousMonthSummary = useMemo(() => {
+    if (!previousMonthData) return null;
+
+    const totalGoal = previousMonthData.habits.reduce(
+      (sum, habit) => sum + (habit.checks?.length || 0),
+      0,
+    );
+
+    const totalCompleted = previousMonthData.habits.reduce(
+      (sum, habit) => sum + habit.checks.filter(Boolean).length,
+      0,
+    );
+
+    const totalLeft = totalGoal - totalCompleted;
+
+    return {
+      year: previousMonthMeta.year,
+      month: MONTHS[previousMonthMeta.monthIndex],
+      totalGoal,
+      totalCompleted,
+      totalLeft,
+      completionPercent: totalGoal
+        ? Math.round((totalCompleted / totalGoal) * 100)
+        : 0,
+      moodAverage: (
+        previousMonthData.mood.reduce(
+          (sum, value) => sum + Number(value || 0),
+          0,
+        ) / previousMonthData.mood.length
+      ).toFixed(1),
+      motivationAverage: (
+        previousMonthData.motivation.reduce(
+          (sum, value) => sum + Number(value || 0),
+          0,
+        ) / previousMonthData.motivation.length
+      ).toFixed(1),
+    };
+  }, [previousMonthData, previousMonthMeta]);
+
   const monthlySummary = {
     year: selectedYear,
     month: MONTHS[selectedMonthIndex],
@@ -1175,10 +1284,6 @@ export default function App() {
     );
 
     showToast("CSV report exported successfully.", "success");
-  };
-
-  const exportMonthPDF = () => {
-    exportDashboardPdf(monthlySummary);
   };
 
   const exportFullBackup = () => {
@@ -1567,6 +1672,13 @@ export default function App() {
               strongestCurrentStreakHabit={
                 monthlyInsights.strongestCurrentStreakHabit
               }
+            />
+
+            <MonthComparisonCard
+              currentSummary={monthlySummary}
+              previousSummary={previousMonthSummary}
+              previousLabel={previousMonthLabel}
+              isLoading={isPreviousMonthLoading}
             />
 
             <MonthlyReviewCard
