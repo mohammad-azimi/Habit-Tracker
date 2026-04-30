@@ -15,6 +15,7 @@ export default function DashboardHeader({
   onExportBackup,
   onImportBackup,
   onExportPrintableHTML,
+  onExportPDF,
   onCopyToNextMonth,
   onOpenCopyToMonth,
 }) {
@@ -66,6 +67,14 @@ export default function DashboardHeader({
         >
           <Printer className="h-4 w-4" />
           Printable HTML
+        </button>
+
+        <button
+          onClick={onExportPDF}
+          className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium flex items-center gap-2 shadow-lg"
+        >
+          <Download className="h-4 w-4" />
+          Export PDF
         </button>
 
         <button
