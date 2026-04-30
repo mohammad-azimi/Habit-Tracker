@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import MonthlyReviewCard from "./components/MonthlyReviewCard";
 import { exportDashboardPdf } from "./lib/pdfReport";
 import CopyMonthModal from "./components/CopyMonthModal";
 import ConfirmActionModal from "./components/ConfirmActionModal";
@@ -61,6 +62,14 @@ function buildDefaultMonthData(year, monthIndex) {
   };
 }
 
+function ensureReviewShape(review = {}) {
+  return {
+    wins: typeof review?.wins === "string" ? review.wins : "",
+    blockers: typeof review?.blockers === "string" ? review.blockers : "",
+    nextFocus: typeof review?.nextFocus === "string" ? review.nextFocus : "",
+  };
+}
+
 function ensureMonthShape(monthData, year, monthIndex) {
   const days = getDaysInMonth(year, monthIndex);
   const safe = monthData || buildDefaultMonthData(year, monthIndex);
@@ -82,6 +91,7 @@ function ensureMonthShape(monthData, year, monthIndex) {
       Number(safe.motivation?.[day] ?? 5),
     ),
     notes: safe.notes || "",
+    review: ensureReviewShape(safe.review),
   };
 }
 
@@ -600,6 +610,16 @@ export default function App() {
     );
   };
 
+  const updateMonthlyReviewField = (field, value) => {
+    updateMonth((month) => ({
+      ...month,
+      review: {
+        ...ensureReviewShape(month.review),
+        [field]: value,
+      },
+    }));
+  };
+
   const toggleHabitDay = (habitId, dayIndex) => {
     updateMonth((month) => ({
       ...month,
@@ -1099,6 +1119,7 @@ export default function App() {
     weeklyProgress,
     mentalStateData,
     notes: safeMonthData.notes,
+    review: safeMonthData.review,
   };
 
   const monthlyInsights = useMemo(() => {
@@ -1546,6 +1567,11 @@ export default function App() {
               strongestCurrentStreakHabit={
                 monthlyInsights.strongestCurrentStreakHabit
               }
+            />
+
+            <MonthlyReviewCard
+              review={safeMonthData.review}
+              onChangeField={updateMonthlyReviewField}
             />
 
             <AnalysisPanel
