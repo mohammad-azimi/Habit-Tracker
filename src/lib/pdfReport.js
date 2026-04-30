@@ -503,6 +503,28 @@ function ensurePageSpace(doc, currentY, neededHeight, margin = 12) {
   return currentY;
 }
 
+function drawReviewBox(doc, { x, y, w, h, title, text }) {
+  const safeTitle = pdfSafeText(title);
+  const safeTextValue = pdfSafeText(text || "No entry");
+
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(x, y, w, h, 4, 4, "FD");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8.5);
+  doc.setTextColor(17, 24, 39);
+  doc.text(safeTitle, x + 4, y + 6);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+
+  const lines = doc.splitTextToSize(safeTextValue, w - 8);
+  doc.text(lines.slice(0, 5), x + 4, y + 12);
+}
+
 export function exportDashboardPdf(summary) {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -777,6 +799,49 @@ export function exportDashboardPdf(summary) {
     pageWidth,
     margin,
   );
+
+  y = ensurePageSpace(doc, y, 52, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Monthly Review",
+    "Structured reflection for the month",
+    y,
+    pageWidth,
+    margin,
+  );
+
+  const reviewCardW = (contentWidth - gap * 2) / 3;
+  const reviewCardH = 34;
+
+  drawReviewBox(doc, {
+    x: margin,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Wins",
+    text: summary.review?.wins || "",
+  });
+
+  drawReviewBox(doc, {
+    x: margin + reviewCardW + gap,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Blockers",
+    text: summary.review?.blockers || "",
+  });
+
+  drawReviewBox(doc, {
+    x: margin + (reviewCardW + gap) * 2,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Next Focus",
+    text: summary.review?.nextFocus || "",
+  });
+
+  y += reviewCardH + 10;
 
   drawSparklineCard(doc, {
     x: margin,
