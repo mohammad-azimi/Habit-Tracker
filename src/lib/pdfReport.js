@@ -16,6 +16,13 @@ function pdfSafeHabitName(name) {
   return pdfSafeText(name || "Untitled Habit");
 }
 
+function averageNumber(values) {
+  if (!values?.length) return 0;
+  return (
+    values.reduce((sum, value) => sum + Number(value || 0), 0) / values.length
+  );
+}
+
 function getProgressTheme(progress) {
   if (progress >= 80) {
     return {
@@ -137,10 +144,9 @@ function drawProgressBar(doc, x, y, w, h, label, value) {
 function drawBadge(doc, x, y, text, fillColor, textColor) {
   const safeText = pdfSafeText(text);
   const paddingX = 3.2;
-  const paddingY = 2.3;
+  const badgeH = 6.2;
   const textWidth = doc.getTextWidth(safeText);
   const badgeW = textWidth + paddingX * 2;
-  const badgeH = 6.2;
 
   doc.setFillColor(...fillColor);
   doc.roundedRect(x, y, badgeW, badgeH, 3, 3, "F");
@@ -183,6 +189,74 @@ function drawHighlightCard(
   doc.text(subtitleLines.slice(0, 2), x + 4, y + h - 4);
 }
 
+function drawSparklineCard(doc, { x, y, w, h, title, data }) {
+  const safeTitle = pdfSafeText(title);
+
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(229, 231, 235);
+  doc.roundedRect(x, y, w, h, 4, 4, "FD");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(107, 114, 128);
+  doc.text(safeTitle, x + 4, y + 5);
+
+  if (!data?.length) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text("No daily trend data available", x + 4, y + 15);
+    return;
+  }
+
+  const chartX = x + 4;
+  const chartY = y + 10;
+  const chartW = w - 8;
+  const chartH = h - 18;
+
+  // Grid
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.2);
+  for (let i = 0; i < 4; i += 1) {
+    const gridY = chartY + (chartH / 3) * i;
+    doc.line(chartX, gridY, chartX + chartW, gridY);
+  }
+
+  const values = data.map((item) =>
+    Math.max(0, Math.min(100, Number(item.value) || 0)),
+  );
+
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+  const range = Math.max(maxValue - minValue, 1);
+
+  const stepX = values.length > 1 ? chartW / (values.length - 1) : 0;
+
+  const points = values.map((value, index) => {
+    const px = chartX + stepX * index;
+    const py = chartY + chartH - ((value - minValue) / range) * chartH;
+    return { x: px, y: py, value };
+  });
+
+  doc.setDrawColor(17, 24, 39);
+  doc.setLineWidth(0.8);
+  for (let i = 0; i < points.length - 1; i += 1) {
+    doc.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+  }
+
+  const lastPoint = points[points.length - 1];
+  if (lastPoint) {
+    doc.setFillColor(17, 24, 39);
+    doc.circle(lastPoint.x, lastPoint.y, 1.2, "F");
+  }
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(148, 163, 184);
+  doc.text("Start", chartX, y + h - 4);
+  doc.text("End", chartX + chartW, y + h - 4, { align: "right" });
+}
+
 function getBestHabit(habits) {
   if (!habits?.length) return null;
   return [...habits].sort((a, b) => b.progress - a.progress)[0];
@@ -196,6 +270,34 @@ function getWeakestHabit(habits) {
 function getBestWeek(weeklyProgress) {
   if (!weeklyProgress?.length) return null;
   return [...weeklyProgress].sort((a, b) => b.value - a.value)[0];
+}
+
+function getTrendStats(dailyProgress) {
+  if (!dailyProgress?.length) {
+    return {
+      startAvg: 0,
+      endAvg: 0,
+      delta: 0,
+      bestDay: null,
+    };
+  }
+
+  const startSlice = dailyProgress.slice(0, Math.min(7, dailyProgress.length));
+  const endSlice = dailyProgress.slice(Math.max(0, dailyProgress.length - 7));
+  const bestDay =
+    [...dailyProgress].sort((a, b) => b.value - a.value)[0] || null;
+
+  const startAvg = Math.round(
+    averageNumber(startSlice.map((item) => item.value)),
+  );
+  const endAvg = Math.round(averageNumber(endSlice.map((item) => item.value)));
+
+  return {
+    startAvg,
+    endAvg,
+    delta: endAvg - startAvg,
+    bestDay,
+  };
 }
 
 function ensurePageSpace(doc, currentY, neededHeight, margin = 12) {
@@ -226,15 +328,18 @@ export function exportDashboardPdf(summary) {
 
   const habits = summary.habits || [];
   const weeklyProgress = summary.weeklyProgress || [];
+  const dailyProgress = summary.dailyProgress || [];
 
   const bestHabit = getBestHabit(habits);
   const weakestHabit = getWeakestHabit(habits);
   const bestWeek = getBestWeek(weeklyProgress);
+  const trendStats = getTrendStats(dailyProgress);
 
   const safeMonth = pdfSafeText(summary.month);
   const safeYear = pdfSafeText(summary.year);
   const safeMonthKey = pdfSafeText(summary.monthKey);
 
+  // Header
   doc.setFont("helvetica", "bold");
   doc.setFontSize(20);
   doc.setTextColor(17, 24, 39);
@@ -253,6 +358,7 @@ export function exportDashboardPdf(summary) {
 
   y += 12;
 
+  // Summary cards
   const cardW = (contentWidth - gap * 2) / 3;
   const cardH = 22;
 
@@ -304,6 +410,7 @@ export function exportDashboardPdf(summary) {
 
   y += cardH * 2 + gap + 8;
 
+  // Highlights
   y = drawSectionTitle(
     doc,
     "Monthly Highlights",
@@ -356,6 +463,7 @@ export function exportDashboardPdf(summary) {
 
   y += highlightH + 12;
 
+  // Weekly progress
   y = drawSectionTitle(
     doc,
     "Weekly Progress",
@@ -381,6 +489,65 @@ export function exportDashboardPdf(summary) {
 
   y = weeklyY + 2;
 
+  // Trend section
+  y = ensurePageSpace(doc, y, 72, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Monthly Trend",
+    "Daily completion flow across the month",
+    y,
+    pageWidth,
+    margin,
+  );
+
+  drawSparklineCard(doc, {
+    x: margin,
+    y: y + 3,
+    w: contentWidth,
+    h: 36,
+    title: "Daily Completion Trend",
+    data: dailyProgress,
+  });
+
+  const miniCardY = y + 43;
+  const miniCardH = 18;
+
+  drawCard(doc, {
+    x: margin,
+    y: miniCardY,
+    w: cardW,
+    h: miniCardH,
+    title: "First 7 Days Avg",
+    value: `${trendStats.startAvg}%`,
+    subtitle: "Opening momentum",
+  });
+
+  drawCard(doc, {
+    x: margin + cardW + gap,
+    y: miniCardY,
+    w: cardW,
+    h: miniCardH,
+    title: "Last 7 Days Avg",
+    value: `${trendStats.endAvg}%`,
+    subtitle: `Delta ${trendStats.delta >= 0 ? "+" : ""}${trendStats.delta}%`,
+  });
+
+  drawCard(doc, {
+    x: margin + (cardW + gap) * 2,
+    y: miniCardY,
+    w: cardW,
+    h: miniCardH,
+    title: "Best Day",
+    value: trendStats.bestDay ? `Day ${trendStats.bestDay.day}` : "-",
+    subtitle: trendStats.bestDay
+      ? `${trendStats.bestDay.value}% completion`
+      : "No data available",
+  });
+
+  y = miniCardY + miniCardH + 10;
+
+  // Habit table
   y = ensurePageSpace(doc, y, 75, margin);
 
   y = drawSectionTitle(
@@ -423,6 +590,7 @@ export function exportDashboardPdf(summary) {
 
   y = doc.lastAutoTable.finalY + 8;
 
+  // Notes
   y = ensurePageSpace(doc, y, 35, margin);
 
   y = drawSectionTitle(doc, "Monthly Notes", "", y, pageWidth, margin);
@@ -443,15 +611,22 @@ export function exportDashboardPdf(summary) {
   doc.setTextColor(55, 65, 81);
   doc.text(noteLines, margin + 4, y + 10);
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.setTextColor(148, 163, 184);
-  doc.text(
-    "Habit Tracker - Dashboard-style monthly report",
-    margin,
-    pageHeight - 8,
-  );
-  doc.text("Page 1", pageWidth - margin, pageHeight - 8, { align: "right" });
+  // Footer for all pages
+  const pageCount = doc.getNumberOfPages();
+  for (let page = 1; page <= pageCount; page += 1) {
+    doc.setPage(page);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      "Habit Tracker - Dashboard-style monthly report",
+      margin,
+      pageHeight - 8,
+    );
+    doc.text(`Page ${page}`, pageWidth - margin, pageHeight - 8, {
+      align: "right",
+    });
+  }
 
   doc.save(`habit-tracker-${safeMonthKey}.pdf`);
 }
