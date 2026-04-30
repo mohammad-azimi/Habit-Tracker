@@ -62,6 +62,38 @@ function getProgressTheme(progress) {
   };
 }
 
+function getHighlightCardTheme(progress) {
+  const safeProgress = Number(progress) || 0;
+
+  if (safeProgress >= 80) {
+    return {
+      statusLabel: "Excellent",
+      borderColor: [187, 247, 208],
+      badgeFill: [220, 252, 231],
+      badgeText: [22, 101, 52],
+      backgroundColor: [255, 255, 255],
+    };
+  }
+
+  if (safeProgress >= 40) {
+    return {
+      statusLabel: "In Progress",
+      borderColor: [253, 186, 116],
+      badgeFill: [255, 237, 213],
+      badgeText: [194, 65, 12],
+      backgroundColor: [255, 255, 255],
+    };
+  }
+
+  return {
+    statusLabel: "Needs Focus",
+    borderColor: [252, 165, 165],
+    badgeFill: [254, 226, 226],
+    badgeText: [185, 28, 28],
+    backgroundColor: [255, 255, 255],
+  };
+}
+
 function getScaleStatus(value, targetLow, targetHigh) {
   if (value < targetLow) {
     return {
@@ -590,9 +622,9 @@ export function exportDashboardPdf(summary) {
 
   const highlightH = 30;
 
-  const bestHabitTheme = getProgressTheme(bestHabit?.progress ?? 0);
-  const weakestHabitTheme = getProgressTheme(weakestHabit?.progress ?? 0);
-  const bestWeekTheme = getProgressTheme(bestWeek?.value ?? 0);
+  const bestHabitTheme = getHighlightCardTheme(bestHabit?.progress ?? 0);
+  const weakestHabitTheme = getHighlightCardTheme(weakestHabit?.progress ?? 0);
+  const bestWeekTheme = getHighlightCardTheme(bestWeek?.value ?? 0);
 
   drawHighlightCard(doc, {
     x: margin,
@@ -602,13 +634,9 @@ export function exportDashboardPdf(summary) {
     title: "Best Habit",
     mainValue: bestHabit ? bestHabit.name : "-",
     subtitle: bestHabit
-      ? `${bestHabit.actual}/${bestHabit.goal} completed - ${bestHabit.progress}%`
+      ? `${bestHabit.actual}/${bestHabit.goal} completed • ${bestHabit.progress}%`
       : "No habit data available",
-    statusLabel: bestHabitTheme.label,
-    borderColor: bestHabitTheme.border,
-    badgeFill: bestHabitTheme.badgeFill,
-    badgeText: bestHabitTheme.badgeText,
-    backgroundColor: bestHabitTheme.fill,
+    ...bestHabitTheme,
   });
 
   drawHighlightCard(doc, {
@@ -619,13 +647,9 @@ export function exportDashboardPdf(summary) {
     title: "Needs Attention",
     mainValue: weakestHabit ? weakestHabit.name : "-",
     subtitle: weakestHabit
-      ? `${weakestHabit.actual}/${weakestHabit.goal} completed - ${weakestHabit.progress}%`
+      ? `${weakestHabit.actual}/${weakestHabit.goal} completed • ${weakestHabit.progress}%`
       : "No habit data available",
-    statusLabel: weakestHabitTheme.label,
-    borderColor: weakestHabitTheme.border,
-    badgeFill: weakestHabitTheme.badgeFill,
-    badgeText: weakestHabitTheme.badgeText,
-    backgroundColor: weakestHabitTheme.fill,
+    ...weakestHabitTheme,
   });
 
   drawHighlightCard(doc, {
@@ -638,11 +662,7 @@ export function exportDashboardPdf(summary) {
     subtitle: bestWeek
       ? `${bestWeek.value}% average completion`
       : "No weekly data available",
-    statusLabel: bestWeekTheme.label,
-    borderColor: bestWeekTheme.border,
-    badgeFill: bestWeekTheme.badgeFill,
-    badgeText: bestWeekTheme.badgeText,
-    backgroundColor: bestWeekTheme.fill,
+    ...bestWeekTheme,
   });
 
   y += highlightH + 10;
