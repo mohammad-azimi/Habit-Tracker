@@ -292,6 +292,108 @@ function drawHighlightCard(
   doc.text(subtitleLines, x + padX, y + h - 5.5);
 }
 
+function formatDeltaText(delta, digits = 0, suffix = "") {
+  if (delta === null || Number.isNaN(delta)) return "No data";
+
+  const rounded = Number(delta.toFixed(digits));
+
+  if (rounded === 0) {
+    return `0${suffix}`;
+  }
+
+  return `${rounded > 0 ? "+" : ""}${rounded}${suffix}`;
+}
+
+function getDeltaTheme(delta) {
+  if (delta === null || Number.isNaN(delta) || delta === 0) {
+    return {
+      fill: [250, 250, 250],
+      border: [229, 231, 235],
+      valueColor: [17, 24, 39],
+      deltaFill: [245, 245, 245],
+      deltaText: [82, 82, 91],
+    };
+  }
+
+  if (delta > 0) {
+    return {
+      fill: [245, 252, 247],
+      border: [187, 247, 208],
+      valueColor: [22, 101, 52],
+      deltaFill: [220, 252, 231],
+      deltaText: [22, 101, 52],
+    };
+  }
+
+  return {
+    fill: [255, 247, 247],
+    border: [252, 165, 165],
+    valueColor: [185, 28, 28],
+    deltaFill: [254, 226, 226],
+    deltaText: [185, 28, 28],
+  };
+}
+
+function drawComparisonMetricCard(
+  doc,
+  {
+    x,
+    y,
+    w,
+    h,
+    title,
+    currentValue,
+    previousValue,
+    delta,
+    suffix = "",
+    digits = 0,
+  },
+) {
+  const theme = getDeltaTheme(delta);
+
+  const safeTitle = pdfSafeText(title);
+  const safeCurrentValue = pdfSafeText(
+    `${currentValue}${currentValue !== null && currentValue !== undefined ? suffix : ""}`,
+  );
+  const safePreviousValue =
+    previousValue === null || previousValue === undefined
+      ? "No previous data"
+      : pdfSafeText(`Previous: ${previousValue}${suffix}`);
+  const safeDeltaText = pdfSafeText(formatDeltaText(delta, digits, suffix));
+
+  doc.setFillColor(...theme.fill);
+  doc.setDrawColor(...theme.border);
+  doc.setLineWidth(0.35);
+  doc.roundedRect(x, y, w, h, 4, 4, "FD");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(107, 114, 128);
+  doc.text(safeTitle, x + 4, y + 6);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(17, 24, 39);
+  doc.text(safeCurrentValue, x + 4, y + 15);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(safePreviousValue, x + 4, y + h - 4.5);
+
+  const pillW = doc.getTextWidth(safeDeltaText) + 8;
+  const pillX = x + w - pillW - 4;
+  const pillY = y + 4;
+
+  doc.setFillColor(...theme.deltaFill);
+  doc.roundedRect(pillX, pillY, pillW, 7, 3.5, 3.5, "F");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...theme.deltaText);
+  doc.text(safeDeltaText, pillX + 4, pillY + 4.8);
+}
+
 function drawSparklineCard(doc, { x, y, w, h, title, data }) {
   const safeTitle = pdfSafeText(title);
 
@@ -548,6 +650,10 @@ export function exportDashboardPdf(summary) {
   const weakestHabit = getWeakestHabit(habits);
   const bestWeek = getBestWeek(weeklyProgress);
   const trendStats = getTrendStats(dailyProgress);
+  const previousMonthSummary = summary.previousMonthSummary || null;
+  const previousMonthLabel = pdfSafeText(
+    summary.previousMonthLabel || "previous month",
+  );
 
   const safeMonth = pdfSafeText(summary.month);
   const safeYear = pdfSafeText(summary.year);
@@ -681,6 +787,89 @@ export function exportDashboardPdf(summary) {
   });
 
   y += highlightH + 10;
+
+  y = ensurePageSpace(doc, y, 48, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Month Comparison",
+    `Compared with ${previousMonthLabel}`,
+    y,
+    pageWidth,
+    margin,
+  );
+
+  const comparisonCardW = (contentWidth - gap) / 2;
+  const comparisonCardH = 20;
+
+  if (!previousMonthSummary) {
+    doc.setFillColor(250, 250, 250);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(margin, y + 3, contentWidth, 16, 4, 4, "FD");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text(
+      `No saved data found for ${previousMonthLabel}.`,
+      margin + 4,
+      y + 13,
+    );
+
+    y += 23;
+  } else {
+    drawComparisonMetricCard(doc, {
+      x: margin,
+      y: y + 3,
+      w: comparisonCardW,
+      h: comparisonCardH,
+      title: "Completion Rate",
+      currentValue: summary.completionPercent,
+      previousValue: previousMonthSummary.completionPercent,
+      delta: summary.completionPercent - previousMonthSummary.completionPercent,
+      suffix: "%",
+    });
+
+    drawComparisonMetricCard(doc, {
+      x: margin + comparisonCardW + gap,
+      y: y + 3,
+      w: comparisonCardW,
+      h: comparisonCardH,
+      title: "Completed",
+      currentValue: summary.totalCompleted,
+      previousValue: previousMonthSummary.totalCompleted,
+      delta: summary.totalCompleted - previousMonthSummary.totalCompleted,
+    });
+
+    drawComparisonMetricCard(doc, {
+      x: margin,
+      y: y + 3 + comparisonCardH + gap,
+      w: comparisonCardW,
+      h: comparisonCardH,
+      title: "Mood Average",
+      currentValue: summary.moodAverage,
+      previousValue: previousMonthSummary.moodAverage,
+      delta:
+        Number(summary.moodAverage) - Number(previousMonthSummary.moodAverage),
+      digits: 1,
+    });
+
+    drawComparisonMetricCard(doc, {
+      x: margin + comparisonCardW + gap,
+      y: y + 3 + comparisonCardH + gap,
+      w: comparisonCardW,
+      h: comparisonCardH,
+      title: "Motivation Avg",
+      currentValue: summary.motivationAverage,
+      previousValue: previousMonthSummary.motivationAverage,
+      delta:
+        Number(summary.motivationAverage) -
+        Number(previousMonthSummary.motivationAverage),
+      digits: 1,
+    });
+
+    y += comparisonCardH * 2 + gap + 10;
+  }
 
   y = ensurePageSpace(doc, y, 70, margin);
 
