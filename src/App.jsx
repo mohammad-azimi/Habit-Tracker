@@ -60,6 +60,11 @@ function buildDefaultMonthData(year, monthIndex) {
     mood: Array.from({ length: days }, () => 5),
     motivation: Array.from({ length: days }, () => 5),
     notes: "",
+    review: {
+      wins: "",
+      blockers: "",
+      nextFocus: "",
+    },
   };
 }
 
@@ -1229,6 +1234,8 @@ export default function App() {
     mentalStateData,
     notes: safeMonthData.notes,
     review: safeMonthData.review,
+    previousMonthSummary,
+    previousMonthLabel,
   };
 
   const monthlyInsights = useMemo(() => {
