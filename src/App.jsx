@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import YearlyOverviewCard from "./components/YearlyOverviewCard";
 import MonthComparisonCard from "./components/MonthComparisonCard";
 import MonthlyReviewCard from "./components/MonthlyReviewCard";
 import { exportDashboardPdf } from "./lib/pdfReport";
@@ -434,6 +435,8 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
+  const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
+  const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
   const [previousMonthData, setPreviousMonthData] = useState(null);
   const [isPreviousMonthLoading, setIsPreviousMonthLoading] = useState(false);
   const [isCopyMonthModalOpen, setIsCopyMonthModalOpen] = useState(false);
@@ -675,6 +678,99 @@ export default function App() {
       cancelled = true;
     };
   }, [currentUser, previousMonthMeta]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadYearlyOverview = async () => {
+      if (!currentUser) return;
+
+      setIsYearlyOverviewLoading(true);
+
+      try {
+        const results = await Promise.all(
+          MONTHS.map(async (monthName, monthIndex) => {
+            try {
+              const response = await getMonthData(
+                Number(selectedYear),
+                monthIndex + 1,
+              );
+
+              const safeData = ensureMonthShape(
+                response?.data,
+                selectedYear,
+                monthIndex,
+              );
+
+              if (isEffectivelyEmptyMonth(safeData)) {
+                return {
+                  month: monthName,
+                  shortMonth: monthName.slice(0, 3),
+                  completionPercent: 0,
+                  moodAverage: "0.0",
+                  motivationAverage: "0.0",
+                  isEmpty: true,
+                };
+              }
+
+              const totalGoal = safeData.habits.reduce(
+                (sum, habit) => sum + habit.checks.length,
+                0,
+              );
+
+              const totalCompleted = safeData.habits.reduce(
+                (sum, habit) => sum + habit.checks.filter(Boolean).length,
+                0,
+              );
+
+              return {
+                month: monthName,
+                shortMonth: monthName.slice(0, 3),
+                completionPercent: totalGoal
+                  ? Math.round((totalCompleted / totalGoal) * 100)
+                  : 0,
+                moodAverage: (
+                  safeData.mood.reduce(
+                    (sum, value) => sum + Number(value || 0),
+                    0,
+                  ) / safeData.mood.length
+                ).toFixed(1),
+                motivationAverage: (
+                  safeData.motivation.reduce(
+                    (sum, value) => sum + Number(value || 0),
+                    0,
+                  ) / safeData.motivation.length
+                ).toFixed(1),
+                isEmpty: false,
+              };
+            } catch (error) {
+              return {
+                month: monthName,
+                shortMonth: monthName.slice(0, 3),
+                completionPercent: 0,
+                moodAverage: "0.0",
+                motivationAverage: "0.0",
+                isEmpty: true,
+              };
+            }
+          }),
+        );
+
+        if (cancelled) return;
+        setYearlyOverviewData(results);
+      } finally {
+        if (!cancelled) {
+          setIsYearlyOverviewLoading(false);
+        }
+      }
+    };
+
+    loadYearlyOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, selectedYear]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -1719,6 +1815,12 @@ export default function App() {
               previousSummary={previousMonthSummary}
               previousLabel={previousMonthLabel}
               isLoading={isPreviousMonthLoading}
+            />
+
+            <YearlyOverviewCard
+              selectedYear={selectedYear}
+              yearlyData={yearlyOverviewData}
+              isLoading={isYearlyOverviewLoading}
             />
 
             <MonthlyReviewCard
