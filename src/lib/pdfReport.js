@@ -394,6 +394,123 @@ function drawComparisonMetricCard(
   doc.text(safeDeltaText, pillX + 4, pillY + 4.8);
 }
 
+function drawYearlyMiniBarChart(doc, { x, y, w, h, data }) {
+  doc.setFillColor(250, 250, 250);
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.3);
+  doc.roundedRect(x, y, w, h, 4, 4, "FD");
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(107, 114, 128);
+  doc.text("Yearly Completion Trend", x + 4, y + 6);
+
+  if (!data?.length) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text("No yearly data available", x + 4, y + 16);
+    return;
+  }
+
+  const chartX = x + 6;
+  const chartY = y + 14;
+  const chartW = w - 12;
+  const chartH = h - 22;
+
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.2);
+  for (let i = 0; i < 4; i += 1) {
+    const gridY = chartY + (chartH / 3) * i;
+    doc.line(chartX, gridY, chartX + chartW, gridY);
+  }
+
+  const visibleData = data.slice(0, 12);
+  const barGap = 2;
+  const barW = Math.max(
+    (chartW - barGap * (visibleData.length - 1)) / visibleData.length,
+    4,
+  );
+
+  visibleData.forEach((item, index) => {
+    const value = Math.max(
+      0,
+      Math.min(100, Number(item.completionPercent) || 0),
+    );
+    const barHeight = (value / 100) * chartH;
+    const barX = chartX + index * (barW + barGap);
+    const barY = chartY + chartH - barHeight;
+
+    doc.setFillColor(
+      item.isEmpty ? 82 : 212,
+      item.isEmpty ? 82 : 212,
+      item.isEmpty ? 82 : 212,
+    );
+    doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text(
+      pdfSafeText(item.shortMonth || "").slice(0, 3),
+      barX + barW / 2,
+      y + h - 4,
+      {
+        align: "center",
+      },
+    );
+  });
+}
+
+function getYearlyOverviewStats(yearlyOverviewData = []) {
+  const activeMonths = yearlyOverviewData.filter((item) => !item.isEmpty);
+
+  if (!activeMonths.length) {
+    return {
+      averageCompletion: 0,
+      averageMood: "0.0",
+      averageMotivation: "0.0",
+      bestMonth: null,
+      worstMonth: null,
+    };
+  }
+
+  const bestMonth = [...activeMonths].sort(
+    (a, b) => b.completionPercent - a.completionPercent,
+  )[0];
+
+  const worstMonth = [...activeMonths].sort(
+    (a, b) => a.completionPercent - b.completionPercent,
+  )[0];
+
+  const averageCompletion = Math.round(
+    activeMonths.reduce(
+      (sum, item) => sum + Number(item.completionPercent || 0),
+      0,
+    ) / activeMonths.length,
+  );
+
+  const averageMood = (
+    activeMonths.reduce((sum, item) => sum + Number(item.moodAverage || 0), 0) /
+    activeMonths.length
+  ).toFixed(1);
+
+  const averageMotivation = (
+    activeMonths.reduce(
+      (sum, item) => sum + Number(item.motivationAverage || 0),
+      0,
+    ) / activeMonths.length
+  ).toFixed(1);
+
+  return {
+    averageCompletion,
+    averageMood,
+    averageMotivation,
+    bestMonth,
+    worstMonth,
+  };
+}
+
 function drawSparklineCard(doc, { x, y, w, h, title, data }) {
   const safeTitle = pdfSafeText(title);
 
@@ -645,11 +762,13 @@ export function exportDashboardPdf(summary) {
   const habits = summary.habits || [];
   const weeklyProgress = summary.weeklyProgress || [];
   const dailyProgress = summary.dailyProgress || [];
+  const yearlyOverviewData = summary.yearlyOverviewData || [];
 
   const bestHabit = getBestHabit(habits);
   const weakestHabit = getWeakestHabit(habits);
   const bestWeek = getBestWeek(weeklyProgress);
   const trendStats = getTrendStats(dailyProgress);
+  const yearlyStats = getYearlyOverviewStats(yearlyOverviewData);
   const previousMonthSummary = summary.previousMonthSummary || null;
   const previousMonthLabel = pdfSafeText(
     summary.previousMonthLabel || "previous month",
@@ -870,6 +989,74 @@ export function exportDashboardPdf(summary) {
 
     y += comparisonCardH * 2 + gap + 10;
   }
+
+  y = ensurePageSpace(doc, y, 78, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Yearly Overview",
+    `12-month summary for ${pdfSafeText(summary.year)}`,
+    y,
+    pageWidth,
+    margin,
+  );
+
+  const yearlyCardW = (contentWidth - gap) / 2;
+  const yearlyCardH = 18;
+
+  drawCard(doc, {
+    x: margin,
+    y: y + 3,
+    w: yearlyCardW,
+    h: yearlyCardH,
+    title: "Average Completion",
+    value: `${yearlyStats.averageCompletion}%`,
+    subtitle: "Across saved months",
+  });
+
+  drawCard(doc, {
+    x: margin + yearlyCardW + gap,
+    y: y + 3,
+    w: yearlyCardW,
+    h: yearlyCardH,
+    title: "Average Mood",
+    value: yearlyStats.averageMood,
+    subtitle: "Year-wide mood average",
+  });
+
+  drawCard(doc, {
+    x: margin,
+    y: y + 3 + yearlyCardH + gap,
+    w: yearlyCardW,
+    h: yearlyCardH,
+    title: "Average Motivation",
+    value: yearlyStats.averageMotivation,
+    subtitle: "Year-wide motivation average",
+  });
+
+  drawCard(doc, {
+    x: margin + yearlyCardW + gap,
+    y: y + 3 + yearlyCardH + gap,
+    w: yearlyCardW,
+    h: yearlyCardH,
+    title: "Best / Worst Month",
+    value: yearlyStats.bestMonth
+      ? `${pdfSafeText(yearlyStats.bestMonth.month)} ${yearlyStats.bestMonth.completionPercent}%`
+      : "-",
+    subtitle: yearlyStats.worstMonth
+      ? `Worst: ${pdfSafeText(yearlyStats.worstMonth.month)} ${yearlyStats.worstMonth.completionPercent}%`
+      : "No yearly data available",
+  });
+
+  drawYearlyMiniBarChart(doc, {
+    x: margin,
+    y: y + 3 + yearlyCardH * 2 + gap + 4,
+    w: contentWidth,
+    h: 34,
+    data: yearlyOverviewData,
+  });
+
+  y += yearlyCardH * 2 + gap + 42;
 
   y = ensurePageSpace(doc, y, 70, margin);
 
