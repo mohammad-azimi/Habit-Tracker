@@ -525,7 +525,6 @@ function drawYearlyMiniBarChart(doc, { x, y, w, h, data, currentMonth }) {
 
     if (item.isEmpty) {
       doc.setFillColor(212, 212, 212);
-      doc.setFillColor(212, 212, 212);
       doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
     } else if (isBest) {
       doc.setFillColor(34, 197, 94);
@@ -1316,49 +1315,6 @@ export function exportDashboardPdf(summary) {
     margin,
   );
 
-  y = ensurePageSpace(doc, y, 52, margin);
-
-  y = drawSectionTitle(
-    doc,
-    "Monthly Review",
-    "Structured reflection for the month",
-    y,
-    pageWidth,
-    margin,
-  );
-
-  const reviewCardW = (contentWidth - gap * 2) / 3;
-  const reviewCardH = 34;
-
-  drawReviewBox(doc, {
-    x: margin,
-    y: y + 3,
-    w: reviewCardW,
-    h: reviewCardH,
-    title: "Wins",
-    text: summary.review?.wins || "",
-  });
-
-  drawReviewBox(doc, {
-    x: margin + reviewCardW + gap,
-    y: y + 3,
-    w: reviewCardW,
-    h: reviewCardH,
-    title: "Blockers",
-    text: summary.review?.blockers || "",
-  });
-
-  drawReviewBox(doc, {
-    x: margin + (reviewCardW + gap) * 2,
-    y: y + 3,
-    w: reviewCardW,
-    h: reviewCardH,
-    title: "Next Focus",
-    text: summary.review?.nextFocus || "",
-  });
-
-  y += reviewCardH + 10;
-
   drawSparklineCard(doc, {
     x: margin,
     y: y + 3,
@@ -1404,6 +1360,49 @@ export function exportDashboardPdf(summary) {
   });
 
   y = miniCardY + miniCardH + 10;
+
+  y = ensurePageSpace(doc, y, 52, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Monthly Review",
+    "Structured reflection for the month",
+    y,
+    pageWidth,
+    margin,
+  );
+
+  const reviewCardW = (contentWidth - gap * 2) / 3;
+  const reviewCardH = 34;
+
+  drawReviewBox(doc, {
+    x: margin,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Wins",
+    text: summary.review?.wins || "",
+  });
+
+  drawReviewBox(doc, {
+    x: margin + reviewCardW + gap,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Blockers",
+    text: summary.review?.blockers || "",
+  });
+
+  drawReviewBox(doc, {
+    x: margin + (reviewCardW + gap) * 2,
+    y: y + 3,
+    w: reviewCardW,
+    h: reviewCardH,
+    title: "Next Focus",
+    text: summary.review?.nextFocus || "",
+  });
+
+  y += reviewCardH + 10;
 
   y = ensurePageSpace(doc, y, 75, margin);
 
