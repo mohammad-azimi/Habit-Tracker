@@ -1366,6 +1366,7 @@ export default function App() {
     review: safeMonthData.review,
     previousMonthSummary,
     previousMonthLabel,
+    yearlyOverviewData,
   };
 
   const monthlyInsights = useMemo(() => {
