@@ -76,6 +76,52 @@ function ensureReviewShape(review = {}) {
   };
 }
 
+function isEffectivelyEmptyMonth(monthData) {
+  if (!monthData) return true;
+
+  const hasAnyCompletedHabit = (monthData.habits || []).some((habit) =>
+    (habit.checks || []).some(Boolean),
+  );
+
+  const hasNotes = Boolean(monthData.notes?.trim());
+
+  const hasReview = Boolean(
+    monthData.review?.wins?.trim() ||
+    monthData.review?.blockers?.trim() ||
+    monthData.review?.nextFocus?.trim(),
+  );
+
+  const hasNonDefaultMood = (monthData.mood || []).some(
+    (value) => Number(value) !== 5,
+  );
+
+  const hasNonDefaultMotivation = (monthData.motivation || []).some(
+    (value) => Number(value) !== 5,
+  );
+
+  const hasChangedHabitStructure =
+    (monthData.habits || []).length !== defaultHabits.length ||
+    (monthData.habits || []).some((habit, index) => {
+      const baseHabit = defaultHabits[index];
+      if (!baseHabit) return true;
+
+      return (
+        habit.name !== baseHabit.name ||
+        habit.icon !== baseHabit.icon ||
+        Boolean(habit.archived)
+      );
+    });
+
+  return !(
+    hasAnyCompletedHabit ||
+    hasNotes ||
+    hasReview ||
+    hasNonDefaultMood ||
+    hasNonDefaultMotivation ||
+    hasChangedHabitStructure
+  );
+}
+
 function ensureMonthShape(monthData, year, monthIndex) {
   const days = getDaysInMonth(year, monthIndex);
   const safe = monthData || buildDefaultMonthData(year, monthIndex);
@@ -487,19 +533,6 @@ export default function App() {
     confirmAction.onConfirm();
     closeConfirmModal();
   };
-
-  const activeDayCount = useMemo(() => {
-    const now = new Date();
-    const year = Number(selectedYear);
-
-    if (year < now.getFullYear()) return daysInMonth;
-    if (year > now.getFullYear()) return 0;
-
-    if (selectedMonthIndex < now.getMonth()) return daysInMonth;
-    if (selectedMonthIndex > now.getMonth()) return 0;
-
-    return Math.min(now.getDate(), daysInMonth);
-  }, [selectedYear, selectedMonthIndex, daysInMonth]);
 
   useEffect(() => {
     let cancelled = false;
@@ -1073,9 +1106,8 @@ export default function App() {
       const left = goal - actual;
       const progress = goal ? Math.round((actual / goal) * 100) : 0;
 
-      const trackedChecks = habit.checks.slice(0, activeDayCount);
-      const currentStreak = calculateCurrentStreak(trackedChecks);
-      const bestStreak = calculateBestStreak(trackedChecks);
+      const currentStreak = calculateCurrentStreak(habit.checks);
+      const bestStreak = calculateBestStreak(habit.checks);
 
       const weekly = weekRanges.map(([start, end], idx) => {
         const slice = habit.checks.slice(start, end);
@@ -1100,7 +1132,7 @@ export default function App() {
         weekly,
       };
     });
-  }, [safeMonthData, daysInMonth, activeDayCount]);
+  }, [safeMonthData, daysInMonth]);
 
   const activeAnalysisRows = useMemo(() => {
     return analysisRows.filter((habit) => !habit.archived);
@@ -1180,6 +1212,7 @@ export default function App() {
 
   const previousMonthSummary = useMemo(() => {
     if (!previousMonthData) return null;
+    if (isEffectivelyEmptyMonth(previousMonthData)) return null;
 
     const totalGoal = previousMonthData.habits.reduce(
       (sum, habit) => sum + (habit.checks?.length || 0),
