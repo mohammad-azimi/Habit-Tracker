@@ -305,11 +305,10 @@ function formatDeltaText(delta, digits = 0, suffix = "") {
 }
 
 function getDeltaTheme(delta) {
-  if (delta === null || Number.isNaN(delta) || delta === 0) {
+  if (delta === null || Number.isNaN(delta)) {
     return {
       fill: [250, 250, 250],
       border: [229, 231, 235],
-      valueColor: [17, 24, 39],
       deltaFill: [245, 245, 245],
       deltaText: [82, 82, 91],
     };
@@ -319,18 +318,25 @@ function getDeltaTheme(delta) {
     return {
       fill: [245, 252, 247],
       border: [187, 247, 208],
-      valueColor: [22, 101, 52],
       deltaFill: [220, 252, 231],
       deltaText: [22, 101, 52],
     };
   }
 
+  if (delta < 0) {
+    return {
+      fill: [255, 247, 247],
+      border: [252, 165, 165],
+      deltaFill: [254, 226, 226],
+      deltaText: [185, 28, 28],
+    };
+  }
+
   return {
-    fill: [255, 247, 247],
-    border: [252, 165, 165],
-    valueColor: [185, 28, 28],
-    deltaFill: [254, 226, 226],
-    deltaText: [185, 28, 28],
+    fill: [250, 250, 250],
+    border: [229, 231, 235],
+    deltaFill: [245, 245, 245],
+    deltaText: [82, 82, 91],
   };
 }
 
@@ -355,43 +361,56 @@ function drawComparisonMetricCard(
   const safeCurrentValue = pdfSafeText(
     `${currentValue}${currentValue !== null && currentValue !== undefined ? suffix : ""}`,
   );
+
   const safePreviousValue =
     previousValue === null || previousValue === undefined
-      ? "No previous data"
+      ? "Previous: No data"
       : pdfSafeText(`Previous: ${previousValue}${suffix}`);
+
   const safeDeltaText = pdfSafeText(formatDeltaText(delta, digits, suffix));
+
+  const padX = 6;
 
   doc.setFillColor(...theme.fill);
   doc.setDrawColor(...theme.border);
   doc.setLineWidth(0.35);
   doc.roundedRect(x, y, w, h, 4, 4, "FD");
 
+  // title
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(107, 114, 128);
-  doc.text(safeTitle, x + 4, y + 6);
+  doc.text(safeTitle, x + padX, y + 6);
 
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(14);
-  doc.setTextColor(17, 24, 39);
-  doc.text(safeCurrentValue, x + 4, y + 15);
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(100, 116, 139);
-  doc.text(safePreviousValue, x + 4, y + h - 4.5);
-
-  const pillW = doc.getTextWidth(safeDeltaText) + 8;
-  const pillX = x + w - pillW - 4;
+  // delta badge
+  const pillW = doc.getTextWidth(safeDeltaText) + 10;
+  const pillH = 7;
+  const pillX = x + w - pillW - padX;
   const pillY = y + 4;
 
   doc.setFillColor(...theme.deltaFill);
-  doc.roundedRect(pillX, pillY, pillW, 7, 3.5, 3.5, "F");
+  doc.roundedRect(pillX, pillY, pillW, pillH, 3.5, 3.5, "F");
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setTextColor(...theme.deltaText);
-  doc.text(safeDeltaText, pillX + 4, pillY + 4.8);
+  doc.text(safeDeltaText, pillX + 5, pillY + 4.8);
+
+  // main value
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.setTextColor(17, 24, 39);
+  doc.text(safeCurrentValue, x + padX, y + 16);
+
+  // previous value
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(safePreviousValue, x + padX, y + h - 4);
+
+  // bottom divider-like visual balance
+  doc.setDrawColor(229, 231, 235);
+  doc.setLineWidth(0.15);
 }
 
 function drawYearlyMiniBarChart(doc, { x, y, w, h, data }) {
@@ -919,7 +938,7 @@ export function exportDashboardPdf(summary) {
   );
 
   const comparisonCardW = (contentWidth - gap) / 2;
-  const comparisonCardH = 20;
+  const comparisonCardH = 24;
 
   if (!previousMonthSummary) {
     doc.setFillColor(250, 250, 250);
