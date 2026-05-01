@@ -413,7 +413,7 @@ function drawComparisonMetricCard(
   doc.setLineWidth(0.15);
 }
 
-function drawYearlyMiniBarChart(doc, { x, y, w, h, data }) {
+function drawYearlyMiniBarChart(doc, { x, y, w, h, data, currentMonth }) {
   doc.setFillColor(250, 250, 250);
   doc.setDrawColor(229, 231, 235);
   doc.setLineWidth(0.3);
@@ -432,41 +432,129 @@ function drawYearlyMiniBarChart(doc, { x, y, w, h, data }) {
     return;
   }
 
-  const chartX = x + 6;
-  const chartY = y + 14;
-  const chartW = w - 12;
+  const visibleData = data.slice(0, 12);
+  const activeMonths = visibleData.filter((item) => !item.isEmpty);
+
+  if (!activeMonths.length) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(148, 163, 184);
+    doc.text("No saved month data available", x + 4, y + 16);
+    return;
+  }
+
+  const values = activeMonths.map((item) =>
+    Math.max(0, Math.min(100, Number(item.completionPercent) || 0)),
+  );
+
+  const minValue = Math.min(...values);
+  const maxValue = Math.max(...values);
+
+  let domainMin = 0;
+  let domainMax = 100;
+
+  if (minValue === maxValue) {
+    domainMin = Math.max(0, minValue - 10);
+    domainMax = Math.min(100, maxValue + 10);
+  } else {
+    const spread = maxValue - minValue;
+    const padding = spread < 15 ? 8 : 5;
+    domainMin = Math.max(0, minValue - padding);
+    domainMax = Math.min(100, maxValue + padding);
+  }
+
+  const range = Math.max(domainMax - domainMin, 1);
+
+  const bestMonth = [...activeMonths].sort(
+    (a, b) => b.completionPercent - a.completionPercent,
+  )[0];
+
+  const worstMonth = [...activeMonths].sort(
+    (a, b) => a.completionPercent - b.completionPercent,
+  )[0];
+
+  const chartX = x + 8;
+  const chartY = y + 12;
+  const chartW = w - 16;
   const chartH = h - 22;
 
+  // grid + y labels
   doc.setDrawColor(229, 231, 235);
   doc.setLineWidth(0.2);
+
+  const gridValues = [
+    domainMin,
+    Math.round(domainMin + range / 3),
+    Math.round(domainMin + (2 * range) / 3),
+    domainMax,
+  ];
+
   for (let i = 0; i < 4; i += 1) {
     const gridY = chartY + (chartH / 3) * i;
     doc.line(chartX, gridY, chartX + chartW, gridY);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(148, 163, 184);
+    doc.text(`${gridValues[i]}%`, chartX - 2, gridY + 1.5, { align: "right" });
   }
 
-  const visibleData = data.slice(0, 12);
-  const barGap = 2;
+  const barGap = 2.2;
   const barW = Math.max(
     (chartW - barGap * (visibleData.length - 1)) / visibleData.length,
     4,
   );
+
+  const points = [];
 
   visibleData.forEach((item, index) => {
     const value = Math.max(
       0,
       Math.min(100, Number(item.completionPercent) || 0),
     );
-    const barHeight = (value / 100) * chartH;
+
+    const normalized = item.isEmpty ? 0 : (value - domainMin) / range;
+    const barHeight = item.isEmpty ? 2 : Math.max(4, normalized * chartH);
+
     const barX = chartX + index * (barW + barGap);
     const barY = chartY + chartH - barHeight;
 
-    doc.setFillColor(
-      item.isEmpty ? 82 : 212,
-      item.isEmpty ? 82 : 212,
-      item.isEmpty ? 82 : 212,
-    );
-    doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    const isBest = !item.isEmpty && item.month === bestMonth?.month;
+    const isWorst = !item.isEmpty && item.month === worstMonth?.month;
+    const isCurrent = !item.isEmpty && item.month === currentMonth;
 
+    if (item.isEmpty) {
+      doc.setFillColor(212, 212, 212);
+      doc.setFillColor(212, 212, 212);
+      doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    } else if (isBest) {
+      doc.setFillColor(34, 197, 94);
+      doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    } else if (isWorst) {
+      doc.setFillColor(239, 68, 68);
+      doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    } else if (isCurrent) {
+      doc.setFillColor(17, 24, 39);
+      doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    } else {
+      doc.setFillColor(163, 163, 163);
+      doc.roundedRect(barX, barY, barW, barHeight, 1.5, 1.5, "F");
+    }
+
+    if (!item.isEmpty) {
+      points.push({
+        x: barX + barW / 2,
+        y: barY,
+        value,
+        month: item.month,
+        shortMonth: item.shortMonth,
+        isBest,
+        isWorst,
+        isCurrent,
+      });
+    }
+
+    // month labels
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
     doc.setTextColor(148, 163, 184);
@@ -474,10 +562,42 @@ function drawYearlyMiniBarChart(doc, { x, y, w, h, data }) {
       pdfSafeText(item.shortMonth || "").slice(0, 3),
       barX + barW / 2,
       y + h - 4,
-      {
-        align: "center",
-      },
+      { align: "center" },
     );
+  });
+
+  // trend line
+  if (points.length > 1) {
+    doc.setDrawColor(17, 24, 39);
+    doc.setLineWidth(0.9);
+
+    for (let i = 0; i < points.length - 1; i += 1) {
+      doc.line(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+    }
+  }
+
+  // dots + value labels for key months
+  points.forEach((point) => {
+    if (point.isBest) {
+      doc.setFillColor(34, 197, 94);
+    } else if (point.isWorst) {
+      doc.setFillColor(239, 68, 68);
+    } else if (point.isCurrent) {
+      doc.setFillColor(17, 24, 39);
+    } else {
+      doc.setFillColor(250, 250, 250);
+    }
+
+    doc.setDrawColor(17, 24, 39);
+    doc.setLineWidth(0.5);
+    doc.circle(point.x, point.y, 1.4, "FD");
+
+    if (point.isBest || point.isWorst || point.isCurrent) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      doc.setTextColor(55, 65, 81);
+      doc.text(`${point.value}%`, point.x, point.y - 3, { align: "center" });
+    }
   });
 }
 
@@ -1071,11 +1191,12 @@ export function exportDashboardPdf(summary) {
     x: margin,
     y: y + 3 + yearlyCardH * 2 + gap + 4,
     w: contentWidth,
-    h: 34,
+    h: 42,
     data: yearlyOverviewData,
+    currentMonth: summary.month,
   });
 
-  y += yearlyCardH * 2 + gap + 42;
+  y += yearlyCardH * 2 + gap + 50;
 
   y = ensurePageSpace(doc, y, 70, margin);
 
