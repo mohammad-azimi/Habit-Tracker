@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
 
+import StreakLeaderboardCard from "./components/StreakLeaderboardCard";
 import YearlyOverviewCard from "./components/YearlyOverviewCard";
 import MonthComparisonCard from "./components/MonthComparisonCard";
 import MonthlyReviewCard from "./components/MonthlyReviewCard";
@@ -1822,6 +1823,8 @@ export default function App() {
               yearlyData={yearlyOverviewData}
               isLoading={isYearlyOverviewLoading}
             />
+
+            <StreakLeaderboardCard rows={analysisRows} />
 
             <MonthlyReviewCard
               review={safeMonthData.review}
