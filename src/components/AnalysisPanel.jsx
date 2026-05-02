@@ -1,6 +1,25 @@
 import React, { useMemo } from "react";
 import { Activity, Flame, Trophy } from "lucide-react";
 
+function formatGoalTypeLabel(targetType, targetValue) {
+  const safeType = targetType || "daily";
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "daily") {
+    return `Daily • ${safeValue}x/day`;
+  }
+
+  if (safeType === "weekly") {
+    return `Weekly • ${safeValue}x/week`;
+  }
+
+  if (safeType === "monthly") {
+    return `Monthly • ${safeValue}x/month`;
+  }
+
+  return `Daily • ${safeValue}x/day`;
+}
+
 export default function AnalysisPanel({
   totalGoal,
   totalCompleted,
@@ -86,8 +105,15 @@ export default function AnalysisPanel({
                 <div className="text-sm font-medium">
                   {row.name} <span className="ml-1">{row.icon}</span>
                 </div>
-                <div className="text-xs text-neutral-500 mt-1">
-                  Goal {row.goal} • Actual {row.actual} • Left {row.left}
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  <span>Goal {row.goal}</span>
+
+                  <span className="inline-flex items-center rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] font-medium text-neutral-300 border border-neutral-700">
+                    {formatGoalTypeLabel(row.targetType, row.targetValue)}
+                  </span>
+
+                  <span>Actual {row.actual}</span>
+                  <span>Left {row.left}</span>
                 </div>
               </div>
 
