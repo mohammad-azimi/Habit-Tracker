@@ -51,6 +51,25 @@ import AnalysisPanel from "./components/AnalysisPanel";
 import TopHabitsCard from "./components/TopHabitsCard";
 import AuthScreen from "./components/AuthScreen";
 
+function formatGoalTypeLabel(targetType, targetValue) {
+  const safeType = targetType || "daily";
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "daily") {
+    return `Daily • ${safeValue}x/day`;
+  }
+
+  if (safeType === "weekly") {
+    return `Weekly • ${safeValue}x/week`;
+  }
+
+  if (safeType === "monthly") {
+    return `Monthly • ${safeValue}x/month`;
+  }
+
+  return `Daily • ${safeValue}x/day`;
+}
+
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
   const targetValue = Math.max(1, Number(habit?.targetValue || 1));
@@ -253,18 +272,36 @@ function buildPrintableReportHTML({
   const habitRows = analysisRows
     .map(
       (row) => `
-        <tr>
-          <td>${row.name} ${row.icon || ""}</td>
-          <td>${row.goal}</td>
-          <td>${row.actual}</td>
-          <td>${row.left}</td>
-          <td>${row.progress}%</td>
-          <td>${row.currentStreak || 0}</td>
-          <td>${row.bestStreak || 0}</td>
-        </tr>
-      `,
+      <tr>
+        <td>${row.name} ${row.icon || ""}</td>
+        <td>${formatGoalTypeLabel(row.targetType, row.targetValue)}</td>
+        <td>${row.goal}</td>
+        <td>${row.actual}</td>
+        <td>${row.left}</td>
+        <td>${row.progress}%</td>
+        <td>${row.currentStreak || 0}</td>
+        <td>${row.bestStreak || 0}</td>
+      </tr>
+    `,
     )
     .join("");
+
+  const bestHabitText = bestHabit
+    ? `${bestHabit.name} ${bestHabit.icon || ""} • ${formatGoalTypeLabel(bestHabit.targetType, bestHabit.targetValue)} • ${bestHabit.progress}%`
+    : "No data";
+
+  const needsAttentionHabitText = needsAttentionHabit
+    ? `${needsAttentionHabit.name} ${needsAttentionHabit.icon || ""} • ${formatGoalTypeLabel(needsAttentionHabit.targetType, needsAttentionHabit.targetValue)} • ${needsAttentionHabit.progress}%`
+    : "No data";
+
+  const streakLeaderText = strongestCurrentStreakHabit
+    ? `${strongestCurrentStreakHabit.name} ${strongestCurrentStreakHabit.icon || ""} • ${formatGoalTypeLabel(
+        strongestCurrentStreakHabit.targetType,
+        strongestCurrentStreakHabit.targetValue,
+      )} • ${strongestCurrentStreakHabit.currentStreak} days`
+    : "No data";
+
+  const notesText = notes?.trim() || "No notes for this month.";
 
   return `
     <!doctype html>
@@ -370,15 +407,15 @@ function buildPrintableReportHTML({
           <div class="grid">
             <div class="card">
               <div class="label">Best Habit</div>
-              <div>${bestHabit ? `${bestHabit.name} ${bestHabit.icon || ""} (${bestHabit.progress}%)` : "No data"}</div>
+              <div>${bestHabitText}</div>
             </div>
             <div class="card">
               <div class="label">Needs Attention</div>
-              <div>${needsAttentionHabit ? `${needsAttentionHabit.name} ${needsAttentionHabit.icon || ""} (${needsAttentionHabit.progress}%)` : "No data"}</div>
+              <div>${needsAttentionHabitText}</div>
             </div>
             <div class="card">
               <div class="label">Streak Leader</div>
-              <div>${strongestCurrentStreakHabit ? `${strongestCurrentStreakHabit.name} ${strongestCurrentStreakHabit.icon || ""} (${strongestCurrentStreakHabit.currentStreak} days)` : "No data"}</div>
+              <div>${streakLeaderText}</div>
             </div>
           </div>
         </div>
@@ -389,6 +426,7 @@ function buildPrintableReportHTML({
             <thead>
               <tr>
                 <th>Habit</th>
+                <th>Goal Type</th>
                 <th>Goal</th>
                 <th>Completed</th>
                 <th>Left</th>
@@ -405,7 +443,7 @@ function buildPrintableReportHTML({
 
         <div class="section">
           <h2>Monthly Notes</h2>
-          <div class="notes">${notes || "No notes for this month."}</div>
+          <div class="notes">${notesText}</div>
         </div>
       </body>
     </html>
@@ -1498,9 +1536,10 @@ const totalGoal = previousMonthData.habits.reduce(
 
   const exportMonthCSV = () => {
     const rows = [
-      ["Habit", "Goal", "Completed", "Left", "Progress %"],
+      ["Habit", "Goal Type", "Goal", "Completed", "Left", "Progress %"],
       ...analysisRows.map((row) => [
         row.name,
+        formatGoalTypeLabel(row.targetType, row.targetValue),
         row.goal,
         row.actual,
         row.left,
