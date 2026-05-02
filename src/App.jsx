@@ -1323,29 +1323,63 @@ export default function App() {
   }, [activeAnalysisRows, habitSearchTerm, habitFilterMode]);
 
   const dailyProgress = useMemo(() => {
+    const totalFlexibleGoal = analysisRows.reduce(
+      (sum, row) => sum + Number(row.goal || 0),
+      0,
+    );
+
     return Array.from({ length: daysInMonth }, (_, dayIndex) => {
-      const completed = safeMonthData.habits.filter(
-        (habit) => habit.checks[dayIndex],
-      ).length;
-      const total = safeMonthData.habits.length || 1;
+      const completedSoFar = safeMonthData.habits.reduce((sum, habit) => {
+        return sum + habit.checks.slice(0, dayIndex + 1).filter(Boolean).length;
+      }, 0);
+
+      const expectedSoFar =
+        totalFlexibleGoal > 0
+          ? (totalFlexibleGoal * (dayIndex + 1)) / daysInMonth
+          : 0;
+
+      const value = expectedSoFar
+        ? Math.min(100, Math.round((completedSoFar / expectedSoFar) * 100))
+        : 0;
 
       return {
         day: dayIndex + 1,
-        value: Math.round((completed / total) * 100),
+        value,
+        completedSoFar,
+        expectedSoFar: Number(expectedSoFar.toFixed(1)),
       };
     });
-  }, [safeMonthData, daysInMonth]);
+  }, [analysisRows, safeMonthData.habits, daysInMonth]);
 
   const weeklyProgress = useMemo(() => {
+    const totalFlexibleGoal = analysisRows.reduce(
+      (sum, row) => sum + Number(row.goal || 0),
+      0,
+    );
+
     return getWeekRanges(daysInMonth).map(([start, end], idx) => {
-      const slice = dailyProgress.slice(start, end);
+      const completedInWeek = safeMonthData.habits.reduce((sum, habit) => {
+        return sum + habit.checks.slice(start, end).filter(Boolean).length;
+      }, 0);
+
+      const weekLength = end - start;
+      const expectedInWeek =
+        totalFlexibleGoal > 0
+          ? (totalFlexibleGoal * weekLength) / daysInMonth
+          : 0;
+
+      const value = expectedInWeek
+        ? Math.min(100, Math.round((completedInWeek / expectedInWeek) * 100))
+        : 0;
 
       return {
         label: `Week ${idx + 1}`,
-        value: Math.round(average(slice.map((item) => item.value))),
+        value,
+        completedInWeek,
+        expectedInWeek: Number(expectedInWeek.toFixed(1)),
       };
     });
-  }, [dailyProgress, daysInMonth]);
+  }, [analysisRows, safeMonthData.habits, daysInMonth]);
 
   const totalGoal = safeMonthData.habits.reduce(
     (sum, habit) => sum + getHabitMonthlyGoal(habit, daysInMonth),
