@@ -51,6 +51,26 @@ import AnalysisPanel from "./components/AnalysisPanel";
 import TopHabitsCard from "./components/TopHabitsCard";
 import AuthScreen from "./components/AuthScreen";
 
+function getHabitMonthlyGoal(habit, daysInMonth) {
+  const targetType = habit?.targetType || "daily";
+  const targetValue = Math.max(1, Number(habit?.targetValue || 1));
+
+  if (targetType === "daily") {
+    return Math.min(daysInMonth, targetValue * daysInMonth);
+  }
+
+  if (targetType === "weekly") {
+    const weeksInMonth = Math.ceil(daysInMonth / 7);
+    return targetValue * weeksInMonth;
+  }
+
+  if (targetType === "monthly") {
+    return targetValue;
+  }
+
+  return daysInMonth;
+}
+
 function buildDefaultMonthData(year, monthIndex) {
   const days = getDaysInMonth(year, monthIndex);
 
@@ -110,7 +130,9 @@ function isEffectivelyEmptyMonth(monthData) {
       return (
         habit.name !== baseHabit.name ||
         habit.icon !== baseHabit.icon ||
-        Boolean(habit.archived)
+        Boolean(habit.archived) ||
+        (habit.targetType || "daily") !== (baseHabit.targetType || "daily") ||
+        Number(habit.targetValue || 1) !== Number(baseHabit.targetValue || 1)
       );
     });
 
@@ -134,6 +156,8 @@ function ensureMonthShape(monthData, year, monthIndex) {
       name: habit.name || `Habit ${idx + 1}`,
       icon: habit.icon || "✅",
       archived: Boolean(habit.archived),
+      targetType: habit.targetType || "daily",
+      targetValue: Number(habit.targetValue || 1),
       checks: Array.from({ length: days }, (_, day) =>
         Boolean(habit.checks?.[day]),
       ),
@@ -196,6 +220,8 @@ function buildCopiedMonthData(monthData, nextYear, nextMonthIndex) {
       name: habit.name,
       icon: habit.icon,
       archived: Boolean(habit.archived),
+      targetType: habit.targetType || "daily",
+      targetValue: Number(habit.targetValue || 1),
       checks: Array.from({ length: nextDays }, () => false),
     })),
     mood: Array.from({ length: nextDays }, () => 5),
@@ -431,6 +457,8 @@ export default function App() {
   const [editingHabit, setEditingHabit] = useState(null);
   const [editingHabitName, setEditingHabitName] = useState("");
   const [editingHabitIcon, setEditingHabitIcon] = useState("✅");
+  const [editingHabitTargetType, setEditingHabitTargetType] = useState("daily");
+  const [editingHabitTargetValue, setEditingHabitTargetValue] = useState(1);
   const [isMonthLoaded, setIsMonthLoaded] = useState(false);
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
@@ -457,6 +485,8 @@ export default function App() {
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
 
+  const [newHabitTargetType, setNewHabitTargetType] = useState("daily");
+  const [newHabitTargetValue, setNewHabitTargetValue] = useState(1);
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -714,8 +744,13 @@ export default function App() {
                 };
               }
 
+              const monthDays = getDaysInMonth(
+                Number(selectedYear),
+                monthIndex,
+              );
+
               const totalGoal = safeData.habits.reduce(
-                (sum, habit) => sum + habit.checks.length,
+                (sum, habit) => sum + getHabitMonthlyGoal(habit, monthDays),
                 0,
               );
 
@@ -874,6 +909,8 @@ export default function App() {
           name: trimmed,
           icon: newHabitIcon || "✅",
           archived: false,
+          targetType: newHabitTargetType,
+          targetValue: Math.max(1, Number(newHabitTargetValue || 1)),
           checks: Array.from({ length: daysInMonth }, () => false),
         },
       ],
@@ -881,6 +918,8 @@ export default function App() {
 
     setNewHabitName("");
     setNewHabitIcon("✅");
+    setNewHabitTargetType("daily");
+    setNewHabitTargetValue(1);
   };
 
   const deleteHabit = (habitId) => {
@@ -1047,12 +1086,16 @@ export default function App() {
     setEditingHabit(habit);
     setEditingHabitName(habit.name || "");
     setEditingHabitIcon(habit.icon || "✅");
+    setEditingHabitTargetType(habit.targetType || "daily");
+    setEditingHabitTargetValue(Number(habit.targetValue || 1));
   };
 
   const closeEditHabit = () => {
     setEditingHabit(null);
     setEditingHabitName("");
     setEditingHabitIcon("✅");
+    setEditingHabitTargetType("daily");
+    setEditingHabitTargetValue(1);
   };
 
   const saveEditedHabit = () => {
@@ -1068,6 +1111,8 @@ export default function App() {
               ...habit,
               name: trimmedName,
               icon: editingHabitIcon || "✅",
+              targetType: editingHabitTargetType || "daily",
+              targetValue: Math.max(1, Number(editingHabitTargetValue || 1)),
             }
           : habit,
       ),
@@ -1199,18 +1244,32 @@ export default function App() {
 
     return safeMonthData.habits.map((habit) => {
       const actual = habit.checks.filter(Boolean).length;
-      const goal = daysInMonth;
-      const left = goal - actual;
-      const progress = goal ? Math.round((actual / goal) * 100) : 0;
+      const goal = getHabitMonthlyGoal(habit, daysInMonth);
+      const left = Math.max(goal - actual, 0);
+      const progress = goal
+        ? Math.min(100, Math.round((actual / goal) * 100))
+        : 0;
 
       const currentStreak = calculateCurrentStreak(habit.checks);
       const bestStreak = calculateBestStreak(habit.checks);
 
       const weekly = weekRanges.map(([start, end], idx) => {
         const slice = habit.checks.slice(start, end);
-        const rate = slice.length
-          ? Math.round((slice.filter(Boolean).length / slice.length) * 100)
-          : 0;
+        const completedInWeek = slice.filter(Boolean).length;
+
+        let rate = 0;
+
+        if (habit.targetType === "weekly") {
+          const weeklyGoal = Math.max(1, Number(habit.targetValue || 1));
+          rate = Math.min(
+            100,
+            Math.round((completedInWeek / weeklyGoal) * 100),
+          );
+        } else {
+          rate = slice.length
+            ? Math.round((completedInWeek / slice.length) * 100)
+            : 0;
+        }
 
         return {
           label: `W${idx + 1}`,
@@ -1288,7 +1347,10 @@ export default function App() {
     });
   }, [dailyProgress, daysInMonth]);
 
-  const totalGoal = daysInMonth * safeMonthData.habits.length;
+  const totalGoal = safeMonthData.habits.reduce(
+    (sum, habit) => sum + getHabitMonthlyGoal(habit, daysInMonth),
+    0,
+  );
   const totalCompleted = analysisRows.reduce((sum, row) => sum + row.actual, 0);
   const totalLeft = Math.max(totalGoal - totalCompleted, 0);
   const completionPercent = totalGoal
@@ -1311,10 +1373,15 @@ export default function App() {
     if (!previousMonthData) return null;
     if (isEffectivelyEmptyMonth(previousMonthData)) return null;
 
-    const totalGoal = previousMonthData.habits.reduce(
-      (sum, habit) => sum + (habit.checks?.length || 0),
-      0,
-    );
+    const previousMonthDays = getDaysInMonth(
+  previousMonthMeta.year,
+  previousMonthMeta.monthIndex,
+);
+
+const totalGoal = previousMonthData.habits.reduce(
+  (sum, habit) => sum + getHabitMonthlyGoal(habit, previousMonthDays),
+  0,
+);
 
     const totalCompleted = previousMonthData.habits.reduce(
       (sum, habit) => sum + habit.checks.filter(Boolean).length,
@@ -1723,6 +1790,35 @@ export default function App() {
                 className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
               />
 
+              <div>
+                <label className="text-xs text-neutral-500 mb-2 block">
+                  Target Type
+                </label>
+                <select
+                  value={newHabitTargetType}
+                  onChange={(e) => setNewHabitTargetType(e.target.value)}
+                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                >
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-neutral-500 mb-2 block">
+                  Target Value
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={newHabitTargetValue}
+                  onChange={(e) => setNewHabitTargetValue(e.target.value)}
+                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                  placeholder="1"
+                />
+              </div>
+
               <button
                 onClick={addHabit}
                 className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2"
@@ -1844,8 +1940,12 @@ export default function App() {
               isOpen={Boolean(editingHabit)}
               habitName={editingHabitName}
               habitIcon={editingHabitIcon}
+              habitTargetType={editingHabitTargetType}
+              habitTargetValue={editingHabitTargetValue}
               onChangeName={setEditingHabitName}
               onChangeIcon={setEditingHabitIcon}
+              onChangeTargetType={setEditingHabitTargetType}
+              onChangeTargetValue={setEditingHabitTargetValue}
               onClose={closeEditHabit}
               onSave={saveEditedHabit}
             />
