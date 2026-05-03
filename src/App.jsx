@@ -448,7 +448,7 @@ function buildPrintableReportHTML({
       </body>
     </html>
   `;
-}
+} 
 
 function calculateCurrentStreak(checks) {
   let streak = 0;

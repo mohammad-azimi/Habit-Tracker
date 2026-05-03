@@ -1,6 +1,21 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
+function formatShortGoalTypeLabel(targetType, targetValue) {
+  const safeType = String(targetType || "daily").toLowerCase();
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "weekly") {
+    return `${safeValue}x/week`;
+  }
+
+  if (safeType === "monthly") {
+    return `${safeValue}x/month`;
+  }
+
+  return `${safeValue}x/day`;
+}
+
 function clampNumber(value, min, max) {
   return Math.max(min, Math.min(max, Number(value) || 0));
 }
@@ -25,6 +40,25 @@ function pdfSafeText(value) {
 
 function pdfSafeHabitName(name) {
   return pdfSafeText(name || "Untitled Habit");
+}
+
+function formatPdfGoalTypeLabel(targetType, targetValue) {
+  const safeType = String(targetType || "daily").toLowerCase();
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "daily") {
+    return `Daily - ${safeValue}x/day`;
+  }
+
+  if (safeType === "weekly") {
+    return `Weekly - ${safeValue}x/week`;
+  }
+
+  if (safeType === "monthly") {
+    return `Monthly - ${safeValue}x/month`;
+  }
+
+  return `Daily - ${safeValue}x/day`;
 }
 
 function getProgressTheme(progress) {
@@ -258,38 +292,48 @@ function drawHighlightCard(
   doc.setLineWidth(0.4);
   doc.roundedRect(x, y, w, h, 5, 5, "FD");
 
+  // title
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(107, 114, 128);
   doc.text(safeTitle, x + padX, y + 7);
 
+  // status pill
   const pillW = doc.getTextWidth(safeStatusLabel) + 9;
   const pillX = x + w - pillW - padX;
   drawStatusPill(doc, pillX, y + 4.5, safeStatusLabel, badgeFill, badgeText);
 
+  // main value font sizing
   let mainFontSize = 16;
-  if (safeMainValue.length > 18) mainFontSize = 14;
-  if (safeMainValue.length > 28) mainFontSize = 12.5;
+  if (safeMainValue.length > 16) mainFontSize = 14;
+  if (safeMainValue.length > 24) mainFontSize = 12.5;
+  if (safeMainValue.length > 32) mainFontSize = 11.5;
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(mainFontSize);
   doc.setTextColor(17, 24, 39);
 
+  const maxMainWidth = w - padX * 2;
   const mainLines = doc
-    .splitTextToSize(safeMainValue, w - padX * 2)
+    .splitTextToSize(safeMainValue, maxMainWidth)
     .slice(0, 2);
 
-  doc.text(mainLines, x + padX, y + 18);
+  const mainStartY = y + 18;
+  const lineHeight = 5;
+  doc.text(mainLines, x + padX, mainStartY);
+
+  // subtitle position depends on main text height
+  const subtitleY = mainStartY + (mainLines.length - 1) * lineHeight + 7;
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8.5);
+  doc.setFontSize(8);
   doc.setTextColor(100, 116, 139);
 
   const subtitleLines = doc
     .splitTextToSize(safeSubtitle, w - padX * 2)
-    .slice(0, 1);
+    .slice(0, 2);
 
-  doc.text(subtitleLines, x + padX, y + h - 5.5);
+  doc.text(subtitleLines, x + padX, subtitleY);
 }
 
 function formatDeltaText(delta, digits = 0, suffix = "") {
@@ -998,7 +1042,7 @@ export function exportDashboardPdf(summary) {
     margin,
   );
 
-  const highlightH = 30;
+  const highlightH = 36;
 
   const bestHabitTheme = getHighlightCardTheme(bestHabit?.progress ?? 0);
   const weakestHabitTheme = getHighlightCardTheme(weakestHabit?.progress ?? 0);
@@ -1012,7 +1056,7 @@ export function exportDashboardPdf(summary) {
     title: "Best Habit",
     mainValue: bestHabit ? bestHabit.name : "-",
     subtitle: bestHabit
-      ? `${bestHabit.actual}/${bestHabit.goal} completed • ${bestHabit.progress}%`
+      ? `${formatPdfGoalTypeLabel(bestHabit.targetType, bestHabit.targetValue)} - ${bestHabit.actual}/${bestHabit.goal} - ${bestHabit.progress}%`
       : "No habit data available",
     ...bestHabitTheme,
   });
@@ -1025,7 +1069,7 @@ export function exportDashboardPdf(summary) {
     title: "Needs Attention",
     mainValue: weakestHabit ? weakestHabit.name : "-",
     subtitle: weakestHabit
-      ? `${weakestHabit.actual}/${weakestHabit.goal} completed • ${weakestHabit.progress}%`
+      ? `${formatShortGoalTypeLabel(weakestHabit.targetType, weakestHabit.targetValue)} - ${weakestHabit.actual}/${weakestHabit.goal} - ${weakestHabit.progress}%`
       : "No habit data available",
     ...weakestHabitTheme,
   });
@@ -1037,9 +1081,7 @@ export function exportDashboardPdf(summary) {
     h: highlightH,
     title: "Best Week",
     mainValue: bestWeek ? bestWeek.label : "-",
-    subtitle: bestWeek
-      ? `${bestWeek.value}% average completion`
-      : "No weekly data available",
+    subtitle: bestWeek ? `Avg ${bestWeek.value}%` : "No weekly data available",
     ...bestWeekTheme,
   });
 
@@ -1409,7 +1451,7 @@ export function exportDashboardPdf(summary) {
   y = drawSectionTitle(
     doc,
     "Habit Breakdown",
-    "Detailed performance per habit",
+    "Detailed performance per habit with flexible goal type",
     y,
     pageWidth,
     margin,
@@ -1417,9 +1459,10 @@ export function exportDashboardPdf(summary) {
 
   autoTable(doc, {
     startY: y + 4,
-    head: [["Habit", "Goal", "Completed", "Left", "Progress"]],
+    head: [["Habit", "Goal Type", "Goal", "Completed", "Left", "Progress"]],
     body: habits.map((habit) => [
       pdfSafeHabitName(habit.name),
+      pdfSafeText(formatPdfGoalTypeLabel(habit.targetType, habit.targetValue)),
       String(habit.goal),
       String(habit.actual),
       String(habit.left),
@@ -1432,8 +1475,8 @@ export function exportDashboardPdf(summary) {
       fontSize: 9,
     },
     styles: {
-      fontSize: 8.5,
-      cellPadding: 2.5,
+      fontSize: 8,
+      cellPadding: 2.2,
       textColor: [31, 41, 55],
       lineColor: [229, 231, 235],
       lineWidth: 0.1,
@@ -1442,6 +1485,14 @@ export function exportDashboardPdf(summary) {
       fillColor: [249, 250, 251],
     },
     margin: { left: margin, right: margin },
+    columnStyles: {
+      0: { cellWidth: 48 },
+      1: { cellWidth: 34 },
+      2: { cellWidth: 18, halign: "center" },
+      3: { cellWidth: 22, halign: "center" },
+      4: { cellWidth: 16, halign: "center" },
+      5: { cellWidth: 20, halign: "center" },
+    },
   });
 
   y = doc.lastAutoTable.finalY + 8;
