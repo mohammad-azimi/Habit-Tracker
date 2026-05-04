@@ -865,6 +865,25 @@ function getBestWeek(weeklyProgress) {
   return [...weeklyProgress].sort((a, b) => b.value - a.value)[0];
 }
 
+function getTopStreakHabits(habits = [], limit = 5) {
+  return [...habits]
+    .filter(
+      (habit) => (habit.currentStreak || 0) > 0 || (habit.bestStreak || 0) > 0,
+    )
+    .sort((a, b) => {
+      if ((b.currentStreak || 0) !== (a.currentStreak || 0)) {
+        return (b.currentStreak || 0) - (a.currentStreak || 0);
+      }
+
+      if ((b.bestStreak || 0) !== (a.bestStreak || 0)) {
+        return (b.bestStreak || 0) - (a.bestStreak || 0);
+      }
+
+      return (b.progress || 0) - (a.progress || 0);
+    })
+    .slice(0, limit);
+}
+
 function getTrendStats(dailyProgress) {
   if (!dailyProgress?.length) {
     return {
@@ -949,6 +968,7 @@ export function exportDashboardPdf(summary) {
   const bestHabit = getBestHabit(habits);
   const weakestHabit = getWeakestHabit(habits);
   const bestWeek = getBestWeek(weeklyProgress);
+  const streakLeaders = getTopStreakHabits(habits, 5);
   const trendStats = getTrendStats(dailyProgress);
   const yearlyStats = getYearlyOverviewStats(yearlyOverviewData);
   const previousMonthSummary = summary.previousMonthSummary || null;
@@ -1086,6 +1106,70 @@ export function exportDashboardPdf(summary) {
   });
 
   y += highlightH + 10;
+
+  y = ensurePageSpace(doc, y, 52, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Streak Leaders",
+    "Top current and best streak habits",
+    y,
+    pageWidth,
+    margin,
+  );
+
+  if (!streakLeaders.length) {
+    doc.setFillColor(250, 250, 250);
+    doc.setDrawColor(229, 231, 235);
+    doc.roundedRect(margin, y + 3, contentWidth, 16, 4, 4, "FD");
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(100, 116, 139);
+    doc.text("No streak data available for this month.", margin + 4, y + 13);
+
+    y += 23;
+  } else {
+    autoTable(doc, {
+      startY: y + 4,
+      head: [["Habit", "Goal Type", "Current", "Best", "Progress"]],
+      body: streakLeaders.map((habit) => [
+        pdfSafeHabitName(habit.name),
+        pdfSafeText(
+          formatPdfGoalTypeLabel(habit.targetType, habit.targetValue),
+        ),
+        `${habit.currentStreak || 0}d`,
+        `${habit.bestStreak || 0}d`,
+        `${habit.progress || 0}%`,
+      ]),
+      theme: "grid",
+      headStyles: {
+        fillColor: [17, 24, 39],
+        textColor: [255, 255, 255],
+        fontSize: 9,
+      },
+      styles: {
+        fontSize: 8,
+        cellPadding: 2.2,
+        textColor: [31, 41, 55],
+        lineColor: [229, 231, 235],
+        lineWidth: 0.1,
+      },
+      alternateRowStyles: {
+        fillColor: [249, 250, 251],
+      },
+      margin: { left: margin, right: margin },
+      columnStyles: {
+        0: { cellWidth: 52 },
+        1: { cellWidth: 34 },
+        2: { cellWidth: 20, halign: "center" },
+        3: { cellWidth: 20, halign: "center" },
+        4: { cellWidth: 24, halign: "center" },
+      },
+    });
+
+    y = doc.lastAutoTable.finalY + 8;
+  }
 
   y = ensurePageSpace(doc, y, 48, margin);
 
