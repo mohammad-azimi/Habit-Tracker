@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { CalendarDays, LogOut, Plus } from "lucide-react";
-
 import StreakLeaderboardCard from "./components/StreakLeaderboardCard";
 import YearlyOverviewCard from "./components/YearlyOverviewCard";
 import MonthComparisonCard from "./components/MonthComparisonCard";
@@ -42,7 +41,6 @@ import {
   getAuthUser,
   saveAuthSession,
 } from "./lib/auth";
-
 import DashboardHeader from "./components/DashboardHeader";
 import ProgressCharts from "./components/ProgressCharts";
 import HabitGrid from "./components/HabitGrid";
@@ -50,25 +48,11 @@ import MentalStateSection from "./components/MentalStateSection";
 import AnalysisPanel from "./components/AnalysisPanel";
 import TopHabitsCard from "./components/TopHabitsCard";
 import AuthScreen from "./components/AuthScreen";
-
-function formatGoalTypeLabel(targetType, targetValue) {
-  const safeType = targetType || "daily";
-  const safeValue = Math.max(1, Number(targetValue || 1));
-
-  if (safeType === "daily") {
-    return `Daily • ${safeValue}x/day`;
-  }
-
-  if (safeType === "weekly") {
-    return `Weekly • ${safeValue}x/week`;
-  }
-
-  if (safeType === "monthly") {
-    return `Monthly • ${safeValue}x/month`;
-  }
-
-  return `Daily • ${safeValue}x/day`;
-}
+import {
+  formatGoalTypeLabel,
+  normalizeGoalType,
+  normalizeGoalValue,
+} from "./lib/goalType";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -175,8 +159,8 @@ function ensureMonthShape(monthData, year, monthIndex) {
       name: habit.name || `Habit ${idx + 1}`,
       icon: habit.icon || "✅",
       archived: Boolean(habit.archived),
-      targetType: habit.targetType || "daily",
-      targetValue: Number(habit.targetValue || 1),
+      targetType: normalizeGoalType(habit.targetType),
+      targetValue: normalizeGoalValue(habit.targetValue),
       checks: Array.from({ length: days }, (_, day) =>
         Boolean(habit.checks?.[day]),
       ),
@@ -239,8 +223,8 @@ function buildCopiedMonthData(monthData, nextYear, nextMonthIndex) {
       name: habit.name,
       icon: habit.icon,
       archived: Boolean(habit.archived),
-      targetType: habit.targetType || "daily",
-      targetValue: Number(habit.targetValue || 1),
+      targetType: normalizeGoalType(habit.targetType),
+      targetValue: normalizeGoalValue(habit.targetValue),
       checks: Array.from({ length: nextDays }, () => false),
     })),
     mood: Array.from({ length: nextDays }, () => 5),
@@ -947,8 +931,8 @@ export default function App() {
           name: trimmed,
           icon: newHabitIcon || "✅",
           archived: false,
-          targetType: newHabitTargetType,
-          targetValue: Math.max(1, Number(newHabitTargetValue || 1)),
+          targetType: normalizeGoalType(habit.targetType),
+          targetValue: normalizeGoalValue(habit.targetValue),
           checks: Array.from({ length: daysInMonth }, () => false),
         },
       ],
@@ -1149,8 +1133,8 @@ export default function App() {
               ...habit,
               name: trimmedName,
               icon: editingHabitIcon || "✅",
-              targetType: editingHabitTargetType || "daily",
-              targetValue: Math.max(1, Number(editingHabitTargetValue || 1)),
+              targetType: normalizeGoalType(habit.targetType),
+              targetValue: normalizeGoalValue(habit.targetValue),
             }
           : habit,
       ),

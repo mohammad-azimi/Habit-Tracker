@@ -1,5 +1,9 @@
 import React from "react";
 import { Brain, Flame, Sparkles, Target, TrendingUp } from "lucide-react";
+import {
+  formatGoalTypeShortLabel,
+  getGoalTypeBadgeClasses,
+} from "../lib/goalType";
 
 function formatGoalTypeLabel(targetType, targetValue) {
   const safeType = targetType || "daily";
@@ -97,12 +101,21 @@ export default function MonthlySummaryCard({
                   </span>
                 </div>
 
-                <div className="text-xs text-neutral-500">
-                  {formatGoalTypeLabel(
-                    bestHabit.targetType,
-                    bestHabit.targetValue,
-                  )}{" "}
-                  • {bestHabit.actual}/{bestHabit.goal}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
+                      bestHabit.targetType,
+                    )}`}
+                  >
+                    {formatGoalTypeShortLabel(
+                      bestHabit.targetType,
+                      bestHabit.targetValue,
+                    )}
+                  </span>
+
+                  <span>
+                    {bestHabit.actual}/{bestHabit.goal}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -128,12 +141,21 @@ export default function MonthlySummaryCard({
                   </span>
                 </div>
 
-                <div className="text-xs text-neutral-500">
-                  {formatGoalTypeLabel(
-                    needsAttentionHabit.targetType,
-                    needsAttentionHabit.targetValue,
-                  )}{" "}
-                  • {needsAttentionHabit.actual}/{needsAttentionHabit.goal}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
+                      needsAttentionHabit.targetType,
+                    )}`}
+                  >
+                    {formatGoalTypeShortLabel(
+                      needsAttentionHabit.targetType,
+                      needsAttentionHabit.targetValue,
+                    )}
+                  </span>
+
+                  <span>
+                    {needsAttentionHabit.actual}/{needsAttentionHabit.goal}
+                  </span>
                 </div>
               </div>
             ) : (
@@ -161,13 +183,22 @@ export default function MonthlySummaryCard({
                   </span>
                 </div>
 
-                <div className="text-xs text-neutral-500">
-                  {formatGoalTypeLabel(
-                    strongestCurrentStreakHabit.targetType,
-                    strongestCurrentStreakHabit.targetValue,
-                  )}{" "}
-                  • {strongestCurrentStreakHabit.actual}/
-                  {strongestCurrentStreakHabit.goal}
+                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
+                      strongestCurrentStreakHabit.targetType,
+                    )}`}
+                  >
+                    {formatGoalTypeShortLabel(
+                      strongestCurrentStreakHabit.targetType,
+                      strongestCurrentStreakHabit.targetValue,
+                    )}
+                  </span>
+
+                  <span>
+                    {strongestCurrentStreakHabit.actual}/
+                    {strongestCurrentStreakHabit.goal}
+                  </span>
                 </div>
               </div>
             ) : (

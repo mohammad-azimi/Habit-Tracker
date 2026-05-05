@@ -10,25 +10,10 @@ import {
   Trophy,
   Target,
 } from "lucide-react";
-
-function formatGoalTypeLabel(targetType, targetValue) {
-  const safeType = targetType || "daily";
-  const safeValue = Math.max(1, Number(targetValue || 1));
-
-  if (safeType === "daily") {
-    return `${safeValue}x/day`;
-  }
-
-  if (safeType === "weekly") {
-    return `${safeValue}x/week`;
-  }
-
-  if (safeType === "monthly") {
-    return `${safeValue}x/month`;
-  }
-
-  return `${safeValue}x/day`;
-}
+import {
+  formatGoalTypeShortLabel,
+  getGoalTypeBadgeClasses,
+} from "../lib/goalType";
 
 export default function HabitGrid({
   habits,
@@ -100,9 +85,13 @@ export default function HabitGrid({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-2">
-                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
-                        <Target className="h-3.5 w-3.5 text-neutral-400" />
-                        {formatGoalTypeLabel(
+                      <div
+                        className={`inline-flex items-center gap-1 rounded-xl border px-2 py-1 text-[11px] font-medium ${getGoalTypeBadgeClasses(
+                          habit.targetType,
+                        )}`}
+                      >
+                        <Target className="h-3.5 w-3.5" />
+                        {formatGoalTypeShortLabel(
                           habit.targetType,
                           habit.targetValue,
                         )}

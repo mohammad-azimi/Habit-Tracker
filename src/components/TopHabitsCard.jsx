@@ -1,21 +1,7 @@
-function formatGoalTypeLabel(targetType, targetValue) {
-  const safeType = targetType || "daily";
-  const safeValue = Math.max(1, Number(targetValue || 1));
-
-  if (safeType === "daily") {
-    return `${safeValue}x/day`;
-  }
-
-  if (safeType === "weekly") {
-    return `${safeValue}x/week`;
-  }
-
-  if (safeType === "monthly") {
-    return `${safeValue}x/month`;
-  }
-
-  return `${safeValue}x/day`;
-}
+import {
+  formatGoalTypeShortLabel,
+  getGoalTypeBadgeClasses,
+} from "../lib/goalType";
 
 export default function TopHabitsCard({ habits }) {
   return (
@@ -37,8 +23,15 @@ export default function TopHabitsCard({ habits }) {
                   </div>
 
                   <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
-                    <span className="inline-flex items-center rounded-full bg-neutral-900 px-2.5 py-1 border border-neutral-700 text-neutral-300">
-                      {formatGoalTypeLabel(habit.targetType, habit.targetValue)}
+                    <span
+                      className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
+                        habit.targetType,
+                      )}`}
+                    >
+                      {formatGoalTypeShortLabel(
+                        habit.targetType,
+                        habit.targetValue,
+                      )}
                     </span>
 
                     <span>
