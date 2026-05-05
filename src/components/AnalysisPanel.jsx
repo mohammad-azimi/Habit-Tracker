@@ -105,13 +105,13 @@ export default function AnalysisPanel({
                 <div className="text-sm font-medium">
                   {row.name} <span className="ml-1">{row.icon}</span>
                 </div>
-                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                  <span>Goal {row.goal}</span>
 
+                <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
                   <span className="inline-flex items-center rounded-full bg-neutral-900 px-2.5 py-1 text-[11px] font-medium text-neutral-300 border border-neutral-700">
                     {formatGoalTypeLabel(row.targetType, row.targetValue)}
                   </span>
 
+                  <span>Goal {row.goal}</span>
                   <span>Actual {row.actual}</span>
                   <span>Left {row.left}</span>
                 </div>

@@ -8,7 +8,27 @@ import {
   Pencil,
   Trash2,
   Trophy,
+  Target,
 } from "lucide-react";
+
+function formatGoalTypeLabel(targetType, targetValue) {
+  const safeType = targetType || "daily";
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "daily") {
+    return `${safeValue}x/day`;
+  }
+
+  if (safeType === "weekly") {
+    return `${safeValue}x/week`;
+  }
+
+  if (safeType === "monthly") {
+    return `${safeValue}x/month`;
+  }
+
+  return `${safeValue}x/day`;
+}
 
 export default function HabitGrid({
   habits,
@@ -80,6 +100,22 @@ export default function HabitGrid({
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2 mt-2">
+                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                        <Target className="h-3.5 w-3.5 text-neutral-400" />
+                        {formatGoalTypeLabel(
+                          habit.targetType,
+                          habit.targetValue,
+                        )}
+                      </div>
+
+                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                        {habit.actual}/{habit.goal}
+                      </div>
+
+                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                        {habit.progress}%
+                      </div>
+
                       <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
                         <Flame className="h-3.5 w-3.5 text-neutral-400" />
                         Current: {habit.currentStreak ?? 0}d
