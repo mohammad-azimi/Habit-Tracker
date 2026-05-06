@@ -466,6 +466,44 @@ function calculateBestStreak(checks) {
   return best;
 }
 
+function sortHabits(rows, sortMode) {
+  const items = [...rows];
+
+  switch (sortMode) {
+    case "current-streak-desc":
+      return items.sort(
+        (a, b) =>
+          (b.currentStreak || 0) - (a.currentStreak || 0) ||
+          b.progress - a.progress,
+      );
+
+    case "best-streak-desc":
+      return items.sort(
+        (a, b) =>
+          (b.bestStreak || 0) - (a.bestStreak || 0) ||
+          b.progress - a.progress,
+      );
+
+    case "completed-desc":
+      return items.sort(
+        (a, b) =>
+          (b.actual || 0) - (a.actual || 0) ||
+          b.progress - a.progress,
+      );
+
+    case "name-asc":
+      return items.sort((a, b) => a.name.localeCompare(b.name));
+
+    case "progress-desc":
+    default:
+      return items.sort(
+        (a, b) =>
+          (b.progress || 0) - (a.progress || 0) ||
+          (b.currentStreak || 0) - (a.currentStreak || 0),
+      );
+  }
+}
+
 export default function App() {
   const currentDate = new Date();
 
@@ -485,7 +523,8 @@ export default function App() {
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
-
+  
+  const [habitSortMode, setHabitSortMode] = useState("progress-desc");
   const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
   const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
   const [previousMonthData, setPreviousMonthData] = useState(null);
@@ -1344,6 +1383,10 @@ export default function App() {
     });
   }, [activeAnalysisRows, habitSearchTerm, habitFilterMode]);
 
+  const sortedFilteredAnalysisRows = useMemo(() => {
+    return sortHabits(filteredAnalysisRows, habitSortMode);
+  }, [filteredAnalysisRows, habitSortMode]);
+
   const dailyProgress = useMemo(() => {
     const totalFlexibleGoal = analysisRows.reduce(
       (sum, row) => sum + Number(row.goal || 0),
@@ -1413,9 +1456,13 @@ export default function App() {
     ? Math.round((totalCompleted / totalGoal) * 100)
     : 0;
 
-  const rankedHabits = [...activeAnalysisRows].sort(
-    (a, b) => b.progress - a.progress,
-  );
+  const sortedActiveAnalysisRows = useMemo(() => {
+    return sortHabits(activeAnalysisRows, habitSortMode);
+  }, [activeAnalysisRows, habitSortMode]);
+
+  const rankedHabits = useMemo(() => {
+    return sortHabits(activeAnalysisRows, habitSortMode);
+  }, [activeAnalysisRows, habitSortMode]);
 
   const mentalStateData = useMemo(() => {
     return Array.from({ length: daysInMonth }, (_, dayIndex) => ({
@@ -1892,7 +1939,7 @@ const totalGoal = previousMonthData.habits.reduce(
               </button>
             </div>
 
-            <TopHabitsCard habits={rankedHabits} />
+            <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
 
             <ArchivedHabitsPanel
               archivedHabits={archivedAnalysisRows}
@@ -1913,8 +1960,33 @@ const totalGoal = previousMonthData.habits.reduce(
               onChangeFilterMode={setHabitFilterMode}
             />
 
+            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <div className="text-sm font-semibold text-neutral-300">
+                    Sort Habits
+                  </div>
+                  <div className="text-xs text-neutral-500 mt-1">
+                    Choose how habits are ranked across the dashboard
+                  </div>
+                </div>
+
+                <select
+                  value={habitSortMode}
+                  onChange={(e) => setHabitSortMode(e.target.value)}
+                  className="rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                >
+                  <option value="progress-desc">Progress</option>
+                  <option value="current-streak-desc">Current Streak</option>
+                  <option value="best-streak-desc">Best Streak</option>
+                  <option value="completed-desc">Completed Count</option>
+                  <option value="name-asc">Name (A-Z)</option>
+                </select>
+              </div>
+            </div>
+
             <HabitGrid
-              habits={filteredAnalysisRows}
+              habits={sortedFilteredAnalysisRows}
               daysInMonth={daysInMonth}
               weekdayLabels={WEEKDAY_LABELS}
               draggedHabitId={draggedHabitId}
@@ -1990,7 +2062,7 @@ const totalGoal = previousMonthData.habits.reduce(
               totalCompleted={totalCompleted}
               totalLeft={totalLeft}
               completionPercent={completionPercent}
-              analysisRows={analysisRows}
+              analysisRows={sortedActiveAnalysisRows}
             />
 
             <EditHabitModal

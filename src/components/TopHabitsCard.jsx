@@ -3,11 +3,30 @@ import {
   getGoalTypeBadgeClasses,
 } from "../lib/goalType";
 
-export default function TopHabitsCard({ habits }) {
+function getSortModeLabel(sortMode) {
+  switch (sortMode) {
+    case "current-streak-desc":
+      return "Sorted by current streak";
+    case "best-streak-desc":
+      return "Sorted by best streak";
+    case "completed-desc":
+      return "Sorted by completed count";
+    case "name-asc":
+      return "Sorted alphabetically";
+    case "progress-desc":
+    default:
+      return "Sorted by progress";
+  }
+}
+
+export default function TopHabitsCard({ habits, sortMode }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-      <div className="text-sm font-semibold text-neutral-300 mb-4">
+      <div className="text-sm font-semibold text-neutral-300 mb-1">
         Top Habits
+      </div>
+      <div className="text-xs text-neutral-500 mb-4">
+        {getSortModeLabel(sortMode)}
       </div>
 
       <div className="space-y-3">
