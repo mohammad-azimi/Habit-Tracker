@@ -14,6 +14,11 @@ import {
   formatGoalTypeShortLabel,
   getGoalTypeBadgeClasses,
 } from "../lib/goalType";
+import {
+  getHabitStatus,
+  getHabitStatusBadgeClasses,
+  getHabitProgressTextClasses,
+} from "../lib/habitStatus";
 
 export default function HabitGrid({
   habits,
@@ -101,8 +106,20 @@ export default function HabitGrid({
                         {habit.actual}/{habit.goal}
                       </div>
 
-                      <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                      <div
+                        className={`inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] font-medium ${getHabitProgressTextClasses(
+                          habit.progress,
+                        )}`}
+                      >
                         {habit.progress}%
+                      </div>
+
+                      <div
+                        className={`inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
+                          habit.progress,
+                        )}`}
+                      >
+                        {getHabitStatus(habit.progress).label}
                       </div>
 
                       <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">

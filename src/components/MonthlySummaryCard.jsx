@@ -4,6 +4,11 @@ import {
   formatGoalTypeShortLabel,
   getGoalTypeBadgeClasses,
 } from "../lib/goalType";
+import {
+  getHabitStatus,
+  getHabitStatusBadgeClasses,
+  getHabitProgressTextClasses,
+} from "../lib/habitStatus";
 
 function formatGoalTypeLabel(targetType, targetValue) {
   const safeType = targetType || "daily";
@@ -92,29 +97,24 @@ export default function MonthlySummaryCard({
 
           <div className="text-sm text-white">
             {bestHabit ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div>
                   {bestHabit.name}{" "}
                   <span className="ml-1">{bestHabit.icon}</span>
-                  <span className="text-neutral-400 ml-2">
+                  <span
+                    className={`ml-2 ${getHabitProgressTextClasses(bestHabit.progress)}`}
+                  >
                     ({bestHabit.progress}%)
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                <div>
                   <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
-                      bestHabit.targetType,
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
+                      bestHabit.progress,
                     )}`}
                   >
-                    {formatGoalTypeShortLabel(
-                      bestHabit.targetType,
-                      bestHabit.targetValue,
-                    )}
-                  </span>
-
-                  <span>
-                    {bestHabit.actual}/{bestHabit.goal}
+                    {getHabitStatus(bestHabit.progress).label}
                   </span>
                 </div>
               </div>
@@ -132,29 +132,26 @@ export default function MonthlySummaryCard({
 
           <div className="text-sm text-white">
             {needsAttentionHabit ? (
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <div>
                   {needsAttentionHabit.name}
                   <span className="ml-1">{needsAttentionHabit.icon}</span>
-                  <span className="text-neutral-400 ml-2">
+                  <span
+                    className={`ml-2 ${getHabitProgressTextClasses(
+                      needsAttentionHabit.progress,
+                    )}`}
+                  >
                     ({needsAttentionHabit.progress}%)
                   </span>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                <div>
                   <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
-                      needsAttentionHabit.targetType,
+                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
+                      needsAttentionHabit.progress,
                     )}`}
                   >
-                    {formatGoalTypeShortLabel(
-                      needsAttentionHabit.targetType,
-                      needsAttentionHabit.targetValue,
-                    )}
-                  </span>
-
-                  <span>
-                    {needsAttentionHabit.actual}/{needsAttentionHabit.goal}
+                    {getHabitStatus(needsAttentionHabit.progress).label}
                   </span>
                 </div>
               </div>
