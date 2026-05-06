@@ -504,6 +504,13 @@ function sortHabits(rows, sortMode) {
   }
 }
 
+function normalizeHabitName(value) {
+  return String(value || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
 export default function App() {
   const currentDate = new Date();
 
@@ -956,10 +963,27 @@ export default function App() {
   };
 
   const addHabit = () => {
-    const trimmed = newHabitName.trim();
-    if (!trimmed) return;
+    const trimmedName = newHabitName.trim().replace(/\s+/g, " ");
+    const trimmedIcon = newHabitIcon.trim() || "✅";
+    const normalizedName = normalizeHabitName(trimmedName);
+    const normalizedTargetType = normalizeGoalType(newHabitTargetType);
+    const normalizedTargetValue = normalizeGoalValue(newHabitTargetValue);
 
-    const safeId = trimmed.toLowerCase().replace(/\s+/g, "-");
+    if (!trimmedName) {
+      showToast("Habit name cannot be empty.", "error");
+      return;
+    }
+
+    const alreadyExists = safeMonthData.habits.some(
+      (habit) => normalizeHabitName(habit.name) === normalizedName,
+    );
+
+    if (alreadyExists) {
+      showToast("A habit with this name already exists.", "error");
+      return;
+    }
+
+    const safeId = trimmedName.toLowerCase().replace(/\s+/g, "-");
 
     updateMonth((month) => ({
       ...month,
@@ -967,11 +991,11 @@ export default function App() {
         ...month.habits,
         {
           id: `${safeId}-${Date.now()}`,
-          name: trimmed,
-          icon: newHabitIcon || "✅",
+          name: trimmedName,
+          icon: trimmedIcon,
           archived: false,
-          targetType: normalizeGoalType(newHabitTargetType),
-          targetValue: normalizeGoalValue(newHabitTargetValue),
+          targetType: normalizedTargetType,
+          targetValue: normalizedTargetValue,
           checks: Array.from({ length: daysInMonth }, () => false),
         },
       ],
@@ -981,6 +1005,8 @@ export default function App() {
     setNewHabitIcon("✅");
     setNewHabitTargetType("daily");
     setNewHabitTargetValue(1);
+
+    showToast("Habit added successfully.", "success");
   };
 
   const deleteHabit = (habitId) => {
@@ -1160,9 +1186,29 @@ export default function App() {
   };
 
   const saveEditedHabit = () => {
-    const trimmedName = editingHabitName.trim();
+    const trimmedName = editingHabitName.trim().replace(/\s+/g, " ");
+    const trimmedIcon = editingHabitIcon.trim() || "✅";
+    const normalizedName = normalizeHabitName(trimmedName);
+    const normalizedTargetType = normalizeGoalType(editingHabitTargetType);
+    const normalizedTargetValue = normalizeGoalValue(editingHabitTargetValue);
 
-    if (!editingHabit || !trimmedName) return;
+    if (!editingHabit) return;
+
+    if (!trimmedName) {
+      showToast("Habit name cannot be empty.", "error");
+      return;
+    }
+
+    const alreadyExists = safeMonthData.habits.some(
+      (habit) =>
+        habit.id !== editingHabit.id &&
+        normalizeHabitName(habit.name) === normalizedName,
+    );
+
+    if (alreadyExists) {
+      showToast("Another habit with this name already exists.", "error");
+      return;
+    }
 
     updateMonth((month) => ({
       ...month,
@@ -1171,15 +1217,16 @@ export default function App() {
           ? {
               ...habit,
               name: trimmedName,
-              icon: editingHabitIcon || "✅",
-              targetType: normalizeGoalType(editingHabitTargetType),
-              targetValue: normalizeGoalValue(editingHabitTargetValue),
+              icon: trimmedIcon,
+              targetType: normalizedTargetType,
+              targetValue: normalizedTargetValue,
             }
           : habit,
       ),
     }));
 
     closeEditHabit();
+    showToast("Habit updated successfully.", "success");
   };
 
   const resetCurrentMonth = () => {
