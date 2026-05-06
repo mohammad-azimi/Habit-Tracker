@@ -35,6 +35,7 @@ export default function HabitGrid({
   onHabitDragOver,
   onHabitDrop,
   onHabitDragEnd,
+  canReorder,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
@@ -71,19 +72,25 @@ export default function HabitGrid({
                 className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
               >
                 <div
-                  draggable
-                  onDragStart={() => onHabitDragStart(habit.id)}
-                  onDragOver={(event) => onHabitDragOver(event)}
-                  onDrop={() => onHabitDrop(habit.id)}
-                  onDragEnd={onHabitDragEnd}
+                  draggable={canReorder}
+                  onDragStart={() => canReorder && onHabitDragStart(habit.id)}
+                  onDragOver={(event) => canReorder && onHabitDragOver(event)}
+                  onDrop={() => canReorder && onHabitDrop(habit.id)}
+                  onDragEnd={() => canReorder && onHabitDragEnd()}
                   className={`px-3 py-3 rounded-xl text-sm text-neutral-200 transition ${
-                    draggedHabitId === habit.id
+                    draggedHabitId === habit.id && canReorder
                       ? "bg-neutral-700 opacity-60"
                       : "bg-neutral-800"
                   }`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
-                    <div className="mt-1 text-neutral-500 cursor-grab shrink-0">
+                    <div
+                      className={`mt-1 shrink-0 ${
+                        canReorder
+                          ? "text-neutral-500 cursor-grab"
+                          : "text-neutral-700 cursor-not-allowed"
+                      }`}
+                    >
                       <GripVertical className="h-4 w-4" />
                     </div>
 
@@ -145,18 +152,28 @@ export default function HabitGrid({
                         <div className="flex items-center gap-1 shrink-0">
                           <button
                             onClick={() => onMoveHabitUp(habit.id)}
-                            disabled={habitIndex === 0}
+                            disabled={!canReorder || habitIndex === 0}
                             className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
-                            title="Move up"
+                            title={
+                              canReorder
+                                ? "Move up"
+                                : "Available only in Manual Order"
+                            }
                           >
                             <ArrowUp className="h-3.5 w-3.5" />
                           </button>
 
                           <button
                             onClick={() => onMoveHabitDown(habit.id)}
-                            disabled={habitIndex === habits.length - 1}
+                            disabled={
+                              !canReorder || habitIndex === habits.length - 1
+                            }
                             className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
-                            title="Move down"
+                            title={
+                              canReorder
+                                ? "Move down"
+                                : "Available only in Manual Order"
+                            }
                           >
                             <ArrowDown className="h-3.5 w-3.5" />
                           </button>
