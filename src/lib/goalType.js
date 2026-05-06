@@ -55,3 +55,22 @@ export function getGoalTypeBadgeClasses(targetType) {
 
   return "border-violet-700/60 bg-violet-950/40 text-violet-300";
 }
+
+export function formatGoalTypeLongLabel(targetType, targetValue) {
+  const safeType = String(targetType || "daily").toLowerCase();
+  const safeValue = Math.max(1, Number(targetValue || 1));
+
+  if (safeType === "daily") {
+    return `${safeValue} time${safeValue === 1 ? "" : "s"} per day`;
+  }
+
+  if (safeType === "weekly") {
+    return `${safeValue} time${safeValue === 1 ? "" : "s"} per week`;
+  }
+
+  if (safeType === "monthly") {
+    return `${safeValue} time${safeValue === 1 ? "" : "s"} per month`;
+  }
+
+  return `${safeValue} time${safeValue === 1 ? "" : "s"} per day`;
+}

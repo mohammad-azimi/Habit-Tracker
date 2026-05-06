@@ -1,4 +1,9 @@
 import {
+  formatGoalTypeShortLabel,
+  formatGoalTypeLongLabel,
+  getGoalTypeBadgeClasses,
+} from "../lib/goalType";
+import {
   getHabitStatus,
   getHabitStatusBadgeClasses,
   getHabitProgressTextClasses,
@@ -49,7 +54,26 @@ export default function TopHabitsCard({ habits, sortMode }) {
                       <span className="ml-1">{habit.icon}</span>
                     </div>
 
-                    <div className="mt-2">
+                    <div className="mt-1 text-[11px] text-neutral-400">
+                      {formatGoalTypeLongLabel(
+                        habit.targetType,
+                        habit.targetValue,
+                      )}{" "}
+                      • {habit.actual}/{habit.goal}
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getGoalTypeBadgeClasses(
+                          habit.targetType,
+                        )}`}
+                      >
+                        {formatGoalTypeShortLabel(
+                          habit.targetType,
+                          habit.targetValue,
+                        )}
+                      </span>
+
                       <span
                         className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
                           habit.progress,

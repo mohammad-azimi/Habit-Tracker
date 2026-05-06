@@ -2,6 +2,7 @@ import React from "react";
 import { Brain, Flame, Sparkles, Target, TrendingUp } from "lucide-react";
 import {
   formatGoalTypeShortLabel,
+  formatGoalTypeLongLabel,
   getGoalTypeBadgeClasses,
 } from "../lib/goalType";
 import {
@@ -27,6 +28,46 @@ function formatGoalTypeLabel(targetType, targetValue) {
   }
 
   return `${safeValue}x/day`;
+}
+
+function HabitMeta({ habit, streakMode = false }) {
+  if (!habit) return null;
+
+  return (
+    <div className="space-y-2">
+      <div>
+        {habit.name}
+        <span className="ml-1">{habit.icon}</span>
+        <span className={`ml-2 ${getHabitProgressTextClasses(habit.progress)}`}>
+          ({habit.progress}%)
+        </span>
+      </div>
+
+      <div className="text-[11px] text-neutral-400">
+        {formatGoalTypeLongLabel(habit.targetType, habit.targetValue)}
+        {!streakMode ? ` • ${habit.actual}/${habit.goal}` : ""}
+        {streakMode ? ` • ${habit.currentStreak ?? 0} days current streak` : ""}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getGoalTypeBadgeClasses(
+            habit.targetType,
+          )}`}
+        >
+          {formatGoalTypeShortLabel(habit.targetType, habit.targetValue)}
+        </span>
+
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
+            habit.progress,
+          )}`}
+        >
+          {getHabitStatus(habit.progress).label}
+        </span>
+      </div>
+    </div>
+  );
 }
 
 export default function MonthlySummaryCard({
@@ -96,31 +137,7 @@ export default function MonthlySummaryCard({
           </div>
 
           <div className="text-sm text-white">
-            {bestHabit ? (
-              <div className="space-y-2">
-                <div>
-                  {bestHabit.name}{" "}
-                  <span className="ml-1">{bestHabit.icon}</span>
-                  <span
-                    className={`ml-2 ${getHabitProgressTextClasses(bestHabit.progress)}`}
-                  >
-                    ({bestHabit.progress}%)
-                  </span>
-                </div>
-
-                <div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
-                      bestHabit.progress,
-                    )}`}
-                  >
-                    {getHabitStatus(bestHabit.progress).label}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              "No data"
-            )}
+            {bestHabit ? <HabitMeta habit={bestHabit} /> : "No data"}
           </div>
         </div>
 
@@ -132,29 +149,7 @@ export default function MonthlySummaryCard({
 
           <div className="text-sm text-white">
             {needsAttentionHabit ? (
-              <div className="space-y-2">
-                <div>
-                  {needsAttentionHabit.name}
-                  <span className="ml-1">{needsAttentionHabit.icon}</span>
-                  <span
-                    className={`ml-2 ${getHabitProgressTextClasses(
-                      needsAttentionHabit.progress,
-                    )}`}
-                  >
-                    ({needsAttentionHabit.progress}%)
-                  </span>
-                </div>
-
-                <div>
-                  <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
-                      needsAttentionHabit.progress,
-                    )}`}
-                  >
-                    {getHabitStatus(needsAttentionHabit.progress).label}
-                  </span>
-                </div>
-              </div>
+              <HabitMeta habit={needsAttentionHabit} />
             ) : (
               "No data"
             )}
@@ -169,35 +164,7 @@ export default function MonthlySummaryCard({
 
           <div className="text-sm text-white">
             {strongestCurrentStreakHabit ? (
-              <div className="space-y-1">
-                <div>
-                  {strongestCurrentStreakHabit.name}
-                  <span className="ml-1">
-                    {strongestCurrentStreakHabit.icon}
-                  </span>
-                  <span className="text-neutral-400 ml-2">
-                    ({strongestCurrentStreakHabit.currentStreak} days)
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
-                  <span
-                    className={`inline-flex items-center rounded-full border px-2.5 py-1 font-medium ${getGoalTypeBadgeClasses(
-                      strongestCurrentStreakHabit.targetType,
-                    )}`}
-                  >
-                    {formatGoalTypeShortLabel(
-                      strongestCurrentStreakHabit.targetType,
-                      strongestCurrentStreakHabit.targetValue,
-                    )}
-                  </span>
-
-                  <span>
-                    {strongestCurrentStreakHabit.actual}/
-                    {strongestCurrentStreakHabit.goal}
-                  </span>
-                </div>
-              </div>
+              <HabitMeta habit={strongestCurrentStreakHabit} streakMode />
             ) : (
               "No data"
             )}
