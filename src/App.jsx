@@ -549,6 +549,7 @@ export default function App() {
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [habitSearchTerm, setHabitSearchTerm] = useState("");
   const [habitFilterMode, setHabitFilterMode] = useState("all");
+  const [goalTypeFilter, setGoalTypeFilter] = useState("all");
   const [toast, setToast] = useState(null);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
@@ -1438,6 +1439,11 @@ export default function App() {
 
       if (!matchesSearch) return false;
 
+      const matchesGoalType =
+        goalTypeFilter === "all" ? true : habit.targetType === goalTypeFilter;
+
+      if (!matchesGoalType) return false;
+
       if (habitFilterMode === "completed") {
         return habit.progress === 100;
       }
@@ -1452,7 +1458,7 @@ export default function App() {
 
       return true;
     });
-  }, [activeAnalysisRows, habitSearchTerm, habitFilterMode]);
+  }, [activeAnalysisRows, habitSearchTerm, habitFilterMode, goalTypeFilter]);
 
   const sortedFilteredAnalysisRows = useMemo(() => {
     return sortHabits(filteredAnalysisRows, habitSortMode);
@@ -2033,6 +2039,8 @@ const totalGoal = previousMonthData.habits.reduce(
               onChangeSearchTerm={setHabitSearchTerm}
               filterMode={habitFilterMode}
               onChangeFilterMode={setHabitFilterMode}
+              goalTypeFilter={goalTypeFilter}
+              onChangeGoalTypeFilter={setGoalTypeFilter}
             />
 
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
