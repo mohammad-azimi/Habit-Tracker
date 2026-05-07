@@ -1,5 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { CalendarDays, LogOut, Plus } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Plus,
+  RotateCcw,
+} from "lucide-react";
 import StreakLeaderboardCard from "./components/StreakLeaderboardCard";
 import YearlyOverviewCard from "./components/YearlyOverviewCard";
 import MonthComparisonCard from "./components/MonthComparisonCard";
@@ -617,6 +624,23 @@ export default function App() {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const goToPreviousMonth = () => {
+    const prev = getPreviousMonthMeta(selectedYear, selectedMonthIndex);
+    setSelectedYear(String(prev.year));
+    setSelectedMonthIndex(prev.monthIndex);
+  };
+
+  const goToNextMonth = () => {
+    const next = getNextMonthMeta(selectedYear, selectedMonthIndex);
+    setSelectedYear(String(next.year));
+    setSelectedMonthIndex(next.monthIndex);
+  };
+
+  const goToCurrentMonth = () => {
+    setSelectedYear(String(currentDate.getFullYear()));
+    setSelectedMonthIndex(currentDate.getMonth());
   };
 
   const resetHabitFilters = () => {
@@ -2049,6 +2073,32 @@ const totalGoal = previousMonthData.habits.reduce(
               <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
                 <CalendarDays className="h-4 w-4" />
                 Calendar Settings
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={goToPreviousMonth}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </button>
+
+                <button
+                  onClick={goToCurrentMonth}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Current
+                </button>
+
+                <button
+                  onClick={goToNextMonth}
+                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
               </div>
 
               <UserProfileCard user={currentUser} />
