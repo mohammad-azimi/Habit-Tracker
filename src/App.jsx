@@ -2198,30 +2198,35 @@ const totalGoal = previousMonthData.habits.reduce(
             <ActiveHabitFilters chips={activeFilterChips} />
 
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                <div className="min-w-0">
                   <div className="text-sm font-semibold text-neutral-300">
                     Sort Habits
                   </div>
                   <div className="text-xs text-neutral-500 mt-1">
-                    Choose how habits are ranked across the dashboard
+                    Choose how habits are ordered across the dashboard
                   </div>
                 </div>
 
-                <select
-                  value={habitSortMode}
-                  onChange={(e) => setHabitSortMode(e.target.value)}
-                  className="rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
-                >
-                  <option value="manual">Manual Order</option>
-                  <option value="progress-desc">Progress</option>
-                  <option value="current-streak-desc">Current Streak</option>
-                  <option value="best-streak-desc">Best Streak</option>
-                  <option value="completed-desc">Completed Count</option>
-                  <option value="name-asc">Name (A-Z)</option>
-                </select>
-                <div className="text-xs text-neutral-500 mt-2">
-                  Drag & drop and move buttons work only in Manual Order.
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <select
+                    value={habitSortMode}
+                    onChange={(e) => setHabitSortMode(e.target.value)}
+                    className="min-w-[220px] rounded-2xl bg-neutral-800 border border-neutral-700 px-4 py-2.5 text-sm outline-none"
+                  >
+                    <option value="progress-desc">Progress</option>
+                    <option value="current-streak-desc">Current Streak</option>
+                    <option value="best-streak-desc">Best Streak</option>
+                    <option value="completed-desc">Completed Count</option>
+                    <option value="name-asc">Name (A-Z)</option>
+                    <option value="manual">Manual Order</option>
+                  </select>
+
+                  <div className="rounded-2xl bg-neutral-800 px-3 py-2.5 text-xs text-neutral-400">
+                    {habitSortMode === "manual"
+                      ? "Drag & drop and move buttons are active."
+                      : "Automatic ranking is active."}
+                  </div>
                 </div>
               </div>
             </div>
