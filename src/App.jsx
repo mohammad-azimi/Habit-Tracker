@@ -617,6 +617,12 @@ export default function App() {
     setToast(null);
   };
 
+  const resetHabitFilters = () => {
+    setHabitSearchTerm("");
+    setHabitFilterMode("all");
+    setGoalTypeFilter("all");
+  };
+
   const restoreDeletedHabit = (habitSnapshot, originalIndex) => {
     updateMonth((month) => {
       if (month.habits.some((habit) => habit.id === habitSnapshot.id)) {
@@ -1464,6 +1470,9 @@ export default function App() {
     return sortHabits(filteredAnalysisRows, habitSortMode);
   }, [filteredAnalysisRows, habitSortMode]);
 
+  const filteredHabitsCount = sortedFilteredAnalysisRows.length;
+  const totalActiveHabitsCount = activeAnalysisRows.length;
+
   const dailyProgress = useMemo(() => {
     const totalFlexibleGoal = analysisRows.reduce(
       (sum, row) => sum + Number(row.goal || 0),
@@ -2041,6 +2050,9 @@ const totalGoal = previousMonthData.habits.reduce(
               onChangeFilterMode={setHabitFilterMode}
               goalTypeFilter={goalTypeFilter}
               onChangeGoalTypeFilter={setGoalTypeFilter}
+              filteredCount={filteredHabitsCount}
+              totalCount={totalActiveHabitsCount}
+              onResetFilters={resetHabitFilters}
             />
 
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
@@ -2097,24 +2109,40 @@ const totalGoal = previousMonthData.habits.reduce(
               </div>
             ) : null}
 
-            <HabitGrid
-              habits={sortedFilteredAnalysisRows}
-              daysInMonth={daysInMonth}
-              weekdayLabels={WEEKDAY_LABELS}
-              draggedHabitId={draggedHabitId}
-              onToggleHabitDay={toggleHabitDay}
-              onRequestDeleteHabit={requestDeleteHabit}
-              onStartEditHabit={startEditHabit}
-              onMoveHabitUp={moveHabitUp}
-              onMoveHabitDown={moveHabitDown}
-              onRequestArchiveHabit={requestArchiveHabit}
-              onHabitDragStart={handleHabitDragStart}
-              onHabitDragOver={handleHabitDragOver}
-              onHabitDrop={handleHabitDrop}
-              onHabitDragEnd={handleHabitDragEnd}
-              canReorder={habitSortMode === "manual"}
-              todayIndex={todayIndex}
-            />
+            {sortedFilteredAnalysisRows.length > 0 ? (
+              <HabitGrid
+                habits={sortedFilteredAnalysisRows}
+                daysInMonth={daysInMonth}
+                weekdayLabels={WEEKDAY_LABELS}
+                draggedHabitId={draggedHabitId}
+                onToggleHabitDay={toggleHabitDay}
+                onRequestDeleteHabit={requestDeleteHabit}
+                onStartEditHabit={startEditHabit}
+                onMoveHabitUp={moveHabitUp}
+                onMoveHabitDown={moveHabitDown}
+                onRequestArchiveHabit={requestArchiveHabit}
+                onHabitDragStart={handleHabitDragStart}
+                onHabitDragOver={handleHabitDragOver}
+                onHabitDrop={handleHabitDrop}
+                onHabitDragEnd={handleHabitDragEnd}
+                todayIndex={todayIndex}
+              />
+            ) : (
+              <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center">
+                <div className="text-lg font-semibold text-white">
+                  No habits found
+                </div>
+                <div className="text-sm text-neutral-500 mt-2">
+                  Try changing your search text or clearing the active filters.
+                </div>
+                <button
+                  onClick={resetHabitFilters}
+                  className="mt-4 rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-2 text-sm font-medium"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            )}
 
             <MentalStateSection
               daysInMonth={daysInMonth}
