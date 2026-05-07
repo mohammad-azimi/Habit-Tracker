@@ -520,14 +520,31 @@ function normalizeHabitName(value) {
     .toLowerCase();
 }
 
+const DASHBOARD_PREFS_KEY = "habit-tracker-dashboard-prefs";
+
+function loadDashboardPrefs() {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = localStorage.getItem(DASHBOARD_PREFS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (error) {
+    console.error("Failed to load dashboard preferences:", error);
+    return null;
+  }
+}
+
 export default function App() {
   const currentDate = new Date();
+  const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
 
   const [selectedYear, setSelectedYear] = useState(
-    String(currentDate.getFullYear()),
+    savedDashboardPrefs?.selectedYear || String(currentDate.getFullYear()),
   );
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(
-    currentDate.getMonth(),
+    Number.isInteger(savedDashboardPrefs?.selectedMonthIndex)
+      ? savedDashboardPrefs.selectedMonthIndex
+      : currentDate.getMonth(),
   );
 
   const [editingHabit, setEditingHabit] = useState(null);
@@ -540,7 +557,9 @@ export default function App() {
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   
-  const [habitSortMode, setHabitSortMode] = useState("manual");
+  const [habitSortMode, setHabitSortMode] = useState(
+    savedDashboardPrefs?.habitSortMode || "manual",
+  );
   const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
   const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
   const [previousMonthData, setPreviousMonthData] = useState(null);
@@ -786,6 +805,21 @@ export default function App() {
 
     return () => clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        DASHBOARD_PREFS_KEY,
+        JSON.stringify({
+          selectedYear,
+          selectedMonthIndex,
+          habitSortMode,
+        }),
+      );
+    } catch (error) {
+      console.error("Failed to save dashboard preferences:", error);
+    }
+  }, [selectedYear, selectedMonthIndex, habitSortMode]);
 
   useEffect(() => {
     if (!authChecked) return;
