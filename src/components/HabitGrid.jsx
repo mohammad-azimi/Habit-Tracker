@@ -36,6 +36,7 @@ export default function HabitGrid({
   onHabitDrop,
   onHabitDragEnd,
   canReorder,
+  todayIndex,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
@@ -46,7 +47,14 @@ export default function HabitGrid({
           </div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
-            <div key={i} className="text-[10px] text-center text-neutral-500">
+            <div
+              key={i}
+              className={`text-[10px] text-center rounded-md py-1 ${
+                i === todayIndex
+                  ? "bg-neutral-200 text-black font-semibold"
+                  : "text-neutral-500"
+              }`}
+            >
               {i + 1}
             </div>
           ))}
@@ -56,7 +64,14 @@ export default function HabitGrid({
           <div></div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
-            <div key={i} className="text-[10px] text-center text-neutral-600">
+            <div
+              key={i}
+              className={`text-[10px] text-center rounded-md py-1 ${
+                i === todayIndex
+                  ? "bg-neutral-800 text-neutral-200 font-medium"
+                  : "text-neutral-600"
+              }`}
+            >
               {weekdayLabels[i % 7]}
             </div>
           ))}
@@ -211,10 +226,14 @@ export default function HabitGrid({
                   <button
                     key={idx}
                     onClick={() => onToggleHabitDay(habit.id, idx)}
-                    className={`h-6 w-6 rounded-md border flex items-center justify-center text-[11px] ${
+                    className={`h-6 w-6 rounded-md border flex items-center justify-center text-[11px] transition ${
                       checked
-                        ? "bg-neutral-300 text-black border-neutral-300"
-                        : "bg-neutral-950 text-neutral-700 border-neutral-800"
+                        ? idx === todayIndex
+                          ? "bg-white text-black border-white ring-1 ring-white"
+                          : "bg-neutral-300 text-black border-neutral-300"
+                        : idx === todayIndex
+                          ? "bg-neutral-900 text-neutral-300 border-neutral-500 ring-1 ring-neutral-500"
+                          : "bg-neutral-950 text-neutral-700 border-neutral-800"
                     }`}
                   >
                     {checked ? "✓" : ""}

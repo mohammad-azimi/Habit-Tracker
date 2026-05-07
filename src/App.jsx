@@ -562,6 +562,13 @@ export default function App() {
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
+  const now = new Date();
+
+  const isCurrentViewedMonth =
+    Number(selectedYear) === now.getFullYear() &&
+    selectedMonthIndex === now.getMonth();
+
+  const todayIndex = isCurrentViewedMonth ? now.getDate() - 1 : null;
 
   const previousMonthMeta = useMemo(() => {
     return getPreviousMonthMeta(selectedYear, selectedMonthIndex);
@@ -572,6 +579,23 @@ export default function App() {
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
+
+  const todaySummary = useMemo(() => {
+    if (todayIndex === null) return null;
+
+    const completedToday = safeMonthData.habits.filter(
+      (habit) => habit.checks?.[todayIndex],
+    ).length;
+
+    const totalToday = safeMonthData.habits.length || 1;
+
+    return {
+      day: todayIndex + 1,
+      completed: completedToday,
+      total: totalToday,
+      percent: Math.round((completedToday / totalToday) * 100),
+    };
+  }, [safeMonthData, todayIndex]);
 
   const showToast = (
     message,
@@ -2040,6 +2064,31 @@ const totalGoal = previousMonthData.habits.reduce(
               </div>
             </div>
 
+            {todaySummary ? (
+              <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-neutral-300">
+                      Today Progress
+                    </div>
+                    <div className="text-xs text-neutral-500 mt-1">
+                      Day {todaySummary.day} of {MONTHS[selectedMonthIndex]}{" "}
+                      {selectedYear}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-2xl bg-neutral-800 px-4 py-2 text-sm text-neutral-300">
+                      {todaySummary.completed}/{todaySummary.total} habits done
+                    </div>
+                    <div className="rounded-2xl bg-white text-black px-4 py-2 text-sm font-semibold">
+                      {todaySummary.percent}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
             <HabitGrid
               habits={sortedFilteredAnalysisRows}
               daysInMonth={daysInMonth}
@@ -2056,6 +2105,7 @@ const totalGoal = previousMonthData.habits.reduce(
               onHabitDrop={handleHabitDrop}
               onHabitDragEnd={handleHabitDragEnd}
               canReorder={habitSortMode === "manual"}
+              todayIndex={todayIndex}
             />
 
             <MentalStateSection
