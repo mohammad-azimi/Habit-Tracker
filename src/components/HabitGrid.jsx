@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ArchiveX,
   ArrowDown,
@@ -38,8 +38,40 @@ export default function HabitGrid({
   canReorder,
   todayIndex,
 }) {
+  const scrollContainerRef = useRef(null);
+  const todayCellRef = useRef(null);
+
+  useEffect(() => {
+    if (todayIndex < 0) return;
+    if (!scrollContainerRef.current) return;
+    if (!todayCellRef.current) return;
+
+    const container = scrollContainerRef.current;
+    const target = todayCellRef.current;
+
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+
+    const currentScrollLeft = container.scrollLeft;
+    const targetLeftInsideContainer =
+      targetRect.left - containerRect.left + currentScrollLeft;
+
+    const centeredScrollLeft =
+      targetLeftInsideContainer -
+      container.clientWidth / 2 +
+      target.clientWidth / 2;
+
+    container.scrollTo({
+      left: Math.max(0, centeredScrollLeft),
+      behavior: "smooth",
+    });
+  }, [todayIndex, daysInMonth, habits.length]);
+
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto">
+    <div
+      ref={scrollContainerRef}
+      className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto"
+    >
       <div className="min-w-[520px] sm:min-w-[1150px]">
         <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
           <div className="text-sm font-semibold text-neutral-300 px-2">
@@ -49,9 +81,10 @@ export default function HabitGrid({
           {Array.from({ length: daysInMonth }, (_, i) => (
             <div
               key={i}
+              ref={i === todayIndex ? todayCellRef : null}
               className={`text-[10px] text-center rounded-md py-1 ${
                 i === todayIndex
-                  ? "bg-neutral-200 text-black font-semibold"
+                  ? "bg-white text-black font-semibold"
                   : "text-neutral-500"
               }`}
             >
