@@ -54,6 +54,7 @@ import {
   normalizeGoalValue,
 } from "./lib/goalType";
 import ActiveHabitFilters from "./components/ActiveHabitFilters";
+import HabitQuickFilters from "./components/HabitQuickFilters";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -622,6 +623,45 @@ export default function App() {
     setHabitSearchTerm("");
     setHabitFilterMode("all");
     setGoalTypeFilter("all");
+  };
+
+  const applyQuickFilter = (filterKey) => {
+    setHabitSearchTerm("");
+
+    if (filterKey === "all") {
+      setHabitFilterMode("all");
+      setGoalTypeFilter("all");
+      return;
+    }
+
+    if (filterKey === "daily") {
+      setHabitFilterMode("all");
+      setGoalTypeFilter("daily");
+      return;
+    }
+
+    if (filterKey === "weekly") {
+      setHabitFilterMode("all");
+      setGoalTypeFilter("weekly");
+      return;
+    }
+
+    if (filterKey === "monthly") {
+      setHabitFilterMode("all");
+      setGoalTypeFilter("monthly");
+      return;
+    }
+
+    if (filterKey === "completed") {
+      setHabitFilterMode("completed");
+      setGoalTypeFilter("all");
+      return;
+    }
+
+    if (filterKey === "needs-focus") {
+      setHabitFilterMode("in-progress");
+      setGoalTypeFilter("all");
+    }
   };
 
   const restoreDeletedHabit = (habitSnapshot, originalIndex) => {
@@ -1516,6 +1556,58 @@ export default function App() {
     return chips;
   }, [habitSearchTerm, habitFilterMode, goalTypeFilter]);
 
+  const activeQuickFilter = useMemo(() => {
+    if (
+      habitFilterMode === "completed" &&
+      goalTypeFilter === "all" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "completed";
+    }
+
+    if (
+      habitFilterMode === "in-progress" &&
+      goalTypeFilter === "all" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "needs-focus";
+    }
+
+    if (
+      habitFilterMode === "all" &&
+      goalTypeFilter === "daily" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "daily";
+    }
+
+    if (
+      habitFilterMode === "all" &&
+      goalTypeFilter === "weekly" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "weekly";
+    }
+
+    if (
+      habitFilterMode === "all" &&
+      goalTypeFilter === "monthly" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "monthly";
+    }
+
+    if (
+      habitFilterMode === "all" &&
+      goalTypeFilter === "all" &&
+      !habitSearchTerm.trim()
+    ) {
+      return "all";
+    }
+
+    return null;
+  }, [habitFilterMode, goalTypeFilter, habitSearchTerm]);
+
   const dailyProgress = useMemo(() => {
     const totalFlexibleGoal = analysisRows.reduce(
       (sum, row) => sum + Number(row.goal || 0),
@@ -2096,6 +2188,11 @@ const totalGoal = previousMonthData.habits.reduce(
               filteredCount={filteredHabitsCount}
               totalCount={totalActiveHabitsCount}
               onResetFilters={resetHabitFilters}
+            />
+
+            <HabitQuickFilters
+              activeFilter={activeQuickFilter}
+              onApplyFilter={applyQuickFilter}
             />
 
             <ActiveHabitFilters chips={activeFilterChips} />
