@@ -53,6 +53,7 @@ import {
   normalizeGoalType,
   normalizeGoalValue,
 } from "./lib/goalType";
+import ActiveHabitFilters from "./components/ActiveHabitFilters";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -1473,6 +1474,48 @@ export default function App() {
   const filteredHabitsCount = sortedFilteredAnalysisRows.length;
   const totalActiveHabitsCount = activeAnalysisRows.length;
 
+  const activeFilterChips = useMemo(() => {
+    const chips = [];
+
+    if (habitSearchTerm.trim()) {
+      chips.push({
+        key: "search",
+        label: `Search: ${habitSearchTerm.trim()}`,
+        onRemove: () => setHabitSearchTerm(""),
+      });
+    }
+
+    if (habitFilterMode !== "all") {
+      const statusMap = {
+        completed: "Completed",
+        "in-progress": "In Progress",
+        "not-started": "Not Started",
+      };
+
+      chips.push({
+        key: "status",
+        label: `Status: ${statusMap[habitFilterMode] || habitFilterMode}`,
+        onRemove: () => setHabitFilterMode("all"),
+      });
+    }
+
+    if (goalTypeFilter !== "all") {
+      const goalTypeMap = {
+        daily: "Daily",
+        weekly: "Weekly",
+        monthly: "Monthly",
+      };
+
+      chips.push({
+        key: "goal-type",
+        label: `Goal: ${goalTypeMap[goalTypeFilter] || goalTypeFilter}`,
+        onRemove: () => setGoalTypeFilter("all"),
+      });
+    }
+
+    return chips;
+  }, [habitSearchTerm, habitFilterMode, goalTypeFilter]);
+
   const dailyProgress = useMemo(() => {
     const totalFlexibleGoal = analysisRows.reduce(
       (sum, row) => sum + Number(row.goal || 0),
@@ -2054,6 +2097,8 @@ const totalGoal = previousMonthData.habits.reduce(
               totalCount={totalActiveHabitsCount}
               onResetFilters={resetHabitFilters}
             />
+
+            <ActiveHabitFilters chips={activeFilterChips} />
 
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
