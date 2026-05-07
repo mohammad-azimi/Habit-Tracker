@@ -2357,6 +2357,7 @@ const totalGoal = previousMonthData.habits.reduce(
                 onHabitDrop={handleHabitDrop}
                 onHabitDragEnd={handleHabitDragEnd}
                 todayIndex={todayIndex}
+                isManualSort={habitSortMode === "manual"}
               />
             ) : (
               <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center">

@@ -35,11 +35,12 @@ export default function HabitGrid({
   onHabitDragOver,
   onHabitDrop,
   onHabitDragEnd,
-  canReorder,
   todayIndex,
+  isManualSort,
 }) {
   const scrollContainerRef = useRef(null);
   const todayCellRef = useRef(null);
+  const canReorder = isManualSort === true;
 
   useEffect(() => {
     if (todayIndex < 0) return;
@@ -74,8 +75,15 @@ export default function HabitGrid({
     >
       <div className="min-w-[520px] sm:min-w-[1150px]">
         <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
-          <div className="text-sm font-semibold text-neutral-300 px-2">
-            My Habits
+          <div className="px-2">
+            <div className="text-sm font-semibold text-neutral-300">
+              My Habits
+            </div>
+            <div className="mt-1 text-[11px] text-neutral-500">
+              {isManualSort
+                ? "Manual reorder is enabled"
+                : "Switch sort mode to Manual Order to reorder habits"}
+            </div>
           </div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
@@ -136,8 +144,13 @@ export default function HabitGrid({
                       className={`mt-1 shrink-0 ${
                         canReorder
                           ? "text-neutral-500 cursor-grab"
-                          : "text-neutral-700 cursor-not-allowed"
+                          : "text-neutral-700 cursor-not-allowed opacity-50"
                       }`}
+                      title={
+                        canReorder
+                          ? "Drag to reorder"
+                          : "Enable Manual Order to reorder"
+                      }
                     >
                       <GripVertical className="h-4 w-4" />
                     </div>
