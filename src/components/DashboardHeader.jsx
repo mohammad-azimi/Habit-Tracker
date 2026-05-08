@@ -74,7 +74,17 @@ export default function DashboardHeader({
       title: "Export",
       items: [
         {
+          label: "Export PDF",
+          description: "Download the styled monthly report as PDF.",
+          icon: Download,
+          onClick: () => {
+            onExportPDF?.();
+            closeMenu();
+          },
+        },
+        {
           label: "Export CSV",
+          description: "Download habit performance as spreadsheet data.",
           icon: FileSpreadsheet,
           onClick: () => {
             onExportCSV?.();
@@ -83,6 +93,7 @@ export default function DashboardHeader({
         },
         {
           label: "Export JSON",
+          description: "Download the current monthly report as raw JSON.",
           icon: FileJson,
           onClick: () => {
             onExportJSON?.();
@@ -91,6 +102,7 @@ export default function DashboardHeader({
         },
         {
           label: "Printable HTML",
+          description: "Open a print-friendly HTML version of the report.",
           icon: FileText,
           onClick: () => {
             onExportPrintableHTML?.();
@@ -98,15 +110,8 @@ export default function DashboardHeader({
           },
         },
         {
-          label: "Export PDF",
-          icon: Download,
-          onClick: () => {
-            onExportPDF?.();
-            closeMenu();
-          },
-        },
-        {
           label: "Backup JSON",
+          description: "Save a backup of your current dashboard data.",
           icon: Database,
           onClick: () => {
             onExportBackup?.();
@@ -120,6 +125,7 @@ export default function DashboardHeader({
       items: [
         {
           label: "Copy to Next Month",
+          description: "Duplicate your current setup into the next month.",
           icon: Copy,
           onClick: () => {
             onCopyToNextMonth?.();
@@ -128,6 +134,7 @@ export default function DashboardHeader({
         },
         {
           label: "Copy to Any Month",
+          description: "Copy your current setup into a chosen month.",
           icon: CalendarPlus,
           onClick: () => {
             onOpenCopyToMonth?.();
@@ -136,6 +143,7 @@ export default function DashboardHeader({
         },
         {
           label: "Import Backup",
+          description: "Restore dashboard data from a backup file.",
           icon: FolderUp,
           onClick: handleImportClick,
         },
@@ -177,13 +185,13 @@ export default function DashboardHeader({
         </button>
 
         {isMenuOpen && (
-          <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
-            <div className="border-b border-neutral-800 px-4 py-3">
+          <div className="absolute right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+            <div className="border-b border-neutral-800 px-4 py-4">
               <div className="text-sm font-semibold text-white">
                 Export & Actions
               </div>
-              <div className="mt-1 text-xs text-neutral-500">
-                Choose a report format or manage monthly data.
+              <div className="mt-1 text-xs leading-5 text-neutral-500">
+                Download reports, create backups, or copy your monthly setup.
               </div>
             </div>
 
@@ -205,10 +213,20 @@ export default function DashboardHeader({
                       <button
                         key={item.label}
                         onClick={item.onClick}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition hover:bg-neutral-800"
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition hover:bg-neutral-800"
                       >
-                        <Icon className="h-4 w-4 text-neutral-400" />
-                        <span>{item.label}</span>
+                        <div className="mt-0.5 shrink-0 rounded-xl bg-neutral-800 p-2">
+                          <Icon className="h-4 w-4 text-neutral-300" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-white">
+                            {item.label}
+                          </div>
+                          <div className="mt-1 text-xs leading-5 text-neutral-500">
+                            {item.description}
+                          </div>
+                        </div>
                       </button>
                     );
                   })}
