@@ -2388,6 +2388,27 @@ const totalGoal = previousMonthData.habits.reduce(
               notes={safeMonthData.notes}
               onChangeNotes={setMonthlyNotes}
             />
+
+            <YearlyOverviewCard
+              selectedYear={selectedYear}
+              yearlyData={yearlyOverviewData}
+              isLoading={isYearlyOverviewLoading}
+            />
+
+            <StreakLeaderboardCard rows={analysisRows} />
+
+            <MonthlyReviewCard
+              review={safeMonthData.review}
+              onChangeField={updateMonthlyReviewField}
+            />
+
+            <AnalysisPanel
+              totalGoal={totalGoal}
+              totalCompleted={totalCompleted}
+              totalLeft={totalLeft}
+              completionPercent={completionPercent}
+              analysisRows={sortedActiveAnalysisRows}
+            />
           </section>
 
           <div className="xl:col-span-3 space-y-4">
@@ -2416,27 +2437,6 @@ const totalGoal = previousMonthData.habits.reduce(
               previousSummary={previousMonthSummary}
               previousLabel={previousMonthLabel}
               isLoading={isPreviousMonthLoading}
-            />
-
-            <YearlyOverviewCard
-              selectedYear={selectedYear}
-              yearlyData={yearlyOverviewData}
-              isLoading={isYearlyOverviewLoading}
-            />
-
-            <StreakLeaderboardCard rows={analysisRows} />
-
-            <MonthlyReviewCard
-              review={safeMonthData.review}
-              onChangeField={updateMonthlyReviewField}
-            />
-
-            <AnalysisPanel
-              totalGoal={totalGoal}
-              totalCompleted={totalCompleted}
-              totalLeft={totalLeft}
-              completionPercent={completionPercent}
-              analysisRows={sortedActiveAnalysisRows}
             />
 
             <EditHabitModal

@@ -40,30 +40,34 @@ export default function HabitGrid({
 }) {
   const scrollContainerRef = useRef(null);
   const todayCellRef = useRef(null);
+  const stickyColumnRef = useRef(null);
   const canReorder = isManualSort === true;
 
   useEffect(() => {
-    if (todayIndex < 0) return;
+    if (todayIndex === null || todayIndex < 0) return;
     if (!scrollContainerRef.current) return;
     if (!todayCellRef.current) return;
+    if (!stickyColumnRef.current) return;
 
     const container = scrollContainerRef.current;
     const target = todayCellRef.current;
+    const stickyColumn = stickyColumnRef.current;
 
     const containerRect = container.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
+    const stickyRect = stickyColumn.getBoundingClientRect();
 
     const currentScrollLeft = container.scrollLeft;
     const targetLeftInsideContainer =
       targetRect.left - containerRect.left + currentScrollLeft;
 
-    const centeredScrollLeft =
-      targetLeftInsideContainer -
-      container.clientWidth / 2 +
-      target.clientWidth / 2;
+    const stickyWidth = stickyRect.width;
+    const safeOffset = stickyWidth + 24;
+
+    const nextScrollLeft = targetLeftInsideContainer - safeOffset;
 
     container.scrollTo({
-      left: Math.max(0, centeredScrollLeft),
+      left: Math.max(0, nextScrollLeft),
       behavior: "smooth",
     });
   }, [todayIndex, daysInMonth, habits.length]);
@@ -75,7 +79,10 @@ export default function HabitGrid({
     >
       <div className="min-w-[520px] sm:min-w-[1150px]">
         <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
-          <div className="px-2">
+          <div
+            ref={stickyColumnRef}
+            className="sticky left-0 z-30 bg-neutral-900 px-2"
+          >
             <div className="text-sm font-semibold text-neutral-300">
               My Habits
             </div>
@@ -102,7 +109,7 @@ export default function HabitGrid({
         </div>
 
         <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
-          <div></div>
+          <div className="sticky left-0 z-20 bg-neutral-900"></div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
             <div
@@ -133,11 +140,11 @@ export default function HabitGrid({
                   onDragOver={(event) => canReorder && onHabitDragOver(event)}
                   onDrop={() => canReorder && onHabitDrop(habit.id)}
                   onDragEnd={() => canReorder && onHabitDragEnd()}
-                  className={`px-3 py-3 rounded-xl text-sm text-neutral-200 transition ${
+                  className={`sticky left-0 z-20 px-3 py-3 rounded-xl text-sm text-neutral-200 transition ${
                     draggedHabitId === habit.id && canReorder
                       ? "bg-neutral-700 opacity-60"
                       : "bg-neutral-800"
-                  }`}
+                  } shadow-[8px_0_18px_-12px_rgba(0,0,0,0.9)]`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
                     <div
