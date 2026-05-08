@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
+  CalendarPlus,
   ChevronDown,
+  Copy,
+  Database,
   Download,
   FileJson,
   FileSpreadsheet,
   FileText,
   FolderUp,
-  Copy,
-  CalendarPlus,
-  Database,
 } from "lucide-react";
 
 export default function DashboardHeader({
@@ -25,12 +25,12 @@ export default function DashboardHeader({
   const fileInputRef = useRef(null);
   const menuRef = useRef(null);
 
-  const toggleMenu = () => {
-    setIsMenuOpen((prev) => !prev);
-  };
-
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev);
   };
 
   const handleImportClick = () => {
@@ -43,7 +43,6 @@ export default function DashboardHeader({
     if (file && onImportBackup) {
       await onImportBackup(file);
     }
-
     event.target.value = "";
   };
 
@@ -55,83 +54,102 @@ export default function DashboardHeader({
       }
     };
 
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        closeMenu();
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
   }, []);
 
-  const menuItems = [
+  const menuSections = [
     {
-      label: "Export CSV",
-      icon: <FileSpreadsheet className="h-4 w-4" />,
-      onClick: () => {
-        onExportCSV();
-        closeMenu();
-      },
+      title: "Export",
+      items: [
+        {
+          label: "Export CSV",
+          icon: FileSpreadsheet,
+          onClick: () => {
+            onExportCSV?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Export JSON",
+          icon: FileJson,
+          onClick: () => {
+            onExportJSON?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Printable HTML",
+          icon: FileText,
+          onClick: () => {
+            onExportPrintableHTML?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Export PDF",
+          icon: Download,
+          onClick: () => {
+            onExportPDF?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Backup JSON",
+          icon: Database,
+          onClick: () => {
+            onExportBackup?.();
+            closeMenu();
+          },
+        },
+      ],
     },
     {
-      label: "Export JSON",
-      icon: <FileJson className="h-4 w-4" />,
-      onClick: () => {
-        onExportJSON();
-        closeMenu();
-      },
-    },
-    {
-      label: "Printable HTML",
-      icon: <FileText className="h-4 w-4" />,
-      onClick: () => {
-        onExportPrintableHTML();
-        closeMenu();
-      },
-    },
-    {
-      label: "Export PDF",
-      icon: <Download className="h-4 w-4" />,
-      onClick: () => {
-        onExportPDF();
-        closeMenu();
-      },
-    },
-    {
-      label: "Copy to Next Month",
-      icon: <Copy className="h-4 w-4" />,
-      onClick: () => {
-        onCopyToNextMonth();
-        closeMenu();
-      },
-    },
-    {
-      label: "Copy to Any Month",
-      icon: <CalendarPlus className="h-4 w-4" />,
-      onClick: () => {
-        onOpenCopyToMonth();
-        closeMenu();
-      },
-    },
-    {
-      label: "Backup JSON",
-      icon: <Database className="h-4 w-4" />,
-      onClick: () => {
-        onExportBackup();
-        closeMenu();
-      },
-    },
-    {
-      label: "Import Backup",
-      icon: <FolderUp className="h-4 w-4" />,
-      onClick: handleImportClick,
+      title: "Actions",
+      items: [
+        {
+          label: "Copy to Next Month",
+          icon: Copy,
+          onClick: () => {
+            onCopyToNextMonth?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Copy to Any Month",
+          icon: CalendarPlus,
+          onClick: () => {
+            onOpenCopyToMonth?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Import Backup",
+          icon: FolderUp,
+          onClick: handleImportClick,
+        },
+      ],
     },
   ];
 
   return (
-    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
           Habit Tracker Dashboard
         </h1>
-        <p className="mt-3 text-base text-neutral-400 max-w-xl">
+        <p className="mt-3 max-w-xl text-base text-neutral-400">
           Track habits, analyze progress, and export monthly reports.
         </p>
       </div>
@@ -147,37 +165,58 @@ export default function DashboardHeader({
 
         <button
           onClick={toggleMenu}
-          className="inline-flex items-center gap-2 rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium border border-neutral-700"
+          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm font-medium hover:bg-neutral-700"
         >
           <Download className="h-4 w-4" />
           Export & Actions
           <ChevronDown
-            className={`h-4 w-4 transition-transform ${
+            className={`h-4 w-4 transition-transform duration-200 ${
               isMenuOpen ? "rotate-180" : ""
             }`}
           />
         </button>
 
-        {isMenuOpen ? (
-          <div className="absolute right-0 mt-2 w-64 rounded-2xl border border-neutral-800 bg-neutral-900 shadow-2xl overflow-hidden z-50">
-            <div className="px-3 py-2 text-xs font-semibold text-neutral-500 border-b border-neutral-800">
-              Export & Actions
+        {isMenuOpen && (
+          <div className="absolute right-0 z-50 mt-3 w-72 overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+            <div className="border-b border-neutral-800 px-4 py-3">
+              <div className="text-sm font-semibold text-white">
+                Export & Actions
+              </div>
+              <div className="mt-1 text-xs text-neutral-500">
+                Choose a report format or manage monthly data.
+              </div>
             </div>
 
-            <div className="py-1">
-              {menuItems.map((item) => (
-                <button
-                  key={item.label}
-                  onClick={item.onClick}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-left text-neutral-200 hover:bg-neutral-800 transition"
-                >
-                  <span className="text-neutral-400">{item.icon}</span>
-                  <span>{item.label}</span>
-                </button>
+            <div className="py-2">
+              {menuSections.map((section, sectionIndex) => (
+                <div key={section.title}>
+                  {sectionIndex > 0 && (
+                    <div className="mx-3 my-2 h-px bg-neutral-800" />
+                  )}
+
+                  <div className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                    {section.title}
+                  </div>
+
+                  {section.items.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <button
+                        key={item.label}
+                        onClick={item.onClick}
+                        className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition hover:bg-neutral-800"
+                      >
+                        <Icon className="h-4 w-4 text-neutral-400" />
+                        <span>{item.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
               ))}
             </div>
           </div>
-        ) : null}
+        )}
       </div>
     </div>
   );
