@@ -61,6 +61,7 @@ import {
 } from "./lib/goalType";
 import ActiveHabitFilters from "./components/ActiveHabitFilters";
 import HabitQuickFilters from "./components/HabitQuickFilters";
+import { Navigate, Route, Routes, useNavigate } from "react-router";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -535,6 +536,7 @@ function loadDashboardPrefs() {
 
 export default function App() {
   const currentDate = new Date();
+  const navigate = useNavigate();
   const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
 
   const [selectedYear, setSelectedYear] = useState(
@@ -555,7 +557,6 @@ export default function App() {
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [currentPage, setCurrentPage] = useState("dashboard");
 
   const [habitSortMode, setHabitSortMode] = useState(
     savedDashboardPrefs?.habitSortMode || "manual",
@@ -643,14 +644,6 @@ export default function App() {
 
   const closeToast = () => {
     setToast(null);
-  };
-
-  const openProfilePage = () => {
-    setCurrentPage("profile");
-  };
-
-  const openDashboardPage = () => {
-    setCurrentPage("dashboard");
   };
 
   const goToPreviousMonth = () => {
@@ -1396,6 +1389,7 @@ export default function App() {
       setMonthData(null);
       setIsMonthLoaded(false);
       setLoadedMonthKey(null);
+      navigate("/dashboard");
       showToast("Account created successfully.", "success");
     } catch (error) {
       setAuthError(error.message || "Failed to register");
@@ -1416,6 +1410,7 @@ export default function App() {
       setMonthData(null);
       setIsMonthLoaded(false);
       setLoadedMonthKey(null);
+      navigate("/dashboard");
       showToast("Logged in successfully.", "success");
     } catch (error) {
       setAuthError(error.message || "Failed to login");
@@ -1432,7 +1427,7 @@ export default function App() {
     setLoadedMonthKey(null);
     setIsSyncing(false);
     setAuthError("");
-    setCurrentPage("dashboard");
+    navigate("/login");
   };
 
   const handleChangePassword = async ({ currentPassword, newPassword }) => {
@@ -1465,12 +1460,12 @@ export default function App() {
       await deleteAccount();
 
       clearAuthSession();
-      setCurrentPage("dashboard");
       setCurrentUser(null);
       setMonthData(null);
       setIsMonthLoaded(false);
       setLoadedMonthKey(null);
       setAuthError("");
+      navigate("/login");
 
       showToast("Account deleted successfully.", "success");
 
@@ -2052,15 +2047,23 @@ export default function App() {
 
   if (!currentUser) {
     return (
-      <>
-        <AuthScreen
-          onLogin={handleLogin}
-          onRegister={handleRegister}
-          isSubmitting={authLoading}
-          errorMessage={authError}
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <>
+              <AuthScreen
+                onLogin={handleLogin}
+                onRegister={handleRegister}
+                isSubmitting={authLoading}
+                errorMessage={authError}
+              />
+              <ToastNotice toast={toast} onClose={closeToast} />
+            </>
+          }
         />
-        <ToastNotice toast={toast} onClose={closeToast} />
-      </>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     );
   }
 
@@ -2074,21 +2077,7 @@ export default function App() {
     );
   }
 
-  if (currentPage === "profile") {
-    return (
-      <ProfilePage
-        currentUser={currentUser}
-        onBack={openDashboardPage}
-        onLogout={handleLogout}
-        onChangePassword={handleChangePassword}
-        isChangingPassword={isChangingPassword}
-        onDeleteAccount={handleDeleteAccount}
-        isDeletingAccount={isDeletingAccount}
-      />
-    );
-  }
-
-  return (
+  const dashboardPage = (
     <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8">
       <div className="mx-auto max-w-[1600px] space-y-6">
         <DashboardHeader
@@ -2111,7 +2100,7 @@ export default function App() {
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
-              onClick={openProfilePage}
+              onClick={() => navigate("/profile")}
               className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
             >
               <UserCircle className="h-4 w-4" />
@@ -2504,5 +2493,27 @@ export default function App() {
         onConfirm={copyCurrentMonthToSelectedMonth}
       />
     </div>
+  );
+
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      <Route path="/dashboard" element={dashboardPage} />
+      <Route
+        path="/profile"
+        element={
+          <ProfilePage
+            currentUser={currentUser}
+            onBack={() => navigate("/dashboard")}
+            onLogout={handleLogout}
+            onChangePassword={handleChangePassword}
+            isChangingPassword={isChangingPassword}
+            onDeleteAccount={handleDeleteAccount}
+            isDeleting={isDeletingAccount}
+          />
+        }
+      />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
   );
 }
