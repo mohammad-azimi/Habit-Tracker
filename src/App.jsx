@@ -6,6 +6,7 @@ import {
   LogOut,
   Plus,
   RotateCcw,
+  UserCircle,
 } from "lucide-react";
 import StreakLeaderboardCard from "./components/StreakLeaderboardCard";
 import YearlyOverviewCard from "./components/YearlyOverviewCard";
@@ -14,15 +15,13 @@ import MonthlyReviewCard from "./components/MonthlyReviewCard";
 import { exportDashboardPdf } from "./lib/pdfReport";
 import CopyMonthModal from "./components/CopyMonthModal";
 import ConfirmActionModal from "./components/ConfirmActionModal";
-import DeleteAccountCard from "./components/DeleteAccountCard";
-import ChangePasswordCard from "./components/ChangePasswordCard";
+import ProfilePage from "./components/ProfilePage";
 import ArchivedHabitsPanel from "./components/ArchivedHabitsPanel";
 import HabitFilters from "./components/HabitFilters";
 import ToastNotice from "./components/ToastNotice";
 import MonthlySummaryCard from "./components/MonthlySummaryCard";
 import MonthlyNotesPanel from "./components/MonthlyNotesPanel";
 import EditHabitModal from "./components/EditHabitModal";
-import UserProfileCard from "./components/UserProfileCard";
 import OverallStatsCard from "./components/OverallStatsCard";
 import defaultHabits from "./data/defaultHabits";
 import {
@@ -441,7 +440,7 @@ function buildPrintableReportHTML({
       </body>
     </html>
   `;
-} 
+}
 
 function calculateCurrentStreak(checks) {
   let streak = 0;
@@ -556,7 +555,8 @@ export default function App() {
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
-  
+  const [currentPage, setCurrentPage] = useState("dashboard");
+
   const [habitSortMode, setHabitSortMode] = useState(
     savedDashboardPrefs?.habitSortMode || "manual",
   );
@@ -643,6 +643,14 @@ export default function App() {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const openProfilePage = () => {
+    setCurrentPage("profile");
+  };
+
+  const openDashboardPage = () => {
+    setCurrentPage("dashboard");
   };
 
   const goToPreviousMonth = () => {
@@ -1298,7 +1306,7 @@ export default function App() {
   const handleHabitDragEnd = () => {
     setDraggedHabitId(null);
   };
-  
+
   const startEditHabit = (habit) => {
     setEditingHabit(habit);
     setEditingHabitName(habit.name || "");
@@ -1424,6 +1432,7 @@ export default function App() {
     setLoadedMonthKey(null);
     setIsSyncing(false);
     setAuthError("");
+    setCurrentPage("dashboard");
   };
 
   const handleChangePassword = async ({ currentPassword, newPassword }) => {
@@ -1456,6 +1465,7 @@ export default function App() {
       await deleteAccount();
 
       clearAuthSession();
+      setCurrentPage("dashboard");
       setCurrentUser(null);
       setMonthData(null);
       setIsMonthLoaded(false);
@@ -1760,14 +1770,14 @@ export default function App() {
     if (isEffectivelyEmptyMonth(previousMonthData)) return null;
 
     const previousMonthDays = getDaysInMonth(
-  previousMonthMeta.year,
-  previousMonthMeta.monthIndex,
-);
+      previousMonthMeta.year,
+      previousMonthMeta.monthIndex,
+    );
 
-const totalGoal = previousMonthData.habits.reduce(
-  (sum, habit) => sum + getHabitMonthlyGoal(habit, previousMonthDays),
-  0,
-);
+    const totalGoal = previousMonthData.habits.reduce(
+      (sum, habit) => sum + getHabitMonthlyGoal(habit, previousMonthDays),
+      0,
+    );
 
     const totalCompleted = previousMonthData.habits.reduce(
       (sum, habit) => sum + habit.checks.filter(Boolean).length,
@@ -2064,6 +2074,20 @@ const totalGoal = previousMonthData.habits.reduce(
     );
   }
 
+  if (currentPage === "profile") {
+    return (
+      <ProfilePage
+        currentUser={currentUser}
+        onBack={openDashboardPage}
+        onLogout={handleLogout}
+        onChangePassword={handleChangePassword}
+        isChangingPassword={isChangingPassword}
+        onDeleteAccount={handleDeleteAccount}
+        isDeletingAccount={isDeletingAccount}
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8">
       <div className="mx-auto max-w-[1600px] space-y-6">
@@ -2085,13 +2109,23 @@ const totalGoal = previousMonthData.habits.reduce(
               : `Logged in as ${currentUser.username} • Connected to PostgreSQL API`}
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center gap-2"
-          >
-            <LogOut className="h-4 w-4" />
-            Logout
-          </button>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={openProfilePage}
+              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+            >
+              <UserCircle className="h-4 w-4" />
+              Profile
+            </button>
+
+            <button
+              onClick={handleLogout}
+              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
@@ -2134,18 +2168,6 @@ const totalGoal = previousMonthData.habits.reduce(
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-
-              <UserProfileCard user={currentUser} />
-
-              <ChangePasswordCard
-                onSubmit={handleChangePassword}
-                isSubmitting={isChangingPassword}
-              />
-
-              <DeleteAccountCard
-                onDeleteAccount={handleDeleteAccount}
-                isDeleting={isDeletingAccount}
-              />
 
               <div>
                 <label className="text-xs text-neutral-500 mb-2 block">
