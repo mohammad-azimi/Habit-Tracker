@@ -62,7 +62,7 @@ export default function HabitGrid({
       targetRect.left - containerRect.left + currentScrollLeft;
 
     const stickyWidth = stickyRect.width;
-    const safeOffset = stickyWidth + 24;
+    const safeOffset = stickyWidth + 20;
 
     const nextScrollLeft = targetLeftInsideContainer - safeOffset;
 
@@ -75,10 +75,10 @@ export default function HabitGrid({
   return (
     <div
       ref={scrollContainerRef}
-      className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl overflow-x-auto"
+      className="rounded-3xl border border-neutral-800 bg-neutral-900 p-3 sm:p-4 shadow-2xl overflow-x-auto"
     >
-      <div className="min-w-[520px] sm:min-w-[1150px]">
-        <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
+      <div className="min-w-[900px] sm:min-w-[1150px]">
+        <div className="grid grid-cols-[290px_repeat(31,minmax(24px,1fr))] sm:grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center mb-2">
           <div
             ref={stickyColumnRef}
             className="sticky left-0 z-30 bg-neutral-900 px-2"
@@ -86,7 +86,7 @@ export default function HabitGrid({
             <div className="text-sm font-semibold text-neutral-300">
               My Habits
             </div>
-            <div className="mt-1 text-[11px] text-neutral-500">
+            <div className="mt-1 text-[10px] sm:text-[11px] text-neutral-500">
               {isManualSort
                 ? "Manual reorder is enabled"
                 : "Switch sort mode to Manual Order to reorder habits"}
@@ -108,7 +108,7 @@ export default function HabitGrid({
           ))}
         </div>
 
-        <div className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
+        <div className="grid grid-cols-[290px_repeat(31,minmax(24px,1fr))] sm:grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 mb-1">
           <div className="sticky left-0 z-20 bg-neutral-900"></div>
 
           {Array.from({ length: daysInMonth }, (_, i) => (
@@ -132,7 +132,7 @@ export default function HabitGrid({
             return (
               <div
                 key={habit.id}
-                className="grid grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
+                className="grid grid-cols-[290px_repeat(31,minmax(24px,1fr))] sm:grid-cols-[520px_repeat(31,minmax(26px,1fr))] gap-1 items-center"
               >
                 <div
                   draggable={canReorder}
@@ -140,13 +140,13 @@ export default function HabitGrid({
                   onDragOver={(event) => canReorder && onHabitDragOver(event)}
                   onDrop={() => canReorder && onHabitDrop(habit.id)}
                   onDragEnd={() => canReorder && onHabitDragEnd()}
-                  className={`sticky left-0 z-20 px-3 py-3 rounded-xl text-sm text-neutral-200 transition ${
+                  className={`sticky left-0 z-20 px-2 py-2.5 sm:px-3 sm:py-3 rounded-xl text-sm text-neutral-200 transition ${
                     draggedHabitId === habit.id && canReorder
                       ? "bg-neutral-700 opacity-60"
                       : "bg-neutral-800"
                   } shadow-[8px_0_18px_-12px_rgba(0,0,0,0.9)]`}
                 >
-                  <div className="flex items-start gap-3 min-w-0">
+                  <div className="flex items-start gap-2 sm:gap-3 min-w-0">
                     <div
                       className={`mt-1 shrink-0 ${
                         canReorder
@@ -163,32 +163,32 @@ export default function HabitGrid({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-start justify-between gap-3">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="truncate font-medium text-[15px]">
+                          <div className="truncate font-medium text-[14px] sm:text-[15px]">
                             {habit.name}
                             <span className="ml-1">{habit.icon}</span>
                           </div>
 
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
                             <div
-                              className={`inline-flex items-center gap-1 rounded-xl border px-2 py-1 text-[11px] font-medium ${getGoalTypeBadgeClasses(
+                              className={`inline-flex items-center gap-1 rounded-xl border px-2 py-1 text-[10px] sm:text-[11px] font-medium ${getGoalTypeBadgeClasses(
                                 habit.targetType,
                               )}`}
                             >
-                              <Target className="h-3.5 w-3.5" />
+                              <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                               {formatGoalTypeShortLabel(
                                 habit.targetType,
                                 habit.targetValue,
                               )}
                             </div>
 
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
+                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[10px] sm:text-[11px] text-neutral-300">
                               {habit.actual}/{habit.goal}
                             </div>
 
                             <div
-                              className={`inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] font-medium ${getHabitProgressTextClasses(
+                              className={`inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[10px] sm:text-[11px] font-medium ${getHabitProgressTextClasses(
                                 habit.progress,
                               )}`}
                             >
@@ -196,7 +196,7 @@ export default function HabitGrid({
                             </div>
 
                             <div
-                              className={`inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[11px] font-medium ${getHabitStatusBadgeClasses(
+                              className={`inline-flex items-center gap-1 rounded-xl px-2 py-1 text-[10px] sm:text-[11px] font-medium ${getHabitStatusBadgeClasses(
                                 habit.progress,
                               )}`}
                             >
@@ -204,24 +204,24 @@ export default function HabitGrid({
                             </div>
                           </div>
 
-                          <div className="mt-2 flex flex-wrap items-center gap-2">
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
-                              <Flame className="h-3.5 w-3.5 text-neutral-400" />
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
+                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[10px] sm:text-[11px] text-neutral-300">
+                              <Flame className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-neutral-400" />
                               Current: {habit.currentStreak ?? 0}d
                             </div>
 
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[11px] text-neutral-300">
-                              <Trophy className="h-3.5 w-3.5 text-neutral-400" />
+                            <div className="inline-flex items-center gap-1 rounded-xl bg-neutral-900 px-2 py-1 text-[10px] sm:text-[11px] text-neutral-300">
+                              <Trophy className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-neutral-400" />
                               Best: {habit.bestStreak ?? 0}d
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-wrap items-center gap-1 shrink-0 sm:flex-nowrap">
                           <button
                             onClick={() => onMoveHabitUp(habit.id)}
                             disabled={!canReorder || habitIndex === 0}
-                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
+                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1 sm:p-1.5"
                             title={
                               canReorder
                                 ? "Move up"
@@ -236,7 +236,7 @@ export default function HabitGrid({
                             disabled={
                               !canReorder || habitIndex === habits.length - 1
                             }
-                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1.5"
+                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 disabled:opacity-40 disabled:cursor-not-allowed p-1 sm:p-1.5"
                             title={
                               canReorder
                                 ? "Move down"
@@ -248,7 +248,7 @@ export default function HabitGrid({
 
                           <button
                             onClick={() => onStartEditHabit(habit)}
-                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 p-1.5"
+                            className="rounded-lg bg-neutral-700 hover:bg-neutral-600 p-1 sm:p-1.5"
                             title="Edit habit"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -256,7 +256,7 @@ export default function HabitGrid({
 
                           <button
                             onClick={() => onRequestArchiveHabit(habit)}
-                            className="rounded-lg bg-neutral-700 hover:bg-amber-700 p-1.5"
+                            className="rounded-lg bg-neutral-700 hover:bg-amber-700 p-1 sm:p-1.5"
                             title="Archive habit"
                           >
                             <ArchiveX className="h-3.5 w-3.5" />
@@ -264,7 +264,7 @@ export default function HabitGrid({
 
                           <button
                             onClick={() => onRequestDeleteHabit(habit)}
-                            className="rounded-lg bg-neutral-700 hover:bg-red-700 p-1.5"
+                            className="rounded-lg bg-neutral-700 hover:bg-red-700 p-1 sm:p-1.5"
                             title="Delete habit"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -279,7 +279,7 @@ export default function HabitGrid({
                   <button
                     key={idx}
                     onClick={() => onToggleHabitDay(habit.id, idx)}
-                    className={`h-6 w-6 rounded-md border flex items-center justify-center text-[11px] transition ${
+                    className={`h-6 w-6 sm:h-6 sm:w-6 rounded-md border flex items-center justify-center text-[11px] transition ${
                       checked
                         ? idx === todayIndex
                           ? "bg-white text-black border-white ring-1 ring-white"

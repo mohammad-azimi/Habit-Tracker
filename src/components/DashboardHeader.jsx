@@ -152,7 +152,7 @@ export default function DashboardHeader({
   ];
 
   return (
-    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between overflow-visible">
       <div>
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
           Habit Tracker Dashboard
@@ -162,7 +162,7 @@ export default function DashboardHeader({
         </p>
       </div>
 
-      <div className="relative self-start" ref={menuRef}>
+      <div className="relative self-start overflow-visible" ref={menuRef}>
         <input
           ref={fileInputRef}
           type="file"
@@ -185,7 +185,7 @@ export default function DashboardHeader({
         </button>
 
         {isMenuOpen && (
-          <div className="absolute right-0 z-50 mt-3 w-[min(22rem,calc(100vw-2rem))] overflow-hidden rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl">
+          <div className="fixed inset-x-4 top-24 z-[100] max-h-[70vh] overflow-y-auto rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[22rem] sm:max-h-[32rem]">
             <div className="border-b border-neutral-800 px-4 py-4">
               <div className="text-sm font-semibold text-white">
                 Export & Actions
