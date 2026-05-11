@@ -63,6 +63,7 @@ import ActiveHabitFilters from "./components/ActiveHabitFilters";
 import HabitQuickFilters from "./components/HabitQuickFilters";
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 import ErrorBoundary from "./components/ErrorBoundary";
+import DashboardStateCard from "./components/DashboardStateCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -2312,7 +2313,15 @@ export default function App() {
               </button>
             </div>
 
-            <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
+            {rankedHabits.length > 0 ? (
+              <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
+            ) : (
+              <DashboardStateCard
+                compact
+                title="No top habits yet"
+                description="Your best-performing habits will appear here once you add and track them."
+              />
+            )}
 
             <ArchivedHabitsPanel
               archivedHabits={archivedAnalysisRows}
@@ -2321,10 +2330,17 @@ export default function App() {
           </section>
 
           <section className="xl:col-span-6 space-y-4">
-            <ProgressCharts
-              dailyProgress={dailyProgress}
-              weeklyProgress={weeklyProgress}
-            />
+            {activeAnalysisRows.length > 0 ? (
+              <ProgressCharts
+                dailyProgress={dailyProgress}
+                weeklyProgress={weeklyProgress}
+              />
+            ) : (
+              <DashboardStateCard
+                title="No chart data yet"
+                description="Add your first habit to start seeing daily and weekly progress charts."
+              />
+            )}
 
             <HabitFilters
               searchTerm={habitSearchTerm}
@@ -2459,20 +2475,35 @@ export default function App() {
               isLoading={isYearlyOverviewLoading}
             />
 
-            <StreakLeaderboardCard rows={analysisRows} />
+            {analysisRows.length > 0 ? (
+              <StreakLeaderboardCard rows={analysisRows} />
+            ) : (
+              <DashboardStateCard
+                compact
+                title="No streak data yet"
+                description="Start checking off habits to build streak rankings."
+              />
+            )}
 
             <MonthlyReviewCard
               review={safeMonthData.review}
               onChangeField={updateMonthlyReviewField}
             />
 
-            <AnalysisPanel
-              totalGoal={totalGoal}
-              totalCompleted={totalCompleted}
-              totalLeft={totalLeft}
-              completionPercent={completionPercent}
-              analysisRows={sortedActiveAnalysisRows}
-            />
+            {sortedActiveAnalysisRows.length > 0 ? (
+              <AnalysisPanel
+                totalGoal={totalGoal}
+                totalCompleted={totalCompleted}
+                totalLeft={totalLeft}
+                completionPercent={completionPercent}
+                analysisRows={sortedActiveAnalysisRows}
+              />
+            ) : (
+              <DashboardStateCard
+                title="No analysis available yet"
+                description="Add active habits and start tracking them to unlock analysis and streak insights."
+              />
+            )}
           </section>
 
           <div className="xl:col-span-3 space-y-4">
