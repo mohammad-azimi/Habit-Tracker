@@ -1634,18 +1634,31 @@ export default function App() {
     }));
   };
 
-  const archiveHabit = (habitId) => {
+  const setHabitArchivedState = (habitId, archived) => {
     updateMonth((month) => ({
       ...month,
       habits: month.habits.map((habit) =>
         habit.id === habitId
           ? {
               ...habit,
-              archived: true,
+              archived,
             }
           : habit,
       ),
     }));
+  };
+
+  const archiveHabit = (habitId, options = {}) => {
+    const { showUndo = false } = options;
+
+    setHabitArchivedState(habitId, true);
+
+    if (showUndo) {
+      showToast("Habit archived.", "info", "Undo", () => {
+        setHabitArchivedState(habitId, false);
+        showToast("Habit restored.", "success");
+      });
+    }
   };
 
   const requestDeleteHabit = (habit) => {
@@ -1678,27 +1691,23 @@ export default function App() {
       message: `"${habit.name}" will be removed from the main list and moved to archived habits.`,
       confirmLabel: "Archive Habit",
       onConfirm: () => {
-        archiveHabit(habit.id);
-
-        showToast("Habit archived.", "info", "Undo", () =>
-          restoreHabit(habit.id),
-        );
+        archiveHabit(habit.id, { showUndo: true });
       },
     });
   };
 
-  const restoreHabit = (habitId) => {
-    updateMonth((month) => ({
-      ...month,
-      habits: month.habits.map((habit) =>
-        habit.id === habitId
-          ? {
-              ...habit,
-              archived: false,
-            }
-          : habit,
-      ),
-    }));
+  const restoreHabit = (habitId, options = {}) => {
+    const { showUndo = false } = options;
+
+    setHabitArchivedState(habitId, false);
+
+    if (showUndo) {
+      showToast("Habit restored.", "success", "Undo", () => {
+        setHabitArchivedState(habitId, true);
+        showToast("Habit archived again.", "info");
+      });
+      return;
+    }
 
     showToast("Habit restored.", "success");
   };
@@ -2952,7 +2961,9 @@ export default function App() {
 
             <ArchivedHabitsPanel
               archivedHabits={archivedAnalysisRows}
-              onRestoreHabit={restoreHabit}
+              onRestoreHabit={(habitId) =>
+                restoreHabit(habitId, { showUndo: true })
+              }
             />
           </section>
 
