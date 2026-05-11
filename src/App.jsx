@@ -67,6 +67,7 @@ import DashboardStateCard from "./components/DashboardStateCard";
 import DashboardLoadingCard from "./components/DashboardLoadingCard";
 import AnalyticsHighlightsCard from "./components/AnalyticsHighlightsCard";
 import WeekdayPerformanceCard from "./components/WeekdayPerformanceCard";
+import WeeklyMomentumCard from "./components/WeeklyMomentumCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -422,6 +423,50 @@ function getWeekdayPerformance(habits, daysInMonth, weekdayLabels) {
     rows,
     bestWeekday: sorted[0] || null,
     weakestWeekday: weakestSorted[0] || null,
+  };
+}
+
+function getWeeklyMomentum(weeklyProgress) {
+  if (!weeklyProgress.length) {
+    return {
+      strongestWeek: null,
+      weakestWeek: null,
+      trend: "stable",
+    };
+  }
+
+  const strongestWeek =
+    [...weeklyProgress].sort((a, b) => b.value - a.value)[0] || null;
+
+  const weakestWeek =
+    [...weeklyProgress].sort((a, b) => a.value - b.value)[0] || null;
+
+  const firstHalf = weeklyProgress.slice(
+    0,
+    Math.ceil(weeklyProgress.length / 2),
+  );
+  const secondHalf = weeklyProgress.slice(Math.ceil(weeklyProgress.length / 2));
+
+  const avgFirstHalf = firstHalf.length
+    ? firstHalf.reduce((sum, item) => sum + item.value, 0) / firstHalf.length
+    : 0;
+
+  const avgSecondHalf = secondHalf.length
+    ? secondHalf.reduce((sum, item) => sum + item.value, 0) / secondHalf.length
+    : avgFirstHalf;
+
+  let trend = "stable";
+
+  if (avgSecondHalf >= avgFirstHalf + 8) {
+    trend = "improving";
+  } else if (avgSecondHalf <= avgFirstHalf - 8) {
+    trend = "slowing";
+  }
+
+  return {
+    strongestWeek,
+    weakestWeek,
+    trend,
   };
 }
 
@@ -2147,6 +2192,10 @@ export default function App() {
     );
   }, [safeMonthData.habits, daysInMonth]);
 
+  const weeklyMomentum = useMemo(() => {
+    return getWeeklyMomentum(weeklyProgress);
+  }, [weeklyProgress]);
+
   const exportMonthJSON = () => {
     downloadBlob(
       `habit-tracker-${monthKey}.json`,
@@ -2807,6 +2856,12 @@ export default function App() {
               rows={weekdayPerformance.rows}
               bestWeekday={weekdayPerformance.bestWeekday}
               weakestWeekday={weekdayPerformance.weakestWeekday}
+            />
+
+            <WeeklyMomentumCard
+              strongestWeek={weeklyMomentum.strongestWeek}
+              weakestWeek={weeklyMomentum.weakestWeek}
+              trend={weeklyMomentum.trend}
             />
 
             {isPreviousMonthLoading ? (
