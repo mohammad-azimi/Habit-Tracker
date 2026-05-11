@@ -839,6 +839,43 @@ function getExportFilterSummary({
   };
 }
 
+function sanitizeFilenamePart(value) {
+  return String(value || "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-_]/g, "")
+    .replace(/-+/g, "-");
+}
+
+function buildExportBaseName({
+  selectedYear,
+  selectedMonthName,
+  scope = "full",
+}) {
+  const safeMonth = sanitizeFilenamePart(selectedMonthName);
+  const safeScope = sanitizeFilenamePart(scope);
+
+  return `habit-tracker-${selectedYear}-${safeMonth}-${safeScope}`;
+}
+
+function buildExportMetadata({
+  selectedYear,
+  selectedMonthName,
+  monthKey,
+  exportType,
+  filters = null,
+}) {
+  return {
+    exportedAt: new Date().toISOString(),
+    exportType,
+    monthKey,
+    month: selectedMonthName,
+    year: selectedYear,
+    filters,
+  };
+}
+
 function getHabitFormError({
   name,
   targetValue,
@@ -951,6 +988,17 @@ export default function App() {
   const [authError, setAuthError] = useState("");
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
+  const selectedMonthName = MONTHS[selectedMonthIndex];
+  const fullExportBaseName = buildExportBaseName({
+    selectedYear,
+    selectedMonthName,
+    scope: "full",
+  });
+  const filteredExportBaseName = buildExportBaseName({
+    selectedYear,
+    selectedMonthName,
+    scope: "filtered",
+  });
   const daysInMonth = getDaysInMonth(selectedYear, selectedMonthIndex);
   const now = new Date();
 
@@ -2252,9 +2300,20 @@ export default function App() {
   }, [weeklyProgress]);
 
   const exportMonthJSON = () => {
+    const payload = {
+      metadata: buildExportMetadata({
+        selectedYear,
+        selectedMonthName,
+        monthKey,
+        exportType: "full-json",
+        filters: null,
+      }),
+      summary: monthlySummary,
+    };
+
     downloadBlob(
-      `habit-tracker-${monthKey}.json`,
-      JSON.stringify(monthlySummary, null, 2),
+      `${fullExportBaseName}.json`,
+      JSON.stringify(payload, null, 2),
       "application/json",
     );
 
@@ -2262,7 +2321,21 @@ export default function App() {
   };
 
   const exportMonthCSV = () => {
+    const metadata = buildExportMetadata({
+      selectedYear,
+      selectedMonthName,
+      monthKey,
+      exportType: "full-csv",
+      filters: null,
+    });
+
     const rows = [
+      ["Full Habit Export"],
+      ["Exported At", metadata.exportedAt],
+      ["Export Type", metadata.exportType],
+      ["Month", `${selectedMonthName} ${selectedYear}`],
+      ["Month Key", monthKey],
+      [],
       ["Habit", "Goal Type", "Goal", "Completed", "Left", "Progress %"],
       ...analysisRows.map((row) => [
         row.name,
@@ -2283,7 +2356,7 @@ export default function App() {
     ];
 
     downloadBlob(
-      `habit-tracker-${monthKey}.csv`,
+      `${fullExportBaseName}.csv`,
       toCSV(rows),
       "text/csv;charset=utf-8;",
     );
@@ -2297,9 +2370,20 @@ export default function App() {
       return;
     }
 
+    const metadata = buildExportMetadata({
+      selectedYear,
+      selectedMonthName,
+      monthKey,
+      exportType: "filtered-csv",
+      filters: exportFilterSummary,
+    });
+
     const rows = [
       ["Filtered Habit Export"],
-      ["Month", `${MONTHS[selectedMonthIndex]} ${selectedYear}`],
+      ["Exported At", metadata.exportedAt],
+      ["Export Type", metadata.exportType],
+      ["Month", `${selectedMonthName} ${selectedYear}`],
+      ["Month Key", monthKey],
       ["Search", exportFilterSummary.search],
       ["Status Filter", exportFilterSummary.status],
       ["Goal Type Filter", exportFilterSummary.goalType],
@@ -2329,7 +2413,7 @@ export default function App() {
     ];
 
     downloadBlob(
-      `habit-tracker-${monthKey}-filtered.csv`,
+      `${filteredExportBaseName}.csv`,
       toCSV(rows),
       "text/csv;charset=utf-8;",
     );
@@ -2344,10 +2428,13 @@ export default function App() {
     }
 
     const payload = {
-      monthKey,
-      month: MONTHS[selectedMonthIndex],
-      year: selectedYear,
-      filters: exportFilterSummary,
+      metadata: buildExportMetadata({
+        selectedYear,
+        selectedMonthName,
+        monthKey,
+        exportType: "filtered-json",
+        filters: exportFilterSummary,
+      }),
       habits: sortedFilteredAnalysisRows.map((row) => ({
         id: row.id,
         name: row.name,
@@ -2365,7 +2452,7 @@ export default function App() {
     };
 
     downloadBlob(
-      `habit-tracker-${monthKey}-filtered.json`,
+      `${filteredExportBaseName}.json`,
       JSON.stringify(payload, null, 2),
       "application/json",
     );
@@ -2374,9 +2461,20 @@ export default function App() {
   };
 
   const exportFullBackup = () => {
+    const payload = {
+      metadata: buildExportMetadata({
+        selectedYear,
+        selectedMonthName,
+        monthKey,
+        exportType: "backup-json",
+        filters: null,
+      }),
+      data: safeMonthData,
+    };
+
     downloadBlob(
-      `habit-tracker-${monthKey}-backup.json`,
-      JSON.stringify(safeMonthData, null, 2),
+      `${fullExportBaseName}-backup.json`,
+      JSON.stringify(payload, null, 2),
       "application/json",
     );
 
@@ -2401,7 +2499,7 @@ export default function App() {
     });
 
     downloadBlob(
-      `habit-tracker-${monthKey}-report.html`,
+      `${fullExportBaseName}-report.html`,
       html,
       "text/html;charset=utf-8;",
     );
