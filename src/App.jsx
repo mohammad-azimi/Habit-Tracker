@@ -64,6 +64,7 @@ import HabitQuickFilters from "./components/HabitQuickFilters";
 import { Navigate, Route, Routes, useNavigate } from "react-router";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardStateCard from "./components/DashboardStateCard";
+import DashboardLoadingCard from "./components/DashboardLoadingCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -2469,11 +2470,19 @@ export default function App() {
               onChangeNotes={setMonthlyNotes}
             />
 
-            <YearlyOverviewCard
-              selectedYear={selectedYear}
-              yearlyData={yearlyOverviewData}
-              isLoading={isYearlyOverviewLoading}
-            />
+            {isYearlyOverviewLoading ? (
+              <DashboardLoadingCard
+                compact
+                title="Loading yearly overview"
+                lines={4}
+              />
+            ) : (
+              <YearlyOverviewCard
+                selectedYear={selectedYear}
+                yearlyData={yearlyOverviewData}
+                isLoading={false}
+              />
+            )}
 
             {analysisRows.length > 0 ? (
               <StreakLeaderboardCard rows={analysisRows} />
@@ -2527,12 +2536,20 @@ export default function App() {
               }
             />
 
-            <MonthComparisonCard
-              currentSummary={monthlySummary}
-              previousSummary={previousMonthSummary}
-              previousLabel={previousMonthLabel}
-              isLoading={isPreviousMonthLoading}
-            />
+            {isPreviousMonthLoading ? (
+              <DashboardLoadingCard
+                compact
+                title="Loading previous month"
+                lines={3}
+              />
+            ) : (
+              <MonthComparisonCard
+                currentSummary={monthlySummary}
+                previousSummary={previousMonthSummary}
+                previousLabel={previousMonthLabel}
+                isLoading={false}
+              />
+            )}
 
             <EditHabitModal
               isOpen={Boolean(editingHabit)}
