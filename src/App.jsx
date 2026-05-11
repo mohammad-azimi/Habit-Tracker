@@ -66,6 +66,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardStateCard from "./components/DashboardStateCard";
 import DashboardLoadingCard from "./components/DashboardLoadingCard";
 import AnalyticsHighlightsCard from "./components/AnalyticsHighlightsCard";
+import WeekdayPerformanceCard from "./components/WeekdayPerformanceCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -364,6 +365,63 @@ function getTrendInsight(dailyProgress) {
   return {
     title: "Steady rhythm",
     description: "Your month looks balanced and reasonably consistent overall.",
+  };
+}
+
+function getWeekdayPerformance(habits, daysInMonth, weekdayLabels) {
+  if (!habits.length || daysInMonth <= 0) {
+    return {
+      rows: [],
+      bestWeekday: null,
+      weakestWeekday: null,
+    };
+  }
+
+  const grouped = weekdayLabels.map((label) => ({
+    label,
+    completed: 0,
+    total: 0,
+    percent: 0,
+  }));
+
+  for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex += 1) {
+    const weekdayIndex = dayIndex % weekdayLabels.length;
+    const completed = habits.reduce(
+      (sum, habit) => sum + (habit.checks?.[dayIndex] ? 1 : 0),
+      0,
+    );
+
+    grouped[weekdayIndex].completed += completed;
+    grouped[weekdayIndex].total += habits.length;
+  }
+
+  const rows = grouped.map((item) => ({
+    ...item,
+    percent: item.total ? Math.round((item.completed / item.total) * 100) : 0,
+  }));
+
+  const rowsWithData = rows.filter((row) => row.total > 0);
+
+  if (!rowsWithData.length) {
+    return {
+      rows,
+      bestWeekday: null,
+      weakestWeekday: null,
+    };
+  }
+
+  const sorted = [...rowsWithData].sort(
+    (a, b) => b.percent - a.percent || b.completed - a.completed,
+  );
+
+  const weakestSorted = [...rowsWithData].sort(
+    (a, b) => a.percent - b.percent || a.completed - b.completed,
+  );
+
+  return {
+    rows,
+    bestWeekday: sorted[0] || null,
+    weakestWeekday: weakestSorted[0] || null,
   };
 }
 
@@ -2081,6 +2139,14 @@ export default function App() {
     return getTrendInsight(dailyProgress);
   }, [dailyProgress]);
 
+  const weekdayPerformance = useMemo(() => {
+    return getWeekdayPerformance(
+      safeMonthData.habits.filter((habit) => !habit.archived),
+      daysInMonth,
+      WEEKDAY_LABELS,
+    );
+  }, [safeMonthData.habits, daysInMonth]);
+
   const exportMonthJSON = () => {
     downloadBlob(
       `habit-tracker-${monthKey}.json`,
@@ -2735,6 +2801,12 @@ export default function App() {
               bestDay={bestDaySummary}
               strongestGoalType={strongestGoalType}
               trendInsight={trendInsight}
+            />
+
+            <WeekdayPerformanceCard
+              rows={weekdayPerformance.rows}
+              bestWeekday={weekdayPerformance.bestWeekday}
+              weakestWeekday={weekdayPerformance.weakestWeekday}
             />
 
             {isPreviousMonthLoading ? (
