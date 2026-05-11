@@ -42,6 +42,32 @@ export default function HabitGrid({
   const todayCellRef = useRef(null);
   const stickyColumnRef = useRef(null);
   const canReorder = isManualSort === true;
+  
+  const getDayButtonClasses = (checked, idx) => {
+    const isToday = idx === todayIndex;
+
+    if (checked && isToday) {
+      return "bg-white text-black border-white ring-1 ring-white shadow-[0_0_0_1px_rgba(255,255,255,0.15)]";
+    }
+
+    if (checked) {
+      return "bg-neutral-300 text-black border-neutral-300 hover:bg-white";
+    }
+
+    if (isToday) {
+      return "bg-neutral-900 text-neutral-200 border-neutral-500 ring-1 ring-neutral-500 hover:bg-neutral-800";
+    }
+
+    return "bg-neutral-950 text-neutral-700 border-neutral-800 hover:bg-neutral-900 hover:border-neutral-700";
+  };
+
+  const getDayButtonLabel = (habitName, idx, checked) => {
+    const dayNumber = idx + 1;
+    const todayText = idx === todayIndex ? " (today)" : "";
+    const statusText = checked ? "completed" : "not completed";
+
+    return `${habitName} - day ${dayNumber}${todayText} - ${statusText}`;
+  };
 
   useEffect(() => {
     if (todayIndex === null || todayIndex < 0) return;
@@ -97,9 +123,9 @@ export default function HabitGrid({
             <div
               key={i}
               ref={i === todayIndex ? todayCellRef : null}
-              className={`text-[10px] text-center rounded-md py-1 ${
+              className={`text-[10px] text-center rounded-md py-1 transition ${
                 i === todayIndex
-                  ? "bg-white text-black font-semibold"
+                  ? "bg-white text-black font-semibold shadow-sm"
                   : "text-neutral-500"
               }`}
             >
@@ -114,9 +140,9 @@ export default function HabitGrid({
           {Array.from({ length: daysInMonth }, (_, i) => (
             <div
               key={i}
-              className={`text-[10px] text-center rounded-md py-1 ${
+              className={`text-[10px] text-center rounded-md py-1 transition ${
                 i === todayIndex
-                  ? "bg-neutral-800 text-neutral-200 font-medium"
+                  ? "bg-neutral-800 text-neutral-100 font-medium"
                   : "text-neutral-600"
               }`}
             >
@@ -274,20 +300,17 @@ export default function HabitGrid({
                     </div>
                   </div>
                 </div>
-
                 {habit.checks.map((checked, idx) => (
                   <button
                     key={idx}
+                    type="button"
                     onClick={() => onToggleHabitDay(habit.id, idx)}
-                    className={`h-6 w-6 sm:h-6 sm:w-6 rounded-md border flex items-center justify-center text-[11px] transition ${
-                      checked
-                        ? idx === todayIndex
-                          ? "bg-white text-black border-white ring-1 ring-white"
-                          : "bg-neutral-300 text-black border-neutral-300"
-                        : idx === todayIndex
-                          ? "bg-neutral-900 text-neutral-300 border-neutral-500 ring-1 ring-neutral-500"
-                          : "bg-neutral-950 text-neutral-700 border-neutral-800"
-                    }`}
+                    aria-label={getDayButtonLabel(habit.name, idx, checked)}
+                    title={getDayButtonLabel(habit.name, idx, checked)}
+                    className={`h-6 w-6 sm:h-6 sm:w-6 rounded-md border flex items-center justify-center text-[11px] transition-all duration-150 touch-manipulation focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-95 ${getDayButtonClasses(
+                      checked,
+                      idx,
+                    )}`}
                   >
                     {checked ? "✓" : ""}
                   </button>
