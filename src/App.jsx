@@ -800,6 +800,45 @@ function normalizeHabitName(value) {
     .toLowerCase();
 }
 
+function getExportFilterSummary({
+  habitSearchTerm,
+  habitFilterMode,
+  goalTypeFilter,
+  habitSortMode,
+  filteredCount,
+}) {
+  const statusMap = {
+    all: "All habits",
+    completed: "Completed only",
+    "in-progress": "In progress only",
+    "not-started": "Not started only",
+  };
+
+  const goalTypeMap = {
+    all: "All goal types",
+    daily: "Daily",
+    weekly: "Weekly",
+    monthly: "Monthly",
+  };
+
+  const sortMap = {
+    manual: "Manual Order",
+    "progress-desc": "Progress",
+    "current-streak-desc": "Current Streak",
+    "best-streak-desc": "Best Streak",
+    "completed-desc": "Completed Count",
+    "name-asc": "Name (A-Z)",
+  };
+
+  return {
+    search: habitSearchTerm.trim() || "None",
+    status: statusMap[habitFilterMode] || habitFilterMode,
+    goalType: goalTypeMap[goalTypeFilter] || goalTypeFilter,
+    sort: sortMap[habitSortMode] || habitSortMode,
+    filteredCount,
+  };
+}
+
 function getHabitFormError({
   name,
   targetValue,
@@ -1992,6 +2031,22 @@ export default function App() {
     return null;
   }, [habitFilterMode, goalTypeFilter, habitSearchTerm]);
 
+  const exportFilterSummary = useMemo(() => {
+    return getExportFilterSummary({
+      habitSearchTerm,
+      habitFilterMode,
+      goalTypeFilter,
+      habitSortMode,
+      filteredCount: filteredHabitsCount,
+    });
+  }, [
+    habitSearchTerm,
+    habitFilterMode,
+    goalTypeFilter,
+    habitSortMode,
+    filteredHabitsCount,
+  ]);
+
   const dailyProgress = useMemo(() => {
     const totalFlexibleGoal = analysisRows.reduce(
       (sum, row) => sum + Number(row.goal || 0),
@@ -2236,6 +2291,88 @@ export default function App() {
     showToast("CSV report exported successfully.", "success");
   };
 
+  const exportFilteredCSV = () => {
+    if (!sortedFilteredAnalysisRows.length) {
+      showToast("There are no filtered habits to export.", "error");
+      return;
+    }
+
+    const rows = [
+      ["Filtered Habit Export"],
+      ["Month", `${MONTHS[selectedMonthIndex]} ${selectedYear}`],
+      ["Search", exportFilterSummary.search],
+      ["Status Filter", exportFilterSummary.status],
+      ["Goal Type Filter", exportFilterSummary.goalType],
+      ["Sort Mode", exportFilterSummary.sort],
+      ["Habit Count", exportFilterSummary.filteredCount],
+      [],
+      [
+        "Habit",
+        "Goal Type",
+        "Goal",
+        "Completed",
+        "Left",
+        "Progress %",
+        "Current Streak",
+        "Best Streak",
+      ],
+      ...sortedFilteredAnalysisRows.map((row) => [
+        row.name,
+        formatGoalTypeLabel(row.targetType, row.targetValue),
+        row.goal,
+        row.actual,
+        row.left,
+        row.progress,
+        row.currentStreak,
+        row.bestStreak,
+      ]),
+    ];
+
+    downloadBlob(
+      `habit-tracker-${monthKey}-filtered.csv`,
+      toCSV(rows),
+      "text/csv;charset=utf-8;",
+    );
+
+    showToast("Filtered CSV exported successfully.", "success");
+  };
+
+  const exportFilteredJSON = () => {
+    if (!sortedFilteredAnalysisRows.length) {
+      showToast("There are no filtered habits to export.", "error");
+      return;
+    }
+
+    const payload = {
+      monthKey,
+      month: MONTHS[selectedMonthIndex],
+      year: selectedYear,
+      filters: exportFilterSummary,
+      habits: sortedFilteredAnalysisRows.map((row) => ({
+        id: row.id,
+        name: row.name,
+        icon: row.icon,
+        targetType: row.targetType,
+        targetValue: row.targetValue,
+        goal: row.goal,
+        actual: row.actual,
+        left: row.left,
+        progress: row.progress,
+        currentStreak: row.currentStreak,
+        bestStreak: row.bestStreak,
+        weekly: row.weekly,
+      })),
+    };
+
+    downloadBlob(
+      `habit-tracker-${monthKey}-filtered.json`,
+      JSON.stringify(payload, null, 2),
+      "application/json",
+    );
+
+    showToast("Filtered JSON exported successfully.", "success");
+  };
+
   const exportFullBackup = () => {
     downloadBlob(
       `habit-tracker-${monthKey}-backup.json`,
@@ -2436,6 +2573,8 @@ export default function App() {
         <DashboardHeader
           onExportCSV={exportMonthCSV}
           onExportJSON={exportMonthJSON}
+          onExportFilteredCSV={exportFilteredCSV}
+          onExportFilteredJSON={exportFilteredJSON}
           onExportBackup={exportFullBackup}
           onImportBackup={importBackup}
           onExportPrintableHTML={exportPrintableHTMLReport}

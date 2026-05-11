@@ -14,6 +14,8 @@ import {
 export default function DashboardHeader({
   onExportCSV,
   onExportJSON,
+  onExportFilteredCSV,
+  onExportFilteredJSON,
   onExportBackup,
   onImportBackup,
   onExportPrintableHTML,
@@ -97,6 +99,26 @@ export default function DashboardHeader({
           icon: FileJson,
           onClick: () => {
             onExportJSON?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Export Filtered CSV",
+          description:
+            "Download only the habits shown in your current filtered view.",
+          icon: FileSpreadsheet,
+          onClick: () => {
+            onExportFilteredCSV?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Export Filtered JSON",
+          description:
+            "Download only the habits shown in your current filtered view.",
+          icon: FileJson,
+          onClick: () => {
+            onExportFilteredJSON?.();
             closeMenu();
           },
         },
