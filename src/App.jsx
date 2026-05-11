@@ -1158,6 +1158,45 @@ export default function App() {
     showToast("Habit restored.", "success");
   };
 
+  const restoreHabitChecks = (habitId, checksSnapshot) => {
+    updateMonth((month) => ({
+      ...month,
+      habits: month.habits.map((habit) =>
+        habit.id === habitId
+          ? {
+              ...habit,
+              checks: [...checksSnapshot],
+            }
+          : habit,
+      ),
+    }));
+
+    showToast("Day change undone.", "success");
+  };
+
+  const restoreEditedHabitSnapshot = (habitSnapshot) => {
+    if (!habitSnapshot) return;
+
+    updateMonth((month) => ({
+      ...month,
+      habits: month.habits.map((habit) =>
+        habit.id === habitSnapshot.id
+          ? {
+              ...habit,
+              name: habitSnapshot.name,
+              icon: habitSnapshot.icon,
+              archived: Boolean(habitSnapshot.archived),
+              targetType: normalizeGoalType(habitSnapshot.targetType),
+              targetValue: normalizeGoalValue(habitSnapshot.targetValue),
+              checks: [...(habitSnapshot.checks || habit.checks)],
+            }
+          : habit,
+      ),
+    }));
+
+    showToast("Habit edit undone.", "success");
+  };
+
   const openConfirmModal = ({
     title,
     message,
@@ -1490,6 +1529,15 @@ export default function App() {
   };
 
   const toggleHabitDay = (habitId, dayIndex) => {
+    const habitSnapshot = safeMonthData.habits.find(
+      (habit) => habit.id === habitId,
+    );
+
+    if (!habitSnapshot) return;
+
+    const previousChecks = [...habitSnapshot.checks];
+    const nextChecked = !Boolean(habitSnapshot.checks[dayIndex]);
+
     updateMonth((month) => ({
       ...month,
       habits: month.habits.map((habit) =>
@@ -1503,6 +1551,15 @@ export default function App() {
           : habit,
       ),
     }));
+
+    showToast(
+      nextChecked
+        ? `Day ${dayIndex + 1} marked complete.`
+        : `Day ${dayIndex + 1} unchecked.`,
+      nextChecked ? "success" : "info",
+      "Undo",
+      () => restoreHabitChecks(habitId, previousChecks),
+    );
   };
 
   const setMentalMetric = (type, dayIndex, value) => {
@@ -1749,6 +1806,12 @@ export default function App() {
       return;
     }
 
+    const previousHabitSnapshot = safeMonthData.habits.find(
+      (habit) => habit.id === editingHabit.id,
+    );
+
+    if (!previousHabitSnapshot) return;
+
     updateMonth((month) => ({
       ...month,
       habits: month.habits.map((habit) =>
@@ -1765,7 +1828,9 @@ export default function App() {
     }));
 
     closeEditHabit();
-    showToast("Habit updated successfully.", "success");
+    showToast("Habit updated successfully.", "success", "Undo", () =>
+      restoreEditedHabitSnapshot(previousHabitSnapshot),
+    );
   };
 
   const resetCurrentMonth = () => {
