@@ -7,6 +7,8 @@ export default function EditHabitModal({
   habitIcon,
   habitTargetType,
   habitTargetValue,
+  errorMessage,
+  isSaveDisabled,
   onChangeName,
   onChangeIcon,
   onChangeTargetType,
@@ -93,6 +95,16 @@ export default function EditHabitModal({
           </div>
         </div>
 
+        {errorMessage ? (
+          <div className="mt-4 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-3 text-xs text-red-300">
+            {errorMessage}
+          </div>
+        ) : (
+          <div className="mt-4 text-xs text-neutral-500">
+            Use a unique habit name and a target value of at least 1.
+          </div>
+        )}
+
         <div className="mt-6 flex gap-3">
           <button
             onClick={onClose}
@@ -103,7 +115,8 @@ export default function EditHabitModal({
 
           <button
             onClick={onSave}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black hover:bg-neutral-200"
+            disabled={isSaveDisabled}
+            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed"
           >
             <Save className="h-4 w-4" />
             Save Changes

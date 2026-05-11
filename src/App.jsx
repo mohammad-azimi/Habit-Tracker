@@ -521,6 +521,47 @@ function normalizeHabitName(value) {
     .toLowerCase();
 }
 
+function getHabitFormError({
+  name,
+  targetValue,
+  existingHabits,
+  editingHabitId = null,
+}) {
+  const trimmedName = String(name || "")
+    .trim()
+    .replace(/\s+/g, " ");
+  const normalizedName = normalizeHabitName(trimmedName);
+  const numericTargetValue = Number(targetValue);
+
+  if (!trimmedName) {
+    return "Habit name cannot be empty.";
+  }
+
+  if (trimmedName.length < 2) {
+    return "Habit name must be at least 2 characters.";
+  }
+
+  if (trimmedName.length > 40) {
+    return "Habit name must be 40 characters or less.";
+  }
+
+  if (!Number.isFinite(numericTargetValue) || numericTargetValue < 1) {
+    return "Target value must be at least 1.";
+  }
+
+  const alreadyExists = existingHabits.some(
+    (habit) =>
+      habit.id !== editingHabitId &&
+      normalizeHabitName(habit.name) === normalizedName,
+  );
+
+  if (alreadyExists) {
+    return "A habit with this name already exists.";
+  }
+
+  return "";
+}
+
 const DASHBOARD_PREFS_KEY = "habit-tracker-dashboard-prefs";
 
 function loadDashboardPrefs() {
@@ -610,6 +651,28 @@ export default function App() {
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
+
+  const newHabitError = useMemo(() => {
+    return getHabitFormError({
+      name: newHabitName,
+      targetValue: newHabitTargetValue,
+      existingHabits: safeMonthData.habits,
+    });
+  }, [newHabitName, newHabitTargetValue, safeMonthData.habits]);
+
+  const editHabitError = useMemo(() => {
+    return getHabitFormError({
+      name: editingHabitName,
+      targetValue: editingHabitTargetValue,
+      existingHabits: safeMonthData.habits,
+      editingHabitId: editingHabit?.id || null,
+    });
+  }, [
+    editingHabitName,
+    editingHabitTargetValue,
+    safeMonthData.habits,
+    editingHabit,
+  ]);
 
   const todaySummary = useMemo(() => {
     if (todayIndex === null) return null;
@@ -1097,21 +1160,11 @@ export default function App() {
   const addHabit = () => {
     const trimmedName = newHabitName.trim().replace(/\s+/g, " ");
     const trimmedIcon = newHabitIcon.trim() || "✅";
-    const normalizedName = normalizeHabitName(trimmedName);
     const normalizedTargetType = normalizeGoalType(newHabitTargetType);
     const normalizedTargetValue = normalizeGoalValue(newHabitTargetValue);
 
-    if (!trimmedName) {
-      showToast("Habit name cannot be empty.", "error");
-      return;
-    }
-
-    const alreadyExists = safeMonthData.habits.some(
-      (habit) => normalizeHabitName(habit.name) === normalizedName,
-    );
-
-    if (alreadyExists) {
-      showToast("A habit with this name already exists.", "error");
+    if (newHabitError) {
+      showToast(newHabitError, "error");
       return;
     }
 
@@ -1320,25 +1373,13 @@ export default function App() {
   const saveEditedHabit = () => {
     const trimmedName = editingHabitName.trim().replace(/\s+/g, " ");
     const trimmedIcon = editingHabitIcon.trim() || "✅";
-    const normalizedName = normalizeHabitName(trimmedName);
     const normalizedTargetType = normalizeGoalType(editingHabitTargetType);
     const normalizedTargetValue = normalizeGoalValue(editingHabitTargetValue);
 
     if (!editingHabit) return;
 
-    if (!trimmedName) {
-      showToast("Habit name cannot be empty.", "error");
-      return;
-    }
-
-    const alreadyExists = safeMonthData.habits.some(
-      (habit) =>
-        habit.id !== editingHabit.id &&
-        normalizeHabitName(habit.name) === normalizedName,
-    );
-
-    if (alreadyExists) {
-      showToast("Another habit with this name already exists.", "error");
+    if (editHabitError) {
+      showToast(editHabitError, "error");
       return;
     }
 
@@ -2244,9 +2285,20 @@ export default function App() {
                 />
               </div>
 
+              {newHabitError ? (
+                <div className="rounded-2xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs text-red-300">
+                  {newHabitError}
+                </div>
+              ) : (
+                <div className="text-xs text-neutral-500">
+                  Choose a unique habit name and a target value of at least 1.
+                </div>
+              )}
+
               <button
                 onClick={addHabit}
-                className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2"
+                disabled={Boolean(newHabitError)}
+                className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed px-4 py-3 text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Add New Habit
@@ -2457,6 +2509,8 @@ export default function App() {
               habitIcon={editingHabitIcon}
               habitTargetType={editingHabitTargetType}
               habitTargetValue={editingHabitTargetValue}
+              errorMessage={editHabitError}
+              isSaveDisabled={Boolean(editHabitError)}
               onChangeName={setEditingHabitName}
               onChangeIcon={setEditingHabitIcon}
               onChangeTargetType={setEditingHabitTargetType}
