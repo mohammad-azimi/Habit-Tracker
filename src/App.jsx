@@ -62,6 +62,7 @@ import {
 import ActiveHabitFilters from "./components/ActiveHabitFilters";
 import HabitQuickFilters from "./components/HabitQuickFilters";
 import { Navigate, Route, Routes, useNavigate } from "react-router";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -2496,24 +2497,26 @@ export default function App() {
   );
 
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
-      <Route path="/dashboard" element={dashboardPage} />
-      <Route
-        path="/profile"
-        element={
-          <ProfilePage
-            currentUser={currentUser}
-            onBack={() => navigate("/dashboard")}
-            onLogout={handleLogout}
-            onChangePassword={handleChangePassword}
-            isChangingPassword={isChangingPassword}
-            onDeleteAccount={handleDeleteAccount}
-            isDeleting={isDeletingAccount}
-          />
-        }
-      />
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
-    </Routes>
+    <ErrorBoundary>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={dashboardPage} />
+        <Route
+          path="/profile"
+          element={
+            <ProfilePage
+              currentUser={currentUser}
+              onBack={() => navigate("/dashboard")}
+              onLogout={handleLogout}
+              onChangePassword={handleChangePassword}
+              isChangingPassword={isChangingPassword}
+              onDeleteAccount={handleDeleteAccount}
+              isDeleting={isDeletingAccount}
+            />
+          }
+        />
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      </Routes>
+    </ErrorBoundary>
   );
 }
