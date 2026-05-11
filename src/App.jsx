@@ -65,6 +65,7 @@ import { Navigate, Route, Routes, useNavigate } from "react-router";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardStateCard from "./components/DashboardStateCard";
 import DashboardLoadingCard from "./components/DashboardLoadingCard";
+import AnalyticsHighlightsCard from "./components/AnalyticsHighlightsCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -191,6 +192,91 @@ function ensureMonthShape(monthData, year, monthIndex) {
 function average(values) {
   if (!values.length) return 0;
   return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function calculateConsistencyScore(rows) {
+  if (!rows.length) return 0;
+
+  const averageProgress =
+    rows.reduce((sum, row) => sum + Number(row.progress || 0), 0) / rows.length;
+
+  const activeHabitsCount = rows.filter(
+    (row) => Number(row.actual || 0) > 0,
+  ).length;
+  const activityCoverage = (activeHabitsCount / rows.length) * 100;
+
+  return Math.round(averageProgress * 0.7 + activityCoverage * 0.3);
+}
+
+function getBestDaySummary(habits, daysInMonth, weekdayLabels) {
+  if (!habits.length || daysInMonth <= 0) return null;
+
+  let best = null;
+
+  for (let dayIndex = 0; dayIndex < daysInMonth; dayIndex += 1) {
+    const completed = habits.reduce(
+      (sum, habit) => sum + (habit.checks?.[dayIndex] ? 1 : 0),
+      0,
+    );
+
+    const total = habits.length;
+    const percent = total ? Math.round((completed / total) * 100) : 0;
+
+    if (!best || completed > best.completed) {
+      best = {
+        day: dayIndex + 1,
+        weekday: weekdayLabels[dayIndex % 7],
+        completed,
+        total,
+        percent,
+      };
+    }
+  }
+
+  return best && best.completed > 0 ? best : null;
+}
+
+function getStrongestGoalType(rows) {
+  if (!rows.length) return null;
+
+  const grouped = rows.reduce((acc, row) => {
+    const key = row.targetType || "daily";
+
+    if (!acc[key]) {
+      acc[key] = {
+        key,
+        goal: 0,
+        actual: 0,
+      };
+    }
+
+    acc[key].goal += Number(row.goal || 0);
+    acc[key].actual += Number(row.actual || 0);
+
+    return acc;
+  }, {});
+
+  const mapped = Object.values(grouped).map((item) => {
+    const progress = item.goal
+      ? Math.min(100, Math.round((item.actual / item.goal) * 100))
+      : 0;
+
+    const labelMap = {
+      daily: "Daily Goals",
+      weekly: "Weekly Goals",
+      monthly: "Monthly Goals",
+    };
+
+    return {
+      ...item,
+      label: labelMap[item.key] || item.key,
+      progress,
+    };
+  });
+
+  mapped.sort((a, b) => b.progress - a.progress || b.actual - a.actual);
+
+  return mapped[0] || null;
 }
 
 function getPreviousMonthMeta(selectedYear, selectedMonthIndex) {
@@ -1887,6 +1973,22 @@ export default function App() {
     };
   }, [analysisRows]);
 
+  const consistencyScore = useMemo(() => {
+    return calculateConsistencyScore(activeAnalysisRows);
+  }, [activeAnalysisRows]);
+
+  const bestDaySummary = useMemo(() => {
+    return getBestDaySummary(
+      safeMonthData.habits.filter((habit) => !habit.archived),
+      daysInMonth,
+      WEEKDAY_LABELS,
+    );
+  }, [safeMonthData.habits, daysInMonth]);
+
+  const strongestGoalType = useMemo(() => {
+    return getStrongestGoalType(activeAnalysisRows);
+  }, [activeAnalysisRows]);
+
   const exportMonthJSON = () => {
     downloadBlob(
       `habit-tracker-${monthKey}.json`,
@@ -2534,6 +2636,12 @@ export default function App() {
               strongestCurrentStreakHabit={
                 monthlyInsights.strongestCurrentStreakHabit
               }
+            />
+
+            <AnalyticsHighlightsCard
+              consistencyScore={consistencyScore}
+              bestDay={bestDaySummary}
+              strongestGoalType={strongestGoalType}
             />
 
             {isPreviousMonthLoading ? (
