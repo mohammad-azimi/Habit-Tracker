@@ -5,6 +5,7 @@ export default function AnalyticsHighlightsCard({
   consistencyScore,
   bestDay,
   strongestGoalType,
+  trendInsight,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
@@ -12,6 +13,19 @@ export default function AnalyticsHighlightsCard({
         <div className="font-semibold">Analytics Highlights</div>
         <div className="text-xs text-neutral-500 mt-1">
           Deeper monthly performance insights
+        </div>
+      </div>
+
+      <div className="mb-3 rounded-2xl border border-neutral-800 bg-neutral-800 px-4 py-3">
+        <div className="text-[11px] uppercase tracking-wide text-neutral-500">
+          Trend Insight
+        </div>
+        <div className="mt-2 text-sm font-medium text-white">
+          {trendInsight?.title || "No trend yet"}
+        </div>
+        <div className="mt-1 text-xs leading-5 text-neutral-400">
+          {trendInsight?.description ||
+            "Track a few days to unlock monthly trend insights."}
         </div>
       </div>
 

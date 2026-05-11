@@ -279,6 +279,94 @@ function getStrongestGoalType(rows) {
   return mapped[0] || null;
 }
 
+function getTrendInsight(dailyProgress) {
+  if (!dailyProgress.length) {
+    return {
+      title: "No trend yet",
+      description: "Track a few days to unlock monthly trend insights.",
+    };
+  }
+
+  const values = dailyProgress.map((item) => Number(item.value || 0));
+  const validValues = values.filter((value) => Number.isFinite(value));
+
+  if (!validValues.length) {
+    return {
+      title: "No trend yet",
+      description: "Track a few days to unlock monthly trend insights.",
+    };
+  }
+
+  const average =
+    validValues.reduce((sum, value) => sum + value, 0) / validValues.length;
+
+  const midpoint = Math.max(1, Math.floor(validValues.length / 2));
+  const firstHalf = validValues.slice(0, midpoint);
+  const secondHalf = validValues.slice(midpoint);
+
+  const avgFirstHalf = firstHalf.length
+    ? firstHalf.reduce((sum, value) => sum + value, 0) / firstHalf.length
+    : 0;
+
+  const avgSecondHalf = secondHalf.length
+    ? secondHalf.reduce((sum, value) => sum + value, 0) / secondHalf.length
+    : avgFirstHalf;
+
+  const last7 = validValues.slice(-7);
+  const first7 = validValues.slice(0, 7);
+
+  const avgLast7 = last7.length
+    ? last7.reduce((sum, value) => sum + value, 0) / last7.length
+    : average;
+
+  const avgFirst7 = first7.length
+    ? first7.reduce((sum, value) => sum + value, 0) / first7.length
+    : average;
+
+  let swingCount = 0;
+  for (let i = 1; i < validValues.length; i += 1) {
+    if (Math.abs(validValues[i] - validValues[i - 1]) >= 25) {
+      swingCount += 1;
+    }
+  }
+
+  if (avgLast7 >= average + 10 && avgLast7 >= 75) {
+    return {
+      title: "Strong finish",
+      description: "Your final stretch is stronger than your monthly average.",
+    };
+  }
+
+  if (avgSecondHalf >= avgFirstHalf + 10) {
+    return {
+      title: "Improving",
+      description:
+        "Your second-half performance is clearly better than your first half.",
+    };
+  }
+
+  if (swingCount >= 5) {
+    return {
+      title: "Unstable rhythm",
+      description:
+        "Your progress swings a lot from day to day. A steadier routine could help.",
+    };
+  }
+
+  if (avgLast7 <= avgFirst7 - 12 && average < 70) {
+    return {
+      title: "Needs reset",
+      description:
+        "Your recent momentum dropped. A small reset could help you recover consistency.",
+    };
+  }
+
+  return {
+    title: "Steady rhythm",
+    description: "Your month looks balanced and reasonably consistent overall.",
+  };
+}
+
 function getPreviousMonthMeta(selectedYear, selectedMonthIndex) {
   const year = Number(selectedYear);
 
@@ -1989,6 +2077,10 @@ export default function App() {
     return getStrongestGoalType(activeAnalysisRows);
   }, [activeAnalysisRows]);
 
+  const trendInsight = useMemo(() => {
+    return getTrendInsight(dailyProgress);
+  }, [dailyProgress]);
+
   const exportMonthJSON = () => {
     downloadBlob(
       `habit-tracker-${monthKey}.json`,
@@ -2642,6 +2734,7 @@ export default function App() {
               consistencyScore={consistencyScore}
               bestDay={bestDaySummary}
               strongestGoalType={strongestGoalType}
+              trendInsight={trendInsight}
             />
 
             {isPreviousMonthLoading ? (
