@@ -1197,6 +1197,16 @@ export default function App() {
     showToast("Habit edit undone.", "success");
   };
 
+  const restoreMonthSnapshot = (monthSnapshot) => {
+    if (!monthSnapshot) return;
+
+    setMonthData(
+      ensureMonthShape(monthSnapshot, selectedYear, selectedMonthIndex),
+    );
+
+    showToast("Month restored.", "success");
+  };
+
   const openConfirmModal = ({
     title,
     message,
@@ -1844,8 +1854,13 @@ export default function App() {
         "This will replace the current month's habits, mood, motivation, and notes with fresh default values.",
       confirmLabel: "Reset Month",
       onConfirm: () => {
+        const monthSnapshot = JSON.parse(JSON.stringify(safeMonthData));
+
         resetCurrentMonth();
-        showToast("Current month has been reset.", "info");
+
+        showToast("Current month has been reset.", "info", "Undo", () =>
+          restoreMonthSnapshot(monthSnapshot),
+        );
       },
     });
   };
