@@ -1023,6 +1023,9 @@ function loadDashboardPrefs() {
       autoScrollToToday: true,
       showArchivedHabits: true,
       showAdvancedAnalytics: true,
+      habitSearchTerm: "",
+      habitFilterMode: "all",
+      goalTypeFilter: "all",
     };
   }
 
@@ -1039,6 +1042,12 @@ function loadDashboardPrefs() {
       autoScrollToToday: parsed?.autoScrollToToday ?? true,
       showArchivedHabits: parsed?.showArchivedHabits ?? true,
       showAdvancedAnalytics: parsed?.showAdvancedAnalytics ?? true,
+      habitSearchTerm:
+        typeof parsed?.habitSearchTerm === "string"
+          ? parsed.habitSearchTerm
+          : "",
+      habitFilterMode: parsed?.habitFilterMode || "all",
+      goalTypeFilter: parsed?.goalTypeFilter || "all",
     };
   } catch (error) {
     console.error("Failed to load dashboard preferences:", error);
@@ -1049,6 +1058,9 @@ function loadDashboardPrefs() {
       autoScrollToToday: true,
       showArchivedHabits: true,
       showAdvancedAnalytics: true,
+      habitSearchTerm: "",
+      habitFilterMode: "all",
+      goalTypeFilter: "all",
     };
   }
 }
@@ -1105,9 +1117,15 @@ export default function App() {
   const [confirmAction, setConfirmAction] = useState(null);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [habitSearchTerm, setHabitSearchTerm] = useState("");
-  const [habitFilterMode, setHabitFilterMode] = useState("all");
-  const [goalTypeFilter, setGoalTypeFilter] = useState("all");
+  const [habitSearchTerm, setHabitSearchTerm] = useState(
+    savedDashboardPrefs?.habitSearchTerm || "",
+  );
+  const [habitFilterMode, setHabitFilterMode] = useState(
+    savedDashboardPrefs?.habitFilterMode || "all",
+  );
+  const [goalTypeFilter, setGoalTypeFilter] = useState(
+    savedDashboardPrefs?.goalTypeFilter || "all",
+  );
   const [toast, setToast] = useState(null);
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
@@ -1241,6 +1259,18 @@ export default function App() {
     setHabitSearchTerm("");
     setHabitFilterMode("all");
     setGoalTypeFilter("all");
+  };
+
+  const resetDashboardPreferences = () => {
+    setHabitSortMode("manual");
+    setAutoScrollToToday(true);
+    setShowArchivedHabits(true);
+    setShowAdvancedAnalytics(true);
+    setHabitSearchTerm("");
+    setHabitFilterMode("all");
+    setGoalTypeFilter("all");
+
+    showToast("Dashboard preferences reset to default.", "success");
   };
 
   const applyQuickFilter = (filterKey) => {
@@ -1441,6 +1471,9 @@ export default function App() {
           autoScrollToToday,
           showArchivedHabits,
           showAdvancedAnalytics,
+          habitSearchTerm,
+          habitFilterMode,
+          goalTypeFilter,
         }),
       );
     } catch (error) {
@@ -1453,6 +1486,9 @@ export default function App() {
     autoScrollToToday,
     showArchivedHabits,
     showAdvancedAnalytics,
+    habitSearchTerm,
+    habitFilterMode,
+    goalTypeFilter,
   ]);
 
   useEffect(() => {
@@ -3172,6 +3208,7 @@ export default function App() {
                 onToggleShowAdvancedAnalytics={() =>
                   setShowAdvancedAnalytics((prev) => !prev)
                 }
+                onResetPreferences={resetDashboardPreferences}
               />
 
               <div className="grid grid-cols-3 gap-2">

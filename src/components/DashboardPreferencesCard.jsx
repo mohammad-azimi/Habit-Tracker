@@ -36,6 +36,7 @@ export default function DashboardPreferencesCard({
   onToggleShowArchivedHabits,
   showAdvancedAnalytics,
   onToggleShowAdvancedAnalytics,
+  onResetPreferences,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl space-y-3">
@@ -69,6 +70,14 @@ export default function DashboardPreferencesCard({
         checked={showAdvancedAnalytics}
         onChange={onToggleShowAdvancedAnalytics}
       />
+
+      <button
+        type="button"
+        onClick={onResetPreferences}
+        className="w-full rounded-2xl bg-neutral-800 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700"
+      >
+        Reset Preferences
+      </button>
     </div>
   );
 }
