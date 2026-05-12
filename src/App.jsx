@@ -825,6 +825,46 @@ function buildHabitsFromTemplate(templateHabits, daysInMonth, existingHabits) {
     });
 }
 
+const CUSTOM_HABIT_TEMPLATES_KEY = "habit-tracker-custom-templates";
+
+function loadCustomHabitTemplates() {
+  if (typeof window === "undefined") return [];
+
+  try {
+    const raw = localStorage.getItem(CUSTOM_HABIT_TEMPLATES_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error("Failed to load custom habit templates:", error);
+    return [];
+  }
+}
+
+function saveCustomHabitTemplates(templates) {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(CUSTOM_HABIT_TEMPLATES_KEY, JSON.stringify(templates));
+  } catch (error) {
+    console.error("Failed to save custom habit templates:", error);
+  }
+}
+
+function buildTemplateFromCurrentHabits(habits, title) {
+  return {
+    id: `custom-template-${Date.now()}`,
+    title: String(title || "").trim(),
+    description: "Saved from your current active habit setup.",
+    isCustom: true,
+    habits: habits.map((habit) => ({
+      name: habit.name,
+      icon: habit.icon,
+      targetType: normalizeGoalType(habit.targetType),
+      targetValue: normalizeGoalValue(habit.targetValue),
+    })),
+  };
+}
+
 function getExportFilterSummary({
   habitSearchTerm,
   habitFilterMode,
@@ -1007,6 +1047,9 @@ export default function App() {
 
   const [newHabitTargetType, setNewHabitTargetType] = useState("daily");
   const [newHabitTargetValue, setNewHabitTargetValue] = useState(1);
+  const [customHabitTemplates, setCustomHabitTemplates] = useState(() =>
+    loadCustomHabitTemplates(),
+  );
   const [currentUser, setCurrentUser] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
@@ -1042,6 +1085,15 @@ export default function App() {
   const safeMonthData = useMemo(() => {
     return ensureMonthShape(monthData, selectedYear, selectedMonthIndex);
   }, [monthData, selectedYear, selectedMonthIndex]);
+
+  const allHabitTemplates = useMemo(() => {
+    const builtInTemplates = habitTemplates.map((template) => ({
+      ...template,
+      isCustom: false,
+    }));
+
+    return [...customHabitTemplates, ...builtInTemplates];
+  }, [customHabitTemplates]);
 
   const newHabitError = useMemo(() => {
     return getHabitFormError({
@@ -1679,6 +1731,65 @@ export default function App() {
       "Undo",
       () => restoreMonthSnapshot(monthSnapshot),
     );
+  };
+
+  const saveCurrentHabitsAsTemplate = () => {
+    const activeHabits = safeMonthData.habits.filter(
+      (habit) => !habit.archived,
+    );
+
+    if (!activeHabits.length) {
+      showToast("There are no active habits to save as a template.", "error");
+      return;
+    }
+
+    const templateTitle = window.prompt("Template name:");
+
+    if (!templateTitle || !templateTitle.trim()) {
+      return;
+    }
+
+    const normalizedTitle = templateTitle.trim().toLowerCase();
+
+    const alreadyExists = customHabitTemplates.some(
+      (template) => template.title.trim().toLowerCase() === normalizedTitle,
+    );
+
+    if (alreadyExists) {
+      showToast("A custom template with this name already exists.", "error");
+      return;
+    }
+
+    const nextTemplate = buildTemplateFromCurrentHabits(
+      activeHabits,
+      templateTitle,
+    );
+    const nextTemplates = [nextTemplate, ...customHabitTemplates];
+
+    setCustomHabitTemplates(nextTemplates);
+    saveCustomHabitTemplates(nextTemplates);
+
+    showToast(
+      `Template "${nextTemplate.title}" saved successfully.`,
+      "success",
+    );
+  };
+
+  const deleteCustomHabitTemplate = (templateId) => {
+    const templateToDelete = customHabitTemplates.find(
+      (template) => template.id === templateId,
+    );
+
+    if (!templateToDelete) return;
+
+    const nextTemplates = customHabitTemplates.filter(
+      (template) => template.id !== templateId,
+    );
+
+    setCustomHabitTemplates(nextTemplates);
+    saveCustomHabitTemplates(nextTemplates);
+
+    showToast(`Template "${templateToDelete.title}" deleted.`, "info");
   };
 
   const deleteHabit = (habitId) => {
@@ -3004,8 +3115,10 @@ export default function App() {
             </div>
 
             <HabitTemplatesCard
-              templates={habitTemplates}
+              templates={allHabitTemplates}
               onApplyTemplate={applyHabitTemplate}
+              onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
+              onDeleteTemplate={deleteCustomHabitTemplate}
             />
 
             {rankedHabits.length > 0 ? (
