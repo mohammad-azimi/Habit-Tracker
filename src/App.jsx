@@ -68,6 +68,8 @@ import DashboardLoadingCard from "./components/DashboardLoadingCard";
 import AnalyticsHighlightsCard from "./components/AnalyticsHighlightsCard";
 import WeekdayPerformanceCard from "./components/WeekdayPerformanceCard";
 import WeeklyMomentumCard from "./components/WeeklyMomentumCard";
+import habitTemplates from "./data/habitTemplates";
+import HabitTemplatesCard from "./components/HabitTemplatesCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -798,6 +800,29 @@ function normalizeHabitName(value) {
     .trim()
     .replace(/\s+/g, " ")
     .toLowerCase();
+}
+
+function buildHabitsFromTemplate(templateHabits, daysInMonth, existingHabits) {
+  const existingNames = new Set(
+    existingHabits.map((habit) => normalizeHabitName(habit.name)),
+  );
+
+  return templateHabits
+    .filter((habit) => !existingNames.has(normalizeHabitName(habit.name)))
+    .map((habit, index) => {
+      const safeName = String(habit.name || `Habit ${index + 1}`).trim();
+      const safeId = safeName.toLowerCase().replace(/\s+/g, "-");
+
+      return {
+        id: `${safeId}-${Date.now()}-${index}`,
+        name: safeName,
+        icon: habit.icon || "✅",
+        archived: false,
+        targetType: normalizeGoalType(habit.targetType),
+        targetValue: normalizeGoalValue(habit.targetValue),
+        checks: Array.from({ length: daysInMonth }, () => false),
+      };
+    });
 }
 
 function getExportFilterSummary({
@@ -1625,6 +1650,35 @@ export default function App() {
     setNewHabitTargetValue(1);
 
     showToast("Habit added successfully.", "success");
+  };
+
+  const applyHabitTemplate = (template) => {
+    if (!template?.habits?.length) return;
+
+    const monthSnapshot = JSON.parse(JSON.stringify(safeMonthData));
+
+    const newHabits = buildHabitsFromTemplate(
+      template.habits,
+      daysInMonth,
+      safeMonthData.habits,
+    );
+
+    if (!newHabits.length) {
+      showToast("All habits from this template already exist.", "info");
+      return;
+    }
+
+    updateMonth((month) => ({
+      ...month,
+      habits: [...month.habits, ...newHabits],
+    }));
+
+    showToast(
+      `${newHabits.length} habits added from "${template.title}".`,
+      "success",
+      "Undo",
+      () => restoreMonthSnapshot(monthSnapshot),
+    );
   };
 
   const deleteHabit = (habitId) => {
@@ -2948,6 +3002,11 @@ export default function App() {
                 Reset Current Month
               </button>
             </div>
+
+            <HabitTemplatesCard
+              templates={habitTemplates}
+              onApplyTemplate={applyHabitTemplate}
+            />
 
             {rankedHabits.length > 0 ? (
               <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
