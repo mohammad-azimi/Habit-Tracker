@@ -70,6 +70,7 @@ import WeekdayPerformanceCard from "./components/WeekdayPerformanceCard";
 import WeeklyMomentumCard from "./components/WeeklyMomentumCard";
 import habitTemplates from "./data/habitTemplates";
 import HabitTemplatesCard from "./components/HabitTemplatesCard";
+import DashboardPreferencesCard from "./components/DashboardPreferencesCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -865,6 +866,35 @@ function buildTemplateFromCurrentHabits(habits, title) {
   };
 }
 
+function normalizeImportedCustomTemplate(template, index = 0) {
+  const safeTitle = String(template?.title || `Imported Template ${index + 1}`)
+    .trim()
+    .replace(/\s+/g, " ");
+
+  const safeHabits = Array.isArray(template?.habits)
+    ? template.habits
+        .map((habit, habitIndex) => ({
+          name: String(habit?.name || `Habit ${habitIndex + 1}`)
+            .trim()
+            .replace(/\s+/g, " "),
+          icon: String(habit?.icon || "✅").trim() || "✅",
+          targetType: normalizeGoalType(habit?.targetType),
+          targetValue: normalizeGoalValue(habit?.targetValue),
+        }))
+        .filter((habit) => habit.name)
+    : [];
+
+  return {
+    id: `custom-template-${Date.now()}-${index}`,
+    title: safeTitle,
+    description: String(
+      template?.description || "Imported custom habit template.",
+    ).trim(),
+    isCustom: true,
+    habits: safeHabits,
+  };
+}
+
 function getExportFilterSummary({
   habitSearchTerm,
   habitFilterMode,
@@ -985,14 +1015,41 @@ function getHabitFormError({
 const DASHBOARD_PREFS_KEY = "habit-tracker-dashboard-prefs";
 
 function loadDashboardPrefs() {
-  if (typeof window === "undefined") return null;
+  if (typeof window === "undefined") {
+    return {
+      selectedYear: null,
+      selectedMonthIndex: null,
+      habitSortMode: "manual",
+      autoScrollToToday: true,
+      showArchivedHabits: true,
+      showAdvancedAnalytics: true,
+    };
+  }
 
   try {
     const raw = localStorage.getItem(DASHBOARD_PREFS_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const parsed = raw ? JSON.parse(raw) : {};
+
+    return {
+      selectedYear: parsed?.selectedYear || null,
+      selectedMonthIndex: Number.isInteger(parsed?.selectedMonthIndex)
+        ? parsed.selectedMonthIndex
+        : null,
+      habitSortMode: parsed?.habitSortMode || "manual",
+      autoScrollToToday: parsed?.autoScrollToToday ?? true,
+      showArchivedHabits: parsed?.showArchivedHabits ?? true,
+      showAdvancedAnalytics: parsed?.showAdvancedAnalytics ?? true,
+    };
   } catch (error) {
     console.error("Failed to load dashboard preferences:", error);
-    return null;
+    return {
+      selectedYear: null,
+      selectedMonthIndex: null,
+      habitSortMode: "manual",
+      autoScrollToToday: true,
+      showArchivedHabits: true,
+      showAdvancedAnalytics: true,
+    };
   }
 }
 
@@ -1000,6 +1057,7 @@ export default function App() {
   const currentDate = new Date();
   const navigate = useNavigate();
   const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
+  const customTemplateFileInputRef = React.useRef(null);
 
   const [selectedYear, setSelectedYear] = useState(
     savedDashboardPrefs?.selectedYear || String(currentDate.getFullYear()),
@@ -1022,6 +1080,15 @@ export default function App() {
 
   const [habitSortMode, setHabitSortMode] = useState(
     savedDashboardPrefs?.habitSortMode || "manual",
+  );
+  const [autoScrollToToday, setAutoScrollToToday] = useState(
+    savedDashboardPrefs?.autoScrollToToday ?? true,
+  );
+  const [showArchivedHabits, setShowArchivedHabits] = useState(
+    savedDashboardPrefs?.showArchivedHabits ?? true,
+  );
+  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(
+    savedDashboardPrefs?.showAdvancedAnalytics ?? true,
   );
   const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
   const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
@@ -1371,12 +1438,22 @@ export default function App() {
           selectedYear,
           selectedMonthIndex,
           habitSortMode,
+          autoScrollToToday,
+          showArchivedHabits,
+          showAdvancedAnalytics,
         }),
       );
     } catch (error) {
       console.error("Failed to save dashboard preferences:", error);
     }
-  }, [selectedYear, selectedMonthIndex, habitSortMode]);
+  }, [
+    selectedYear,
+    selectedMonthIndex,
+    habitSortMode,
+    autoScrollToToday,
+    showArchivedHabits,
+    showAdvancedAnalytics,
+  ]);
 
   useEffect(() => {
     if (!authChecked) return;
@@ -1790,6 +1867,98 @@ export default function App() {
     saveCustomHabitTemplates(nextTemplates);
 
     showToast(`Template "${templateToDelete.title}" deleted.`, "info");
+  };
+
+  const exportCustomHabitTemplates = () => {
+    if (!customHabitTemplates.length) {
+      showToast("There are no custom templates to export.", "error");
+      return;
+    }
+
+    const payload = {
+      metadata: {
+        exportedAt: new Date().toISOString(),
+        exportType: "custom-habit-templates",
+        count: customHabitTemplates.length,
+      },
+      templates: customHabitTemplates.map((template) => ({
+        title: template.title,
+        description: template.description,
+        habits: template.habits.map((habit) => ({
+          name: habit.name,
+          icon: habit.icon,
+          targetType: normalizeGoalType(habit.targetType),
+          targetValue: normalizeGoalValue(habit.targetValue),
+        })),
+      })),
+    };
+
+    downloadBlob(
+      "habit-tracker-custom-templates.json",
+      JSON.stringify(payload, null, 2),
+      "application/json",
+    );
+
+    showToast("Custom templates exported successfully.", "success");
+  };
+
+  const triggerImportCustomTemplates = () => {
+    customTemplateFileInputRef.current?.click();
+  };
+
+  const importCustomHabitTemplates = async (file) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      const rawTemplates = Array.isArray(parsed)
+        ? parsed
+        : Array.isArray(parsed?.templates)
+          ? parsed.templates
+          : null;
+
+      if (!rawTemplates || !rawTemplates.length) {
+        throw new Error("No templates found.");
+      }
+
+      const importedTemplates = rawTemplates
+        .map((template, index) =>
+          normalizeImportedCustomTemplate(template, index),
+        )
+        .filter((template) => template.title && template.habits.length > 0);
+
+      if (!importedTemplates.length) {
+        throw new Error("No valid templates found.");
+      }
+
+      const existingTitles = new Set(
+        customHabitTemplates.map((template) =>
+          template.title.trim().toLowerCase(),
+        ),
+      );
+
+      const dedupedTemplates = importedTemplates.filter(
+        (template) => !existingTitles.has(template.title.trim().toLowerCase()),
+      );
+
+      if (!dedupedTemplates.length) {
+        showToast("All imported templates already exist.", "info");
+        return;
+      }
+
+      const nextTemplates = [...dedupedTemplates, ...customHabitTemplates];
+
+      setCustomHabitTemplates(nextTemplates);
+      saveCustomHabitTemplates(nextTemplates);
+
+      showToast(
+        `${dedupedTemplates.length} custom template(s) imported successfully.`,
+        "success",
+      );
+    } catch (error) {
+      console.error(error);
+      showToast("Template file is not valid.", "error");
+    }
   };
 
   const deleteHabit = (habitId) => {
@@ -2922,6 +3091,20 @@ export default function App() {
   const dashboardPage = (
     <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8">
       <div className="mx-auto max-w-[1600px] space-y-6">
+        <input
+          ref={customTemplateFileInputRef}
+          type="file"
+          accept=".json,application/json"
+          className="hidden"
+          onChange={async (event) => {
+            const file = event.target.files?.[0];
+            if (file) {
+              await importCustomHabitTemplates(file);
+            }
+            event.target.value = "";
+          }}
+        />
+
         <DashboardHeader
           onExportCSV={exportMonthCSV}
           onExportJSON={exportMonthJSON}
@@ -2975,6 +3158,21 @@ export default function App() {
                 <CalendarDays className="h-4 w-4" />
                 Calendar Settings
               </div>
+
+              <DashboardPreferencesCard
+                autoScrollToToday={autoScrollToToday}
+                onToggleAutoScrollToToday={() =>
+                  setAutoScrollToToday((prev) => !prev)
+                }
+                showArchivedHabits={showArchivedHabits}
+                onToggleShowArchivedHabits={() =>
+                  setShowArchivedHabits((prev) => !prev)
+                }
+                showAdvancedAnalytics={showAdvancedAnalytics}
+                onToggleShowAdvancedAnalytics={() =>
+                  setShowAdvancedAnalytics((prev) => !prev)
+                }
+              />
 
               <div className="grid grid-cols-3 gap-2">
                 <button
@@ -3119,6 +3317,8 @@ export default function App() {
               onApplyTemplate={applyHabitTemplate}
               onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
               onDeleteTemplate={deleteCustomHabitTemplate}
+              onExportCustomTemplates={exportCustomHabitTemplates}
+              onImportCustomTemplates={triggerImportCustomTemplates}
             />
 
             {rankedHabits.length > 0 ? (
@@ -3131,12 +3331,14 @@ export default function App() {
               />
             )}
 
-            <ArchivedHabitsPanel
-              archivedHabits={archivedAnalysisRows}
-              onRestoreHabit={(habitId) =>
-                restoreHabit(habitId, { showUndo: true })
-              }
-            />
+            {showArchivedHabits ? (
+              <ArchivedHabitsPanel
+                archivedHabits={archivedAnalysisRows}
+                onRestoreHabit={(habitId) =>
+                  restoreHabit(habitId, { showUndo: true })
+                }
+              />
+            ) : null}
           </section>
 
           <section className="xl:col-span-6 space-y-4">
@@ -3248,6 +3450,7 @@ export default function App() {
                 onHabitDragEnd={handleHabitDragEnd}
                 todayIndex={todayIndex}
                 isManualSort={habitSortMode === "manual"}
+                autoScrollToToday={autoScrollToToday}
               />
             ) : (
               <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center">
@@ -3345,24 +3548,28 @@ export default function App() {
               }
             />
 
-            <AnalyticsHighlightsCard
-              consistencyScore={consistencyScore}
-              bestDay={bestDaySummary}
-              strongestGoalType={strongestGoalType}
-              trendInsight={trendInsight}
-            />
+            {showAdvancedAnalytics ? (
+              <>
+                <AnalyticsHighlightsCard
+                  consistencyScore={consistencyScore}
+                  bestDay={bestDaySummary}
+                  strongestGoalType={strongestGoalType}
+                  trendInsight={trendInsight}
+                />
 
-            <WeekdayPerformanceCard
-              rows={weekdayPerformance.rows}
-              bestWeekday={weekdayPerformance.bestWeekday}
-              weakestWeekday={weekdayPerformance.weakestWeekday}
-            />
+                <WeekdayPerformanceCard
+                  rows={weekdayPerformance.rows}
+                  bestWeekday={weekdayPerformance.bestWeekday}
+                  weakestWeekday={weekdayPerformance.weakestWeekday}
+                />
 
-            <WeeklyMomentumCard
-              strongestWeek={weeklyMomentum.strongestWeek}
-              weakestWeek={weeklyMomentum.weakestWeek}
-              trend={weeklyMomentum.trend}
-            />
+                <WeeklyMomentumCard
+                  strongestWeek={weeklyMomentum.strongestWeek}
+                  weakestWeek={weeklyMomentum.weakestWeek}
+                  trend={weeklyMomentum.trend}
+                />
+              </>
+            ) : null}
 
             {isPreviousMonthLoading ? (
               <DashboardLoadingCard

@@ -1,15 +1,23 @@
 import React from "react";
-import { BookmarkPlus, Sparkles, Trash2 } from "lucide-react";
+import {
+  BookmarkPlus,
+  Download,
+  FolderUp,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 export default function HabitTemplatesCard({
   templates,
   onApplyTemplate,
   onSaveCurrentTemplate,
   onDeleteTemplate,
+  onExportCustomTemplates,
+  onImportCustomTemplates,
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl space-y-3">
-      <div className="flex items-start justify-between gap-3">
+      <div className="flex flex-col gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
             <Sparkles className="h-4 w-4" />
@@ -20,13 +28,31 @@ export default function HabitTemplatesCard({
           </div>
         </div>
 
-        <button
-          onClick={onSaveCurrentTemplate}
-          className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200"
-        >
-          <BookmarkPlus className="h-3.5 w-3.5" />
-          Save Current
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onSaveCurrentTemplate}
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200"
+          >
+            <BookmarkPlus className="h-3.5 w-3.5" />
+            Save Current
+          </button>
+
+          <button
+            onClick={onExportCustomTemplates}
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700"
+          >
+            <Download className="h-3.5 w-3.5" />
+            Export Custom
+          </button>
+
+          <button
+            onClick={onImportCustomTemplates}
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700"
+          >
+            <FolderUp className="h-3.5 w-3.5" />
+            Import Custom
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">

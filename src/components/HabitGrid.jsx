@@ -37,12 +37,13 @@ export default function HabitGrid({
   onHabitDragEnd,
   todayIndex,
   isManualSort,
+  autoScrollToToday = true,
 }) {
   const scrollContainerRef = useRef(null);
   const todayCellRef = useRef(null);
   const stickyColumnRef = useRef(null);
   const canReorder = isManualSort === true;
-  
+
   const getDayButtonClasses = (checked, idx) => {
     const isToday = idx === todayIndex;
 
@@ -70,6 +71,7 @@ export default function HabitGrid({
   };
 
   useEffect(() => {
+    if (!autoScrollToToday) return;
     if (todayIndex === null || todayIndex < 0) return;
     if (!scrollContainerRef.current) return;
     if (!todayCellRef.current) return;
