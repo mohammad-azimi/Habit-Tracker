@@ -31,7 +31,7 @@ export default function HabitTemplatesCard({
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onSaveCurrentTemplate}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200"
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200 active:scale-[0.98] transition duration-150"
           >
             <BookmarkPlus className="h-3.5 w-3.5" />
             Save Current
@@ -39,7 +39,7 @@ export default function HabitTemplatesCard({
 
           <button
             onClick={onExportCustomTemplates}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700"
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
           >
             <Download className="h-3.5 w-3.5" />
             Export Custom
@@ -47,7 +47,7 @@ export default function HabitTemplatesCard({
 
           <button
             onClick={onImportCustomTemplates}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700"
+            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
           >
             <FolderUp className="h-3.5 w-3.5" />
             Import Custom
@@ -60,7 +60,7 @@ export default function HabitTemplatesCard({
           templates.map((template) => (
             <div
               key={template.id}
-              className="rounded-2xl border border-neutral-800 bg-neutral-800/60 p-4"
+              className="rounded-2xl border border-neutral-800 bg-neutral-800/60 p-4 transition duration-150 hover:border-neutral-700 hover:bg-neutral-800"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -102,7 +102,7 @@ export default function HabitTemplatesCard({
 
                   <button
                     onClick={() => onApplyTemplate(template)}
-                    className="shrink-0 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200"
+                    className="shrink-0 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200 active:scale-[0.98] transition duration-150"
                   >
                     Use Template
                   </button>

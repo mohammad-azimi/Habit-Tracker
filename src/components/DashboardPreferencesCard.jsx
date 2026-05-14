@@ -3,7 +3,7 @@ import { Settings2 } from "lucide-react";
 
 function PreferenceToggle({ label, description, checked, onChange }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl bg-neutral-800 px-4 py-3">
+    <div className="flex items-center justify-between gap-3 rounded-2xl bg-neutral-800 px-4 py-3 transition duration-150 hover:bg-neutral-750">
       <div className="min-w-0 flex-1">
         <div className="text-sm font-medium text-white">{label}</div>
         <div className="mt-1 text-xs leading-5 text-neutral-500">
@@ -14,7 +14,7 @@ function PreferenceToggle({ label, description, checked, onChange }) {
       <button
         type="button"
         onClick={onChange}
-        className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+        className={`relative h-7 w-12 shrink-0 rounded-full transition duration-200 active:scale-[0.96] ${
           checked ? "bg-white" : "bg-neutral-700"
         }`}
         aria-pressed={checked}
@@ -119,7 +119,7 @@ export default function DashboardPreferencesCard({
       <button
         type="button"
         onClick={onResetPreferences}
-        className="w-full rounded-2xl bg-neutral-800 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700"
+        className="w-full rounded-2xl bg-neutral-800 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700 active:scale-[0.99] transition duration-150"
       >
         Reset Preferences
       </button>

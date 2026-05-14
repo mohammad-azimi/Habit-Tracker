@@ -195,7 +195,7 @@ export default function DashboardHeader({
 
         <button
           onClick={toggleMenu}
-          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm font-medium hover:bg-neutral-700"
+          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm font-medium hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
         >
           <Download className="h-4 w-4" />
           Export & Actions
@@ -207,7 +207,7 @@ export default function DashboardHeader({
         </button>
 
         {isMenuOpen && (
-          <div className="fixed inset-x-4 top-24 z-[100] max-h-[70vh] overflow-y-auto rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[22rem] sm:max-h-[32rem]">
+          <div className="fixed inset-x-4 top-24 z-[100] max-h-[70vh] overflow-y-auto rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl transition duration-150 animate-[fadeIn_.15s_ease-out] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[22rem] sm:max-h-[32rem]">
             <div className="border-b border-neutral-800 px-4 py-4">
               <div className="text-sm font-semibold text-white">
                 Export & Actions
@@ -235,7 +235,7 @@ export default function DashboardHeader({
                       <button
                         key={item.label}
                         onClick={item.onClick}
-                        className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition hover:bg-neutral-800"
+                        className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition duration-150 hover:bg-neutral-800 active:scale-[0.995]"
                       >
                         <div className="mt-0.5 shrink-0 rounded-xl bg-neutral-800 p-2">
                           <Icon className="h-4 w-4 text-neutral-300" />
