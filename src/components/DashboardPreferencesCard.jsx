@@ -36,6 +36,16 @@ export default function DashboardPreferencesCard({
   onToggleShowArchivedHabits,
   showAdvancedAnalytics,
   onToggleShowAdvancedAnalytics,
+  showTodayProgress,
+  onToggleShowTodayProgress,
+  showTopHabits,
+  onToggleShowTopHabits,
+  showYearlyOverview,
+  onToggleShowYearlyOverview,
+  showStreakLeaderboard,
+  onToggleShowStreakLeaderboard,
+  showMonthlyReview,
+  onToggleShowMonthlyReview,
   onResetPreferences,
 }) {
   return (
@@ -69,6 +79,41 @@ export default function DashboardPreferencesCard({
         description="Display deeper analytics cards like trend, weekday performance, and momentum."
         checked={showAdvancedAnalytics}
         onChange={onToggleShowAdvancedAnalytics}
+      />
+
+      <PreferenceToggle
+        label="Show today progress"
+        description="Display the Today Progress card in the dashboard."
+        checked={showTodayProgress}
+        onChange={onToggleShowTodayProgress}
+      />
+
+      <PreferenceToggle
+        label="Show top habits"
+        description="Display the Top Habits card in the sidebar."
+        checked={showTopHabits}
+        onChange={onToggleShowTopHabits}
+      />
+
+      <PreferenceToggle
+        label="Show yearly overview"
+        description="Display the yearly overview section in the dashboard."
+        checked={showYearlyOverview}
+        onChange={onToggleShowYearlyOverview}
+      />
+
+      <PreferenceToggle
+        label="Show streak leaderboard"
+        description="Display the streak leaderboard card."
+        checked={showStreakLeaderboard}
+        onChange={onToggleShowStreakLeaderboard}
+      />
+
+      <PreferenceToggle
+        label="Show monthly review"
+        description="Display the monthly review section."
+        checked={showMonthlyReview}
+        onChange={onToggleShowMonthlyReview}
       />
 
       <button

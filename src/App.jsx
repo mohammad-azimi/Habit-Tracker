@@ -1023,6 +1023,11 @@ function loadDashboardPrefs() {
       autoScrollToToday: true,
       showArchivedHabits: true,
       showAdvancedAnalytics: true,
+      showTodayProgress: true,
+      showTopHabits: true,
+      showYearlyOverview: true,
+      showStreakLeaderboard: true,
+      showMonthlyReview: true,
       habitSearchTerm: "",
       habitFilterMode: "all",
       goalTypeFilter: "all",
@@ -1042,6 +1047,11 @@ function loadDashboardPrefs() {
       autoScrollToToday: parsed?.autoScrollToToday ?? true,
       showArchivedHabits: parsed?.showArchivedHabits ?? true,
       showAdvancedAnalytics: parsed?.showAdvancedAnalytics ?? true,
+      showTodayProgress: parsed?.showTodayProgress ?? true,
+      showTopHabits: parsed?.showTopHabits ?? true,
+      showYearlyOverview: parsed?.showYearlyOverview ?? true,
+      showStreakLeaderboard: parsed?.showStreakLeaderboard ?? true,
+      showMonthlyReview: parsed?.showMonthlyReview ?? true,
       habitSearchTerm:
         typeof parsed?.habitSearchTerm === "string"
           ? parsed.habitSearchTerm
@@ -1101,6 +1111,21 @@ export default function App() {
   );
   const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(
     savedDashboardPrefs?.showAdvancedAnalytics ?? true,
+  );
+  const [showTodayProgress, setShowTodayProgress] = useState(
+    savedDashboardPrefs?.showTodayProgress ?? true,
+  );
+  const [showTopHabits, setShowTopHabits] = useState(
+    savedDashboardPrefs?.showTopHabits ?? true,
+  );
+  const [showYearlyOverview, setShowYearlyOverview] = useState(
+    savedDashboardPrefs?.showYearlyOverview ?? true,
+  );
+  const [showStreakLeaderboard, setShowStreakLeaderboard] = useState(
+    savedDashboardPrefs?.showStreakLeaderboard ?? true,
+  );
+  const [showMonthlyReview, setShowMonthlyReview] = useState(
+    savedDashboardPrefs?.showMonthlyReview ?? true,
   );
   const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
   const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
@@ -1266,6 +1291,11 @@ export default function App() {
     setAutoScrollToToday(true);
     setShowArchivedHabits(true);
     setShowAdvancedAnalytics(true);
+    setShowTodayProgress(true);
+    setShowTopHabits(true);
+    setShowYearlyOverview(true);
+    setShowStreakLeaderboard(true);
+    setShowMonthlyReview(true);
     setHabitSearchTerm("");
     setHabitFilterMode("all");
     setGoalTypeFilter("all");
@@ -1471,6 +1501,11 @@ export default function App() {
           autoScrollToToday,
           showArchivedHabits,
           showAdvancedAnalytics,
+          showTodayProgress,
+          showTopHabits,
+          showYearlyOverview,
+          showStreakLeaderboard,
+          showMonthlyReview,
           habitSearchTerm,
           habitFilterMode,
           goalTypeFilter,
@@ -1486,6 +1521,11 @@ export default function App() {
     autoScrollToToday,
     showArchivedHabits,
     showAdvancedAnalytics,
+    showTodayProgress,
+    showTopHabits,
+    showYearlyOverview,
+    showStreakLeaderboard,
+    showMonthlyReview,
     habitSearchTerm,
     habitFilterMode,
     goalTypeFilter,
@@ -3208,6 +3248,24 @@ export default function App() {
                 onToggleShowAdvancedAnalytics={() =>
                   setShowAdvancedAnalytics((prev) => !prev)
                 }
+                showTodayProgress={showTodayProgress}
+                onToggleShowTodayProgress={() =>
+                  setShowTodayProgress((prev) => !prev)
+                }
+                showTopHabits={showTopHabits}
+                onToggleShowTopHabits={() => setShowTopHabits((prev) => !prev)}
+                showYearlyOverview={showYearlyOverview}
+                onToggleShowYearlyOverview={() =>
+                  setShowYearlyOverview((prev) => !prev)
+                }
+                showStreakLeaderboard={showStreakLeaderboard}
+                onToggleShowStreakLeaderboard={() =>
+                  setShowStreakLeaderboard((prev) => !prev)
+                }
+                showMonthlyReview={showMonthlyReview}
+                onToggleShowMonthlyReview={() =>
+                  setShowMonthlyReview((prev) => !prev)
+                }
                 onResetPreferences={resetDashboardPreferences}
               />
 
@@ -3358,15 +3416,17 @@ export default function App() {
               onImportCustomTemplates={triggerImportCustomTemplates}
             />
 
-            {rankedHabits.length > 0 ? (
-              <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
-            ) : (
-              <DashboardStateCard
-                compact
-                title="No top habits yet"
-                description="Your best-performing habits will appear here once you add and track them."
-              />
-            )}
+            {showTopHabits ? (
+              rankedHabits.length > 0 ? (
+                <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
+              ) : (
+                <DashboardStateCard
+                  compact
+                  title="No top habits yet"
+                  description="Your best-performing habits will appear here once you add and track them."
+                />
+              )
+            ) : null}
 
             {showArchivedHabits ? (
               <ArchivedHabitsPanel
@@ -3444,7 +3504,7 @@ export default function App() {
               </div>
             </div>
 
-            {todaySummary ? (
+            {showTodayProgress && todaySummary ? (
               <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -3519,34 +3579,40 @@ export default function App() {
               onChangeNotes={setMonthlyNotes}
             />
 
-            {isYearlyOverviewLoading ? (
-              <DashboardLoadingCard
-                compact
-                title="Loading yearly overview"
-                lines={4}
-              />
-            ) : (
-              <YearlyOverviewCard
-                selectedYear={selectedYear}
-                yearlyData={yearlyOverviewData}
-                isLoading={false}
-              />
-            )}
+            {showYearlyOverview ? (
+              isYearlyOverviewLoading ? (
+                <DashboardLoadingCard
+                  compact
+                  title="Loading yearly overview"
+                  lines={4}
+                />
+              ) : (
+                <YearlyOverviewCard
+                  selectedYear={selectedYear}
+                  yearlyData={yearlyOverviewData}
+                  isLoading={false}
+                />
+              )
+            ) : null}
 
-            {analysisRows.length > 0 ? (
-              <StreakLeaderboardCard rows={analysisRows} />
-            ) : (
-              <DashboardStateCard
-                compact
-                title="No streak data yet"
-                description="Start checking off habits to build streak rankings."
-              />
-            )}
+            {showStreakLeaderboard ? (
+              analysisRows.length > 0 ? (
+                <StreakLeaderboardCard rows={analysisRows} />
+              ) : (
+                <DashboardStateCard
+                  compact
+                  title="No streak data yet"
+                  description="Start checking off habits to build streak rankings."
+                />
+              )
+            ) : null}
 
-            <MonthlyReviewCard
-              review={safeMonthData.review}
-              onChangeField={updateMonthlyReviewField}
-            />
+            {showMonthlyReview ? (
+              <MonthlyReviewCard
+                review={safeMonthData.review}
+                onChangeField={updateMonthlyReviewField}
+              />
+            ) : null}
 
             {sortedActiveAnalysisRows.length > 0 ? (
               <AnalysisPanel
