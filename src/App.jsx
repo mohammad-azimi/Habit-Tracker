@@ -1099,6 +1099,10 @@ export default function App() {
   const [monthData, setMonthData] = useState(null);
   const [loadedMonthKey, setLoadedMonthKey] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [syncStatus, setSyncStatus] = useState("idle");
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const [syncErrorMessage, setSyncErrorMessage] = useState("");
+  const [saveTrigger, setSaveTrigger] = useState(0);
 
   const [habitSortMode, setHabitSortMode] = useState(
     savedDashboardPrefs?.habitSortMode || "manual",
@@ -1244,6 +1248,32 @@ export default function App() {
     };
   }, [safeMonthData, todayIndex]);
 
+  const syncStatusText = useMemo(() => {
+    if (syncStatus === "loading") {
+      return "Loading month data...";
+    }
+
+    if (syncStatus === "saving") {
+      return "Syncing changes with server...";
+    }
+
+    if (syncStatus === "saved") {
+      if (lastSavedAt) {
+        return `All changes saved • ${lastSavedAt.toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}`;
+      }
+      return "All changes saved";
+    }
+
+    if (syncStatus === "error") {
+      return syncErrorMessage || "Save failed";
+    }
+
+    return "Connected to PostgreSQL API";
+  }, [syncStatus, lastSavedAt, syncErrorMessage]);
+
   const showToast = (
     message,
     type = "success",
@@ -1261,6 +1291,11 @@ export default function App() {
 
   const closeToast = () => {
     setToast(null);
+  };
+
+  const retrySaveNow = () => {
+    setSaveTrigger((prev) => prev + 1);
+    showToast("Retrying save...", "info");
   };
 
   const goToPreviousMonth = () => {
@@ -1540,6 +1575,8 @@ export default function App() {
     async function loadMonthFromApi() {
       try {
         setIsSyncing(true);
+        setSyncStatus("loading");
+        setSyncErrorMessage("");
         setIsMonthLoaded(false);
         setLoadedMonthKey(null);
 
@@ -1556,6 +1593,7 @@ export default function App() {
 
         setMonthData(nextMonthData);
         setLoadedMonthKey(monthKey);
+        setSyncStatus("saved");
       } catch (error) {
         console.error("Failed to load month from API:", error);
 
@@ -1563,6 +1601,10 @@ export default function App() {
 
         setMonthData(buildDefaultMonthData(selectedYear, selectedMonthIndex));
         setLoadedMonthKey(monthKey);
+        setSyncStatus("error");
+        setSyncErrorMessage(
+          "Failed to load month from server. Showing local default month.",
+        );
       } finally {
         if (!cancelled) {
           setIsSyncing(false);
@@ -1726,14 +1768,23 @@ export default function App() {
     const timeoutId = setTimeout(async () => {
       try {
         setIsSyncing(true);
+        setSyncStatus("saving");
+        setSyncErrorMessage("");
 
         await saveMonthData(
           Number(selectedYear),
           selectedMonthIndex + 1,
           safeMonthData,
         );
+
+        setSyncStatus("saved");
+        setLastSavedAt(new Date());
       } catch (error) {
         console.error("Failed to save month to API:", error);
+        setSyncStatus("error");
+        setSyncErrorMessage(
+          error?.message || "Failed to save changes to the server.",
+        );
       } finally {
         setIsSyncing(false);
       }
@@ -1750,6 +1801,7 @@ export default function App() {
     monthKey,
     selectedYear,
     selectedMonthIndex,
+    saveTrigger,
   ]);
 
   const updateMonth = (updater) => {
@@ -2333,6 +2385,8 @@ export default function App() {
     setIsMonthLoaded(false);
     setLoadedMonthKey(null);
     setIsSyncing(false);
+    setSyncStatus("idle");
+    setSyncErrorMessage("");
     setAuthError("");
     navigate("/login");
   };
@@ -3195,10 +3249,42 @@ export default function App() {
         />
 
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="text-sm text-neutral-400">
-            {isSyncing
-              ? "Syncing with server..."
-              : `Logged in as ${currentUser.username} • Connected to PostgreSQL API`}
+          <div className="flex flex-col gap-2">
+            <div className="text-sm text-neutral-400">
+              Logged in as {currentUser.username}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <div
+                className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-medium ${
+                  syncStatus === "error"
+                    ? "bg-red-950/30 text-red-300 border border-red-900/40"
+                    : syncStatus === "saving" || syncStatus === "loading"
+                      ? "bg-amber-950/30 text-amber-300 border border-amber-900/40"
+                      : "bg-emerald-950/30 text-emerald-300 border border-emerald-900/40"
+                }`}
+              >
+                <span
+                  className={`h-2 w-2 rounded-full ${
+                    syncStatus === "error"
+                      ? "bg-red-400"
+                      : syncStatus === "saving" || syncStatus === "loading"
+                        ? "bg-amber-400"
+                        : "bg-emerald-400"
+                  }`}
+                />
+                {syncStatusText}
+              </div>
+
+              {syncStatus === "error" ? (
+                <button
+                  onClick={retrySaveNow}
+                  className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-3 py-2 text-xs font-medium text-white"
+                >
+                  Retry Save
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
