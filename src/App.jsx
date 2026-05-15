@@ -1013,25 +1013,27 @@ function getHabitFormError({
 }
 
 const DASHBOARD_PREFS_KEY = "habit-tracker-dashboard-prefs";
+const DEFAULT_DASHBOARD_PREFS = {
+  selectedYear: null,
+  selectedMonthIndex: null,
+  habitSortMode: "manual",
+  autoScrollToToday: true,
+  showArchivedHabits: true,
+  showAdvancedAnalytics: true,
+  showTodayProgress: true,
+  showTopHabits: true,
+  showYearlyOverview: true,
+  showStreakLeaderboard: true,
+  showMonthlyReview: true,
+  habitSearchTerm: "",
+  habitFilterMode: "all",
+  goalTypeFilter: "all",
+};
+const YEAR_OPTIONS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
 
 function loadDashboardPrefs() {
   if (typeof window === "undefined") {
-    return {
-      selectedYear: null,
-      selectedMonthIndex: null,
-      habitSortMode: "manual",
-      autoScrollToToday: true,
-      showArchivedHabits: true,
-      showAdvancedAnalytics: true,
-      showTodayProgress: true,
-      showTopHabits: true,
-      showYearlyOverview: true,
-      showStreakLeaderboard: true,
-      showMonthlyReview: true,
-      habitSearchTerm: "",
-      habitFilterMode: "all",
-      goalTypeFilter: "all",
-    };
+    return DEFAULT_DASHBOARD_PREFS;
   }
 
   try {
@@ -1039,39 +1041,29 @@ function loadDashboardPrefs() {
     const parsed = raw ? JSON.parse(raw) : {};
 
     return {
-      selectedYear: parsed?.selectedYear || null,
+      ...DEFAULT_DASHBOARD_PREFS,
+      ...parsed,
       selectedMonthIndex: Number.isInteger(parsed?.selectedMonthIndex)
         ? parsed.selectedMonthIndex
-        : null,
-      habitSortMode: parsed?.habitSortMode || "manual",
-      autoScrollToToday: parsed?.autoScrollToToday ?? true,
-      showArchivedHabits: parsed?.showArchivedHabits ?? true,
-      showAdvancedAnalytics: parsed?.showAdvancedAnalytics ?? true,
-      showTodayProgress: parsed?.showTodayProgress ?? true,
-      showTopHabits: parsed?.showTopHabits ?? true,
-      showYearlyOverview: parsed?.showYearlyOverview ?? true,
-      showStreakLeaderboard: parsed?.showStreakLeaderboard ?? true,
-      showMonthlyReview: parsed?.showMonthlyReview ?? true,
+        : DEFAULT_DASHBOARD_PREFS.selectedMonthIndex,
       habitSearchTerm:
         typeof parsed?.habitSearchTerm === "string"
           ? parsed.habitSearchTerm
-          : "",
-      habitFilterMode: parsed?.habitFilterMode || "all",
-      goalTypeFilter: parsed?.goalTypeFilter || "all",
+          : DEFAULT_DASHBOARD_PREFS.habitSearchTerm,
     };
   } catch (error) {
     console.error("Failed to load dashboard preferences:", error);
-    return {
-      selectedYear: null,
-      selectedMonthIndex: null,
-      habitSortMode: "manual",
-      autoScrollToToday: true,
-      showArchivedHabits: true,
-      showAdvancedAnalytics: true,
-      habitSearchTerm: "",
-      habitFilterMode: "all",
-      goalTypeFilter: "all",
-    };
+    return DEFAULT_DASHBOARD_PREFS;
+  }
+}
+
+function saveDashboardPrefs(prefs) {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(DASHBOARD_PREFS_KEY, JSON.stringify(prefs));
+  } catch (error) {
+    console.error("Failed to save dashboard preferences:", error);
   }
 }
 
@@ -1322,18 +1314,18 @@ export default function App() {
   };
 
   const resetDashboardPreferences = () => {
-    setHabitSortMode("manual");
-    setAutoScrollToToday(true);
-    setShowArchivedHabits(true);
-    setShowAdvancedAnalytics(true);
-    setShowTodayProgress(true);
-    setShowTopHabits(true);
-    setShowYearlyOverview(true);
-    setShowStreakLeaderboard(true);
-    setShowMonthlyReview(true);
-    setHabitSearchTerm("");
-    setHabitFilterMode("all");
-    setGoalTypeFilter("all");
+    setHabitSortMode(DEFAULT_DASHBOARD_PREFS.habitSortMode);
+    setAutoScrollToToday(DEFAULT_DASHBOARD_PREFS.autoScrollToToday);
+    setShowArchivedHabits(DEFAULT_DASHBOARD_PREFS.showArchivedHabits);
+    setShowAdvancedAnalytics(DEFAULT_DASHBOARD_PREFS.showAdvancedAnalytics);
+    setShowTodayProgress(DEFAULT_DASHBOARD_PREFS.showTodayProgress);
+    setShowTopHabits(DEFAULT_DASHBOARD_PREFS.showTopHabits);
+    setShowYearlyOverview(DEFAULT_DASHBOARD_PREFS.showYearlyOverview);
+    setShowStreakLeaderboard(DEFAULT_DASHBOARD_PREFS.showStreakLeaderboard);
+    setShowMonthlyReview(DEFAULT_DASHBOARD_PREFS.showMonthlyReview);
+    setHabitSearchTerm(DEFAULT_DASHBOARD_PREFS.habitSearchTerm);
+    setHabitFilterMode(DEFAULT_DASHBOARD_PREFS.habitFilterMode);
+    setGoalTypeFilter(DEFAULT_DASHBOARD_PREFS.goalTypeFilter);
 
     showToast("Dashboard preferences reset to default.", "success");
   };
@@ -1526,29 +1518,22 @@ export default function App() {
   }, [toast]);
 
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        DASHBOARD_PREFS_KEY,
-        JSON.stringify({
-          selectedYear,
-          selectedMonthIndex,
-          habitSortMode,
-          autoScrollToToday,
-          showArchivedHabits,
-          showAdvancedAnalytics,
-          showTodayProgress,
-          showTopHabits,
-          showYearlyOverview,
-          showStreakLeaderboard,
-          showMonthlyReview,
-          habitSearchTerm,
-          habitFilterMode,
-          goalTypeFilter,
-        }),
-      );
-    } catch (error) {
-      console.error("Failed to save dashboard preferences:", error);
-    }
+    saveDashboardPrefs({
+      selectedYear,
+      selectedMonthIndex,
+      habitSortMode,
+      autoScrollToToday,
+      showArchivedHabits,
+      showAdvancedAnalytics,
+      showTodayProgress,
+      showTopHabits,
+      showYearlyOverview,
+      showStreakLeaderboard,
+      showMonthlyReview,
+      habitSearchTerm,
+      habitFilterMode,
+      goalTypeFilter,
+    });
   }, [
     selectedYear,
     selectedMonthIndex,
@@ -3106,8 +3091,6 @@ export default function App() {
     });
   };
 
-  const yearOptions = [2025, 2026, 2027, 2028];
-
   const openCopyMonthModal = () => {
     const nextMonth = getNextMonthMeta(selectedYear, selectedMonthIndex);
 
@@ -3390,7 +3373,7 @@ export default function App() {
                   onChange={(e) => setSelectedYear(e.target.value)}
                   className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
                 >
-                  {[2025, 2026, 2027, 2028].map((year) => (
+                  {YEAR_OPTIONS.map((year) => (
                     <option key={year} value={year}>
                       {year}
                     </option>
@@ -3811,7 +3794,7 @@ export default function App() {
         currentMonthIndex={selectedMonthIndex}
         targetYear={copyTargetYear}
         targetMonthIndex={copyTargetMonthIndex}
-        yearOptions={yearOptions}
+        yearOptions={YEAR_OPTIONS}
         monthOptions={MONTHS}
         isSubmitting={isSyncing}
         onChangeTargetYear={setCopyTargetYear}
