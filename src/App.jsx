@@ -71,6 +71,8 @@ import WeeklyMomentumCard from "./components/WeeklyMomentumCard";
 import habitTemplates from "./data/habitTemplates";
 import HabitTemplatesCard from "./components/HabitTemplatesCard";
 import DashboardPreferencesCard from "./components/DashboardPreferencesCard";
+import FullScreenStatus from "./components/FullScreenStatus";
+import SyncStatusBadge from "./components/SyncStatusBadge";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -3160,13 +3162,7 @@ export default function App() {
   };
 
   if (!authChecked) {
-    return (
-      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
-          Loading Habit Tracker...
-        </div>
-      </div>
-    );
+    return <FullScreenStatus message="Loading Habit Tracker..." />;
   }
 
   if (!currentUser) {
@@ -3192,13 +3188,7 @@ export default function App() {
   }
 
   if (currentUser && !isMonthLoaded) {
-    return (
-      <div className="min-h-screen bg-neutral-950 text-white flex items-center justify-center">
-        <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-6 py-4 shadow-2xl">
-          Loading your dashboard...
-        </div>
-      </div>
-    );
+    return <FullScreenStatus message="Loading your dashboard..." />;
   }
 
   const dashboardPage = (
@@ -3237,37 +3227,11 @@ export default function App() {
               Logged in as {currentUser.username}
             </div>
 
-            <div className="flex flex-wrap items-center gap-2">
-              <div
-                className={`inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-xs font-medium ${
-                  syncStatus === "error"
-                    ? "bg-red-950/30 text-red-300 border border-red-900/40"
-                    : syncStatus === "saving" || syncStatus === "loading"
-                      ? "bg-amber-950/30 text-amber-300 border border-amber-900/40"
-                      : "bg-emerald-950/30 text-emerald-300 border border-emerald-900/40"
-                }`}
-              >
-                <span
-                  className={`h-2 w-2 rounded-full ${
-                    syncStatus === "error"
-                      ? "bg-red-400"
-                      : syncStatus === "saving" || syncStatus === "loading"
-                        ? "bg-amber-400"
-                        : "bg-emerald-400"
-                  }`}
-                />
-                {syncStatusText}
-              </div>
-
-              {syncStatus === "error" ? (
-                <button
-                  onClick={retrySaveNow}
-                  className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-3 py-2 text-xs font-medium text-white"
-                >
-                  Retry Save
-                </button>
-              ) : null}
-            </div>
+            <SyncStatusBadge
+              syncStatus={syncStatus}
+              syncStatusText={syncStatusText}
+              onRetry={retrySaveNow}
+            />
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
