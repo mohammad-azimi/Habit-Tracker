@@ -32,7 +32,7 @@ export default function SyncStatusBadge({
           onClick={onRetry}
           className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-3 py-2 text-xs font-medium text-white"
         >
-          Retry Save
+          Retry save
         </button>
       ) : null}
     </div>

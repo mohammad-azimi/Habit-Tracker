@@ -180,7 +180,7 @@ export default function DashboardHeader({
           Habit Tracker Dashboard
         </h1>
         <p className="mt-3 max-w-xl text-base text-neutral-400">
-          Track habits, analyze progress, and export monthly reports.
+          Track your habits, review progress, and export monthly reports
         </p>
       </div>
 
@@ -213,7 +213,7 @@ export default function DashboardHeader({
                 Export & Actions
               </div>
               <div className="mt-1 text-xs leading-5 text-neutral-500">
-                Download reports, create backups, or copy your monthly setup.
+                Export reports, manage backups, and reuse your monthly setup
               </div>
             </div>
 

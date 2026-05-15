@@ -56,7 +56,7 @@ export default function DashboardPreferencesCard({
           Dashboard Preferences
         </div>
         <div className="mt-1 text-xs text-neutral-500">
-          Personalize how your dashboard behaves
+          Choose how your dashboard looks and behaves
         </div>
       </div>
 
@@ -121,7 +121,7 @@ export default function DashboardPreferencesCard({
         onClick={onResetPreferences}
         className="w-full rounded-2xl bg-neutral-800 px-4 py-3 text-sm font-medium text-white hover:bg-neutral-700 active:scale-[0.99] transition duration-150"
       >
-        Reset Preferences
+        Reset dashboard preferences
       </button>
     </div>
   );

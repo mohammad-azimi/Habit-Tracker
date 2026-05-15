@@ -104,7 +104,7 @@ export default function HabitTemplatesCard({
                     onClick={() => onApplyTemplate(template)}
                     className="shrink-0 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200 active:scale-[0.98] transition duration-150"
                   >
-                    Use Template
+                    Use
                   </button>
                 </div>
               </div>
@@ -112,7 +112,7 @@ export default function HabitTemplatesCard({
           ))
         ) : (
           <div className="rounded-2xl border border-neutral-800 bg-neutral-800/60 p-4 text-sm text-neutral-400">
-            No templates yet.
+            No templates available yet
           </div>
         )}
       </div>

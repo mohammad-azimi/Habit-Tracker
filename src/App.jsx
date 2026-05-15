@@ -1265,7 +1265,7 @@ export default function App() {
       return syncErrorMessage || "Save failed";
     }
 
-    return "Connected to PostgreSQL API";
+    return "Connected";
   }, [syncStatus, lastSavedAt, syncErrorMessage]);
 
   const showToast = (
@@ -3256,9 +3256,9 @@ export default function App() {
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
           <section className="xl:col-span-3 space-y-4">
             <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-              <div className="text-xl font-semibold">HABIT TRACKER</div>
+              <div className="text-xl font-semibold">Habit Tracker</div>
               <div className="text-neutral-400 mt-1">
-                - {MONTHS[selectedMonthIndex]} -
+                {MONTHS[selectedMonthIndex]} {selectedYear}
               </div>
             </div>
 
@@ -3308,7 +3308,7 @@ export default function App() {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Prev
+                  Previous
                 </button>
 
                 <button
@@ -3316,14 +3316,14 @@ export default function App() {
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
                 >
                   <RotateCcw className="h-4 w-4" />
-                  Current
+                  This Month
                 </button>
 
                 <button
                   onClick={goToNextMonth}
                   className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
                 >
-                  Next
+                  Next Month
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
@@ -3429,14 +3429,14 @@ export default function App() {
                 className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed px-4 py-3 text-sm font-medium flex items-center justify-center gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Add New Habit
+                Add Habit
               </button>
 
               <button
                 onClick={requestResetCurrentMonth}
                 className="w-full rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium"
               >
-                Reset Current Month
+                Reset Month
               </button>
             </div>
 
@@ -3585,16 +3585,16 @@ export default function App() {
             ) : (
               <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center">
                 <div className="text-lg font-semibold text-white">
-                  No habits found
+                  No matching habits
                 </div>
                 <div className="text-sm text-neutral-500 mt-2">
-                  Try changing your search text or clearing the active filters.
+                  Try adjusting your filters or clearing the current search.
                 </div>
                 <button
                   onClick={resetHabitFilters}
                   className="mt-4 rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-2 text-sm font-medium"
                 >
-                  Clear Filters
+                  Clear filters
                 </button>
               </div>
             )}
