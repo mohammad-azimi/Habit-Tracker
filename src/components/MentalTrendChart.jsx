@@ -17,6 +17,25 @@ function average(values) {
   );
 }
 
+function AvgCard({ icon: Icon, label, value, iconClass, valueClass }) {
+  return (
+    <div className="rounded-[24px] bg-white/[0.06] p-4 ring-1 ring-white/5">
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black/35 ring-1 ring-white/10">
+          <Icon className={`h-5 w-5 ${iconClass}`} />
+        </div>
+
+        <div>
+          <div className="text-sm text-neutral-400">{label}</div>
+          <div className={`mt-1 text-[30px] font-semibold ${valueClass}`}>
+            {value}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MentalTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
 
@@ -25,42 +44,23 @@ function MentalTooltip({ active, payload, label }) {
 
   return (
     <div className="rounded-2xl border border-neutral-800 bg-neutral-900/95 px-4 py-3 shadow-2xl backdrop-blur">
-      <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
-        Day {label}
+      <div className="text-[11px] tracking-[0.18em] text-neutral-500">
+        DAY {label}
       </div>
 
       <div className="mt-2 space-y-2 text-sm">
         <div className="flex items-center gap-2 text-neutral-200">
           <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
-          Mood:{" "}
+          Mood:
           <span className="font-semibold text-white">{moodItem?.value}</span>
         </div>
 
         <div className="flex items-center gap-2 text-neutral-200">
           <span className="h-2.5 w-2.5 rounded-full bg-sky-400" />
-          Motivation:{" "}
+          Motivation:
           <span className="font-semibold text-white">
             {motivationItem?.value}
           </span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AvgCard({ icon: Icon, label, value, iconClass, valueClass }) {
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-800/80 px-4 py-4">
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-900">
-          <Icon className={`h-5 w-5 ${iconClass}`} />
-        </div>
-
-        <div>
-          <div className="text-sm text-neutral-400">{label}</div>
-          <div className={`mt-1 text-3xl font-semibold ${valueClass}`}>
-            {value}
-          </div>
         </div>
       </div>
     </div>
@@ -98,13 +98,11 @@ export default function MentalTrendChart({
         />
       </div>
 
-      <div className="rounded-3xl border border-neutral-800 bg-[linear-gradient(180deg,#171717_0%,#111111_100%)] p-4">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-white">Mental Trend</div>
-            <div className="mt-1 text-xs text-neutral-500">
-              Mood and motivation across the month
-            </div>
+      <div className="rounded-[28px] border border-neutral-800 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.12),_transparent_30%),linear-gradient(180deg,#171717_0%,#101012_100%)] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+        <div className="mb-4">
+          <div className="text-lg font-semibold text-white">Mental Trend</div>
+          <div className="mt-1 text-sm text-neutral-400">
+            Mood and motivation across the month
           </div>
         </div>
 

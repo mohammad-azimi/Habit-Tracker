@@ -1,39 +1,31 @@
-import React, { useMemo } from "react";
+import React from "react";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { CheckCircle2, CircleDashed, Target } from "lucide-react";
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-function StatMiniCard({ icon: Icon, label, value, accentClass }) {
+function StatMiniCard({ icon: Icon, label, value }) {
   return (
-    <div
-      className={`rounded-2xl border border-neutral-800 bg-neutral-800/80 px-4 py-4 shadow-[0_10px_30px_-18px_rgba(0,0,0,0.9)] ${accentClass}`}
-    >
-      <div className="flex items-center gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-900">
-          <Icon className="h-5 w-5 text-neutral-300" />
-        </div>
-
-        <div className="min-w-0">
-          <div className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
-            {label}
-          </div>
-          <div className="mt-1 text-2xl font-semibold text-white">{value}</div>
-        </div>
+    <div className="rounded-[22px] bg-white/[0.06] px-4 py-3.5 ring-1 ring-white/5 shadow-inner">
+      <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/10">
+        <Icon className="h-5 w-5 text-white/90" />
       </div>
+
+      <div className="text-[10px] tracking-[0.20em] text-neutral-500">
+        {label}
+      </div>
+      <div className="mt-1 text-[22px] font-semibold text-white">{value}</div>
     </div>
   );
 }
 
-function StatsTooltip({ active, payload }) {
-  if (!active || !payload?.length) return null;
-
-  const item = payload[0]?.payload;
-
+function SummaryCard({ title, children }) {
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/95 px-4 py-3 shadow-2xl backdrop-blur">
-      <div className="text-xs uppercase tracking-[0.18em] text-neutral-500">
-        {item?.name}
+    <div className="rounded-[24px] bg-white/[0.06] p-4 ring-1 ring-white/5">
+      <div className="text-[10px] tracking-[0.18em] text-neutral-500">
+        {title}
       </div>
-      <div className="mt-1 text-lg font-semibold text-white">{item?.value}</div>
+      <div className="mt-3 text-[15px] leading-7 text-neutral-200">
+        {children}
+      </div>
     </div>
   );
 }
@@ -44,118 +36,82 @@ export default function OverallStatsCard({
   totalLeft,
   completionPercent,
 }) {
-  const chartData = useMemo(
-    () => [
-      { name: "Completed", value: Number(totalCompleted || 0) },
-      { name: "Left", value: Number(totalLeft || 0) },
-    ],
-    [totalCompleted, totalLeft],
-  );
+  const safeGoal = Number(totalGoal || 0);
+  const safeCompleted = Number(totalCompleted || 0);
+  const safeLeft = Math.max(Number(totalLeft || 0), 0);
+  const safePercent = Number(completionPercent || 0);
+
+  const chartData = [
+    { name: "Completed", value: safeCompleted },
+    { name: "Left", value: safeLeft > 0 ? safeLeft : 0.0001 },
+  ];
 
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-[radial-gradient(circle_at_top_left,rgba(124,58,237,0.10),transparent_28%),linear-gradient(180deg,#171717_0%,#101010_100%)] p-5 shadow-2xl">
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <div>
-          <div className="text-xl font-semibold text-white">Overall Stats</div>
-          <div className="mt-1 text-xs text-neutral-500">
-            Monthly habit completion overview
-          </div>
-        </div>
+    <div className="rounded-[32px] border border-neutral-800 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.14),_transparent_30%),linear-gradient(180deg,#171717_0%,#101012_100%)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+      <div>
+        <h3 className="text-[28px] font-semibold tracking-tight text-white">
+          Overall Stats
+        </h3>
+        <p className="mt-1 text-sm text-neutral-400">
+          Monthly habit completion overview
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <StatMiniCard
-          icon={Target}
-          label="Goal"
-          value={totalGoal}
-          accentClass="shadow-[0_0_0_1px_rgba(139,92,246,0.18)]"
-        />
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <StatMiniCard icon={Target} label="GOAL" value={safeGoal} />
         <StatMiniCard
           icon={CheckCircle2}
-          label="Completed"
-          value={totalCompleted}
-          accentClass=""
+          label="COMPLETED"
+          value={safeCompleted}
         />
-        <StatMiniCard
-          icon={CircleDashed}
-          label="Left"
-          value={totalLeft}
-          accentClass=""
-        />
+        <StatMiniCard icon={CircleDashed} label="LEFT" value={safeLeft} />
       </div>
 
-      <div className="mt-6 flex flex-col items-center justify-center gap-5 lg:flex-row lg:items-center lg:justify-between">
-        <div className="relative h-[270px] w-full max-w-[320px] min-w-0">
-          <ResponsiveContainer width="100%" height="100%">
-            <PieChart>
-              <defs>
-                <linearGradient
-                  id="overallStatsGradient"
-                  x1="0"
-                  y1="0"
-                  x2="1"
-                  y2="1"
+      <div className="mt-6 space-y-4">
+        <div className="rounded-[26px] bg-white/[0.04] p-4 ring-1 ring-white/5">
+          <div className="relative mx-auto aspect-square w-full max-w-[250px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={chartData}
+                  dataKey="value"
+                  innerRadius={68}
+                  outerRadius={104}
+                  startAngle={90}
+                  endAngle={-270}
+                  paddingAngle={4}
+                  cornerRadius={10}
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth={2}
                 >
-                  <stop offset="0%" stopColor="#a855f7" />
-                  <stop offset="100%" stopColor="#6366f1" />
-                </linearGradient>
-              </defs>
+                  <Cell fill="#8b5cf6" />
+                  <Cell fill="#3f3f46" />
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
 
-              <Pie
-                data={chartData}
-                dataKey="value"
-                innerRadius={74}
-                outerRadius={104}
-                startAngle={90}
-                endAngle={-270}
-                stroke="#0b0b0c"
-                strokeWidth={3}
-                paddingAngle={1.5}
-              >
-                <Cell fill="url(#overallStatsGradient)" />
-                <Cell fill="#3a3a3d" />
-              </Pie>
-
-              <Tooltip content={<StatsTooltip />} cursor={false} />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-            <div className="text-5xl font-semibold tracking-tight text-white">
-              {completionPercent}%
-            </div>
-            <div className="mt-2 text-center text-sm leading-5 text-neutral-400">
-              Monthly completion
-              <br />
-              rate
+            <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
+              <div className="text-[52px] font-bold leading-none tracking-tight text-white">
+                {safePercent}%
+              </div>
+              <div className="mt-2 max-w-[140px] text-[13px] leading-5 text-neutral-300">
+                Monthly completion rate
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="w-full max-w-[280px] space-y-3">
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-800/80 px-4 py-4">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
-              Progress Summary
-            </div>
-            <div className="mt-2 text-sm text-neutral-300">
-              You have completed{" "}
-              <span className="font-semibold text-white">{totalCompleted}</span>{" "}
-              out of{" "}
-              <span className="font-semibold text-white">{totalGoal}</span>{" "}
-              planned habit actions this month.
-            </div>
-          </div>
+        <SummaryCard title="PROGRESS SUMMARY">
+          You have completed{" "}
+          <span className="font-semibold text-white">{safeCompleted}</span> out
+          of <span className="font-semibold text-white"> {safeGoal}</span>{" "}
+          planned habit actions this month.
+        </SummaryCard>
 
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-800/80 px-4 py-4">
-            <div className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
-              Remaining
-            </div>
-            <div className="mt-2 text-sm text-neutral-300">
-              <span className="font-semibold text-white">{totalLeft}</span>{" "}
-              actions are still left to reach your monthly target.
-            </div>
-          </div>
-        </div>
+        <SummaryCard title="REMAINING">
+          <span className="font-semibold text-white">{safeLeft}</span> actions
+          are still left to reach your monthly target.
+        </SummaryCard>
       </div>
     </div>
   );

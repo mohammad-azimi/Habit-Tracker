@@ -1,19 +1,5 @@
 import { FileText } from "lucide-react";
 import MentalTrendChart from "./MentalTrendChart";
-import {
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-  Tooltip,
-} from "recharts";
-
-function average(values) {
-  if (!values.length) return 0;
-  return values.reduce((sum, value) => sum + value, 0) / values.length;
-}
 
 export default function MentalStateSection({
   daysInMonth,
@@ -24,12 +10,12 @@ export default function MentalStateSection({
 }) {
   return (
     <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="font-semibold">Mental State</div>
         <FileText className="h-4 w-4 text-neutral-400" />
       </div>
 
-      <div className="overflow-x-auto mb-5">
+      <div className="mb-5 overflow-x-auto">
         <div className="min-w-[900px] space-y-2">
           <div
             className="grid gap-1"
@@ -46,7 +32,7 @@ export default function MentalStateSection({
           </div>
 
           <div
-            className="grid gap-1 items-center"
+            className="grid items-center gap-1"
             style={{
               gridTemplateColumns: `120px repeat(${daysInMonth}, minmax(42px, 1fr))`,
             }}
@@ -64,13 +50,13 @@ export default function MentalStateSection({
                 onChange={(e) =>
                   onSetMentalMetric("mood", dayIndex, e.target.value)
                 }
-                className="h-10 rounded-xl bg-neutral-950 border border-neutral-800 text-center text-sm outline-none"
+                className="h-10 rounded-xl border border-neutral-800 bg-neutral-950 text-center text-sm outline-none"
               />
             ))}
           </div>
 
           <div
-            className="grid gap-1 items-center"
+            className="grid items-center gap-1"
             style={{
               gridTemplateColumns: `120px repeat(${daysInMonth}, minmax(42px, 1fr))`,
             }}
@@ -88,7 +74,7 @@ export default function MentalStateSection({
                 onChange={(e) =>
                   onSetMentalMetric("motivation", dayIndex, e.target.value)
                 }
-                className="h-10 rounded-xl bg-neutral-950 border border-neutral-800 text-center text-sm outline-none"
+                className="h-10 rounded-xl border border-neutral-800 bg-neutral-950 text-center text-sm outline-none"
               />
             ))}
           </div>
