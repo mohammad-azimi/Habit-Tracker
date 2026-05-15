@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import MentalTrendChart from "./MentalTrendChart";
 import {
   ResponsiveContainer,
   LineChart,
@@ -94,56 +95,11 @@ export default function MentalStateSection({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 text-sm">
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="text-neutral-500">Mood Average</div>
-          <div className="text-xl font-semibold mt-1">
-            {average(mood).toFixed(1)}
-          </div>
-        </div>
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="text-neutral-500">Motivation Average</div>
-          <div className="text-xl font-semibold mt-1">
-            {average(motivation).toFixed(1)}
-          </div>
-        </div>
-      </div>
-
-      <div className="h-64">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={mentalStateData}>
-            <CartesianGrid stroke="#262626" strokeDasharray="3 3" />
-            <XAxis
-              dataKey="day"
-              tick={{ fill: "#a3a3a3", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <YAxis
-              domain={[1, 10]}
-              tick={{ fill: "#a3a3a3", fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-              width={30}
-            />
-            <Tooltip />
-            <Line
-              type="monotone"
-              dataKey="Mood"
-              stroke="#e5e5e5"
-              strokeWidth={3}
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="Motivation"
-              stroke="#737373"
-              strokeWidth={3}
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      <MentalTrendChart
+        mood={mood}
+        motivation={motivation}
+        mentalStateData={mentalStateData}
+      />
     </div>
   );
 }
