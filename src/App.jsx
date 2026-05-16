@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  BarChart3,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
@@ -61,7 +62,13 @@ import {
 } from "./lib/goalType";
 import ActiveHabitFilters from "./components/ActiveHabitFilters";
 import HabitQuickFilters from "./components/HabitQuickFilters";
-import { Navigate, Route, Routes, useNavigate } from "react-router";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router";
 import ErrorBoundary from "./components/ErrorBoundary";
 import DashboardStateCard from "./components/DashboardStateCard";
 import DashboardLoadingCard from "./components/DashboardLoadingCard";
@@ -1072,6 +1079,7 @@ function saveDashboardPrefs(prefs) {
 export default function App() {
   const currentDate = new Date();
   const navigate = useNavigate();
+  const location = useLocation();
   const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
   const customTemplateFileInputRef = React.useRef(null);
 
@@ -2430,6 +2438,54 @@ export default function App() {
     }
   };
 
+    const pageNavButtonBase =
+      "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition duration-150";
+
+    const pageTabs = (
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => navigate("/dashboard")}
+          className={`${pageNavButtonBase} ${
+            location.pathname === "/dashboard"
+              ? "bg-white text-black"
+              : "border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+          }`}
+        >
+          <CalendarDays className="h-4 w-4" />
+          Dashboard
+        </button>
+
+        <button
+          onClick={() => navigate("/analytics")}
+          className={`${pageNavButtonBase} ${
+            location.pathname === "/analytics"
+              ? "bg-white text-black"
+              : "border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+          }`}
+        >
+          <BarChart3 className="h-4 w-4" />
+          Analytics
+        </button>
+      </div>
+    );
+
+    const accountActions = (
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          onClick={() => navigate("/profile")}
+          className="theme-button-secondary"
+        >
+          <UserCircle className="h-4 w-4" />
+          Profile
+        </button>
+
+        <button onClick={handleLogout} className="theme-button-secondary">
+          <LogOut className="h-4 w-4" />
+          Logout
+        </button>
+      </div>
+    );
+
   const analysisRows = useMemo(() => {
     const weekRanges = getWeekRanges(daysInMonth);
 
@@ -3191,592 +3247,687 @@ export default function App() {
     return <FullScreenStatus message="Loading your dashboard..." />;
   }
 
-  const dashboardPage = (
-    <div className="app-theme-bg min-h-screen p-4 md:p-8">
-      <div className="mx-auto max-w-[1600px] space-y-6">
-        <input
-          ref={customTemplateFileInputRef}
-          type="file"
-          accept=".json,application/json"
-          className="hidden"
-          onChange={async (event) => {
-            const file = event.target.files?.[0];
-            if (file) {
-              await importCustomHabitTemplates(file);
-            }
-            event.target.value = "";
-          }}
-        />
+    const dashboardPage = (
+      <div className="app-theme-bg min-h-screen p-4 md:p-8">
+        <div className="mx-auto max-w-[1600px] space-y-6">
+          <input
+            ref={customTemplateFileInputRef}
+            type="file"
+            accept=".json,application/json"
+            className="hidden"
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (file) {
+                await importCustomHabitTemplates(file);
+              }
+              event.target.value = "";
+            }}
+          />
 
-        <DashboardHeader
-          onExportCSV={exportMonthCSV}
-          onExportJSON={exportMonthJSON}
-          onExportFilteredCSV={exportFilteredCSV}
-          onExportFilteredJSON={exportFilteredJSON}
-          onExportBackup={exportFullBackup}
-          onImportBackup={importBackup}
-          onExportPrintableHTML={exportPrintableHTMLReport}
-          onExportPDF={exportPDFReport}
-          onCopyToNextMonth={requestCopyToNextMonth}
-          onOpenCopyToMonth={openCopyMonthModal}
-        />
+          <DashboardHeader
+            onExportCSV={exportMonthCSV}
+            onExportJSON={exportMonthJSON}
+            onExportFilteredCSV={exportFilteredCSV}
+            onExportFilteredJSON={exportFilteredJSON}
+            onExportBackup={exportFullBackup}
+            onImportBackup={importBackup}
+            onExportPrintableHTML={exportPrintableHTMLReport}
+            onExportPDF={exportPDFReport}
+            onCopyToNextMonth={requestCopyToNextMonth}
+            onOpenCopyToMonth={openCopyMonthModal}
+          />
 
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex flex-col gap-2">
-            <div className="text-sm text-neutral-400">
-              Logged in as {currentUser.username}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-2">
+              <div className="text-sm text-neutral-400">
+                Logged in as {currentUser.username}
+              </div>
+
+              <SyncStatusBadge
+                syncStatus={syncStatus}
+                syncStatusText={syncStatusText}
+                onRetry={retrySaveNow}
+              />
             </div>
 
-            <SyncStatusBadge
-              syncStatus={syncStatus}
-              syncStatusText={syncStatusText}
-              onRetry={retrySaveNow}
-            />
+            <div className="flex flex-col gap-3 lg:items-end">
+              {pageTabs}
+              {accountActions}
+            </div>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              onClick={() => navigate("/profile")}
-              className="theme-button-secondary"
-            >
-              <UserCircle className="h-4 w-4" />
-              Profile
-            </button>
-
-            <button onClick={handleLogout} className="theme-button-secondary">
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <section className="xl:col-span-3 space-y-4">
-            <div className="theme-card p-5">
-              <div className="theme-section-title">Habit Tracker</div>
-              <div className="theme-section-subtitle">
-                {MONTHS[selectedMonthIndex]} {selectedYear}
-              </div>
-            </div>
-
-            <DashboardPreferencesCard
-              autoScrollToToday={autoScrollToToday}
-              onToggleAutoScrollToToday={() =>
-                setAutoScrollToToday((prev) => !prev)
-              }
-              showArchivedHabits={showArchivedHabits}
-              onToggleShowArchivedHabits={() =>
-                setShowArchivedHabits((prev) => !prev)
-              }
-              showAdvancedAnalytics={showAdvancedAnalytics}
-              onToggleShowAdvancedAnalytics={() =>
-                setShowAdvancedAnalytics((prev) => !prev)
-              }
-              showTodayProgress={showTodayProgress}
-              onToggleShowTodayProgress={() =>
-                setShowTodayProgress((prev) => !prev)
-              }
-              showTopHabits={showTopHabits}
-              onToggleShowTopHabits={() => setShowTopHabits((prev) => !prev)}
-              showYearlyOverview={showYearlyOverview}
-              onToggleShowYearlyOverview={() =>
-                setShowYearlyOverview((prev) => !prev)
-              }
-              showStreakLeaderboard={showStreakLeaderboard}
-              onToggleShowStreakLeaderboard={() =>
-                setShowStreakLeaderboard((prev) => !prev)
-              }
-              showMonthlyReview={showMonthlyReview}
-              onToggleShowMonthlyReview={() =>
-                setShowMonthlyReview((prev) => !prev)
-              }
-              onResetPreferences={resetDashboardPreferences}
-            />
-
-            <div className="theme-card p-5 space-y-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
-                <CalendarDays className="h-4 w-4" />
-                Calendar Settings
-              </div>
-
-              <div className="grid grid-cols-1 gap-2">
-                <button
-                  onClick={goToPreviousMonth}
-                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                >
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                    <ChevronLeft className="h-4 w-4 shrink-0" />
-                    Previous Month
-                  </span>
-                </button>
-
-                <button
-                  onClick={goToCurrentMonth}
-                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                >
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                    <RotateCcw className="h-4 w-4 shrink-0" />
-                    This Month
-                  </span>
-                </button>
-
-                <button
-                  onClick={goToNextMonth}
-                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                >
-                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                    <ChevronRight className="h-4 w-4 shrink-0" />
-                    Next Month
-                  </span>
-                </button>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs text-neutral-500">
-                  Year
-                </label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                  className="theme-select"
-                >
-                  {YEAR_OPTIONS.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs text-neutral-500">
-                  Month
-                </label>
-                <select
-                  value={selectedMonthIndex}
-                  onChange={(e) =>
-                    setSelectedMonthIndex(Number(e.target.value))
-                  }
-                  className="theme-select"
-                >
-                  {MONTHS.map((month, index) => (
-                    <option key={month} value={index}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="theme-card p-5 space-y-3">
-              <div className="text-sm font-semibold text-neutral-300">
-                Add Habit
-              </div>
-
-              <input
-                value={newHabitName}
-                onChange={(e) => setNewHabitName(e.target.value)}
-                placeholder="Habit name"
-                className="theme-input"
-              />
-
-              <input
-                value={newHabitIcon}
-                onChange={(e) => setNewHabitIcon(e.target.value)}
-                placeholder="Icon, e.g. ✅"
-                className="theme-input"
-              />
-
-              <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
-                  Target Type
-                </label>
-                <select
-                  value={newHabitTargetType}
-                  onChange={(e) => setNewHabitTargetType(e.target.value)}
-                  className="theme-select"
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
-                  Target Value
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  value={newHabitTargetValue}
-                  onChange={(e) => setNewHabitTargetValue(e.target.value)}
-                  className="theme-input"
-                  placeholder="1"
-                />
-              </div>
-
-              {newHabitError ? (
-                <div className="rounded-2xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs text-red-300">
-                  {newHabitError}
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+            <section className="space-y-4 xl:col-span-3">
+              <div className="theme-card p-5">
+                <div className="theme-section-title">Habit Tracker</div>
+                <div className="theme-section-subtitle">
+                  {MONTHS[selectedMonthIndex]} {selectedYear}
                 </div>
+              </div>
+
+              <div className="theme-card p-5 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
+                  <CalendarDays className="h-4 w-4" />
+                  Calendar Settings
+                </div>
+
+                <div className="grid grid-cols-1 gap-2">
+                  <button
+                    onClick={goToPreviousMonth}
+                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <ChevronLeft className="h-4 w-4 shrink-0" />
+                      Previous Month
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={goToCurrentMonth}
+                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <RotateCcw className="h-4 w-4 shrink-0" />
+                      This Month
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={goToNextMonth}
+                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <ChevronRight className="h-4 w-4 shrink-0" />
+                      Next Month
+                    </span>
+                  </button>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs text-neutral-500">
+                    Year
+                  </label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="theme-select"
+                  >
+                    {YEAR_OPTIONS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs text-neutral-500">
+                    Month
+                  </label>
+                  <select
+                    value={selectedMonthIndex}
+                    onChange={(e) =>
+                      setSelectedMonthIndex(Number(e.target.value))
+                    }
+                    className="theme-select"
+                  >
+                    {MONTHS.map((month, index) => (
+                      <option key={month} value={index}>
+                        {month}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="theme-card p-5 space-y-3">
+                <div className="text-sm font-semibold text-neutral-300">
+                  Add Habit
+                </div>
+
+                <input
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                  placeholder="Habit name"
+                  className="theme-input"
+                />
+
+                <input
+                  value={newHabitIcon}
+                  onChange={(e) => setNewHabitIcon(e.target.value)}
+                  placeholder="Icon, e.g. ✅"
+                  className="theme-input"
+                />
+
+                <div>
+                  <label className="mb-2 block text-xs text-neutral-500">
+                    Target Type
+                  </label>
+                  <select
+                    value={newHabitTargetType}
+                    onChange={(e) => setNewHabitTargetType(e.target.value)}
+                    className="theme-select"
+                  >
+                    <option value="daily">Daily</option>
+                    <option value="weekly">Weekly</option>
+                    <option value="monthly">Monthly</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs text-neutral-500">
+                    Target Value
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={newHabitTargetValue}
+                    onChange={(e) => setNewHabitTargetValue(e.target.value)}
+                    className="theme-input"
+                    placeholder="1"
+                  />
+                </div>
+
+                {newHabitError ? (
+                  <div className="rounded-2xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs text-red-300">
+                    {newHabitError}
+                  </div>
+                ) : (
+                  <div className="text-xs text-neutral-500">
+                    Choose a unique habit name and a target value of at least 1.
+                  </div>
+                )}
+
+                <button
+                  onClick={addHabit}
+                  disabled={Boolean(newHabitError)}
+                  className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Habit
+                </button>
+
+                <button
+                  onClick={requestResetCurrentMonth}
+                  className="theme-button-secondary w-full"
+                >
+                  Reset Month
+                </button>
+              </div>
+
+              <HabitTemplatesCard
+                templates={allHabitTemplates}
+                onApplyTemplate={applyHabitTemplate}
+                onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
+                onDeleteTemplate={deleteCustomHabitTemplate}
+                onExportCustomTemplates={exportCustomHabitTemplates}
+                onImportCustomTemplates={triggerImportCustomTemplates}
+              />
+
+              {showArchivedHabits ? (
+                <ArchivedHabitsPanel
+                  archivedHabits={archivedAnalysisRows}
+                  onRestoreHabit={(habitId) =>
+                    restoreHabit(habitId, { showUndo: true })
+                  }
+                />
+              ) : null}
+            </section>
+
+            <section className="space-y-4 xl:col-span-9">
+              <HabitFilters
+                searchTerm={habitSearchTerm}
+                onChangeSearchTerm={setHabitSearchTerm}
+                filterMode={habitFilterMode}
+                onChangeFilterMode={setHabitFilterMode}
+                goalTypeFilter={goalTypeFilter}
+                onChangeGoalTypeFilter={setGoalTypeFilter}
+                filteredCount={filteredHabitsCount}
+                totalCount={totalActiveHabitsCount}
+                onResetFilters={resetHabitFilters}
+              />
+
+              <HabitQuickFilters
+                activeFilter={activeQuickFilter}
+                onApplyFilter={applyQuickFilter}
+              />
+
+              <ActiveHabitFilters chips={activeFilterChips} />
+
+              <div className="theme-card p-4">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-neutral-300">
+                      Sort Habits
+                    </div>
+                    <div className="mt-1 text-xs text-neutral-500">
+                      Choose how habits are ordered across the dashboard
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                    <select
+                      value={habitSortMode}
+                      onChange={(e) => setHabitSortMode(e.target.value)}
+                      className="theme-select min-w-[220px] px-4 py-2.5"
+                    >
+                      <option value="progress-desc">Progress</option>
+                      <option value="current-streak-desc">
+                        Current Streak
+                      </option>
+                      <option value="best-streak-desc">Best Streak</option>
+                      <option value="completed-desc">Completed Count</option>
+                      <option value="name-asc">Name (A-Z)</option>
+                      <option value="manual">Manual Order</option>
+                    </select>
+
+                    <div className="theme-pill">
+                      {habitSortMode === "manual"
+                        ? "Drag & drop and move buttons are active."
+                        : "Automatic ranking is active."}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {showTodayProgress && todaySummary ? (
+                <div className="theme-card p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-neutral-300">
+                        Today Progress
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500">
+                        Day {todaySummary.day} of {MONTHS[selectedMonthIndex]}{" "}
+                        {selectedYear}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="theme-pill px-4 py-2 text-sm">
+                        {todaySummary.completed}/{todaySummary.total} habits
+                        done
+                      </div>
+                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm">
+                        {todaySummary.percent}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              {sortedFilteredAnalysisRows.length > 0 ? (
+                <HabitGrid
+                  habits={sortedFilteredAnalysisRows}
+                  daysInMonth={daysInMonth}
+                  weekdayLabels={WEEKDAY_LABELS}
+                  draggedHabitId={draggedHabitId}
+                  onToggleHabitDay={toggleHabitDay}
+                  onRequestDeleteHabit={requestDeleteHabit}
+                  onStartEditHabit={startEditHabit}
+                  onMoveHabitUp={moveHabitUp}
+                  onMoveHabitDown={moveHabitDown}
+                  onRequestArchiveHabit={requestArchiveHabit}
+                  onHabitDragStart={handleHabitDragStart}
+                  onHabitDragOver={handleHabitDragOver}
+                  onHabitDrop={handleHabitDrop}
+                  onHabitDragEnd={handleHabitDragEnd}
+                  todayIndex={todayIndex}
+                  isManualSort={habitSortMode === "manual"}
+                  autoScrollToToday={autoScrollToToday}
+                />
               ) : (
-                <div className="text-xs text-neutral-500">
-                  Choose a unique habit name and a target value of at least 1.
+                <div className="theme-card p-8 text-center">
+                  <div className="text-lg font-semibold text-white">
+                    No matching habits
+                  </div>
+                  <div className="mt-2 text-sm text-neutral-500">
+                    Try adjusting your filters or clearing the current search.
+                  </div>
+                  <button
+                    onClick={resetHabitFilters}
+                    className="theme-button-primary mt-4"
+                  >
+                    Clear filters
+                  </button>
                 </div>
               )}
-
-              <button
-                onClick={addHabit}
-                disabled={Boolean(newHabitError)}
-                className="theme-button-primary w-full disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed"
-              >
-                <Plus className="h-4 w-4" />
-                Add Habit
-              </button>
-
-              <button
-                onClick={requestResetCurrentMonth}
-                className="theme-button-secondary w-full"
-              >
-                Reset Month
-              </button>
-            </div>
-
-            <HabitTemplatesCard
-              templates={allHabitTemplates}
-              onApplyTemplate={applyHabitTemplate}
-              onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
-              onDeleteTemplate={deleteCustomHabitTemplate}
-              onExportCustomTemplates={exportCustomHabitTemplates}
-              onImportCustomTemplates={triggerImportCustomTemplates}
-            />
-
-            {showTopHabits ? (
-              rankedHabits.length > 0 ? (
-                <TopHabitsCard habits={rankedHabits} sortMode={habitSortMode} />
-              ) : (
-                <DashboardStateCard
-                  compact
-                  title="No top habits yet"
-                  description="Your best-performing habits will appear here once you add and track them."
-                />
-              )
-            ) : null}
-
-            {showArchivedHabits ? (
-              <ArchivedHabitsPanel
-                archivedHabits={archivedAnalysisRows}
-                onRestoreHabit={(habitId) =>
-                  restoreHabit(habitId, { showUndo: true })
-                }
-              />
-            ) : null}
-          </section>
-
-          <section className="xl:col-span-6 space-y-4">
-            {activeAnalysisRows.length > 0 ? (
-              <ProgressCharts
-                dailyProgress={dailyProgress}
-                weeklyProgress={weeklyProgress}
-              />
-            ) : (
-              <DashboardStateCard
-                title="No chart data yet"
-                description="Add your first habit to start seeing daily and weekly progress charts."
-              />
-            )}
-
-            <HabitFilters
-              searchTerm={habitSearchTerm}
-              onChangeSearchTerm={setHabitSearchTerm}
-              filterMode={habitFilterMode}
-              onChangeFilterMode={setHabitFilterMode}
-              goalTypeFilter={goalTypeFilter}
-              onChangeGoalTypeFilter={setGoalTypeFilter}
-              filteredCount={filteredHabitsCount}
-              totalCount={totalActiveHabitsCount}
-              onResetFilters={resetHabitFilters}
-            />
-
-            <HabitQuickFilters
-              activeFilter={activeQuickFilter}
-              onApplyFilter={applyQuickFilter}
-            />
-
-            <ActiveHabitFilters chips={activeFilterChips} />
-
-            <div className="theme-card p-4">
-              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <div className="min-w-0">
-                  <div className="text-sm font-semibold text-neutral-300">
-                    Sort Habits
-                  </div>
-                  <div className="text-xs text-neutral-500 mt-1">
-                    Choose how habits are ordered across the dashboard
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <select
-                    value={habitSortMode}
-                    onChange={(e) => setHabitSortMode(e.target.value)}
-                    className="theme-select min-w-[220px] px-4 py-2.5"
-                  >
-                    <option value="progress-desc">Progress</option>
-                    <option value="current-streak-desc">Current Streak</option>
-                    <option value="best-streak-desc">Best Streak</option>
-                    <option value="completed-desc">Completed Count</option>
-                    <option value="name-asc">Name (A-Z)</option>
-                    <option value="manual">Manual Order</option>
-                  </select>
-
-                  <div className="theme-pill">
-                    {habitSortMode === "manual"
-                      ? "Drag & drop and move buttons are active."
-                      : "Automatic ranking is active."}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {showTodayProgress && todaySummary ? (
-              <div className="theme-card p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <div className="text-sm font-semibold text-neutral-300">
-                      Today Progress
-                    </div>
-                    <div className="text-xs text-neutral-500 mt-1">
-                      Day {todaySummary.day} of {MONTHS[selectedMonthIndex]}{" "}
-                      {selectedYear}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="theme-pill px-4 py-2 text-sm">
-                      {todaySummary.completed}/{todaySummary.total} habits done
-                    </div>
-                    <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm">
-                      {todaySummary.percent}%
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : null}
-
-            {sortedFilteredAnalysisRows.length > 0 ? (
-              <HabitGrid
-                habits={sortedFilteredAnalysisRows}
-                daysInMonth={daysInMonth}
-                weekdayLabels={WEEKDAY_LABELS}
-                draggedHabitId={draggedHabitId}
-                onToggleHabitDay={toggleHabitDay}
-                onRequestDeleteHabit={requestDeleteHabit}
-                onStartEditHabit={startEditHabit}
-                onMoveHabitUp={moveHabitUp}
-                onMoveHabitDown={moveHabitDown}
-                onRequestArchiveHabit={requestArchiveHabit}
-                onHabitDragStart={handleHabitDragStart}
-                onHabitDragOver={handleHabitDragOver}
-                onHabitDrop={handleHabitDrop}
-                onHabitDragEnd={handleHabitDragEnd}
-                todayIndex={todayIndex}
-                isManualSort={habitSortMode === "manual"}
-                autoScrollToToday={autoScrollToToday}
-              />
-            ) : (
-              <div className="theme-card p-8 text-center">
-                <div className="text-lg font-semibold text-white">
-                  No matching habits
-                </div>
-                <div className="text-sm text-neutral-500 mt-2">
-                  Try adjusting your filters or clearing the current search.
-                </div>
-                <button
-                  onClick={resetHabitFilters}
-                  className="theme-button-primary mt-4"
-                >
-                  Clear filters
-                </button>
-              </div>
-            )}
-
-            <MentalStateSection
-              daysInMonth={daysInMonth}
-              mood={safeMonthData.mood}
-              motivation={safeMonthData.motivation}
-              mentalStateData={mentalStateData}
-              onSetMentalMetric={setMentalMetric}
-            />
-
-            <MonthlyNotesPanel
-              notes={safeMonthData.notes}
-              onChangeNotes={setMonthlyNotes}
-            />
-
-            {showYearlyOverview ? (
-              isYearlyOverviewLoading ? (
-                <DashboardLoadingCard
-                  compact
-                  title="Loading yearly overview"
-                  lines={4}
-                />
-              ) : (
-                <YearlyOverviewCard
-                  selectedYear={selectedYear}
-                  yearlyData={yearlyOverviewData}
-                  isLoading={false}
-                />
-              )
-            ) : null}
-
-            {showStreakLeaderboard ? (
-              analysisRows.length > 0 ? (
-                <StreakLeaderboardCard rows={analysisRows} />
-              ) : (
-                <DashboardStateCard
-                  compact
-                  title="No streak data yet"
-                  description="Start checking off habits to build streak rankings."
-                />
-              )
-            ) : null}
-
-            {showMonthlyReview ? (
-              <MonthlyReviewCard
-                review={safeMonthData.review}
-                onChangeField={updateMonthlyReviewField}
-              />
-            ) : null}
-
-            {sortedActiveAnalysisRows.length > 0 ? (
-              <AnalysisPanel
-                totalGoal={totalGoal}
-                totalCompleted={totalCompleted}
-                totalLeft={totalLeft}
-                completionPercent={completionPercent}
-                analysisRows={sortedActiveAnalysisRows}
-              />
-            ) : (
-              <DashboardStateCard
-                title="No analysis available yet"
-                description="Add active habits and start tracking them to unlock analysis and streak insights."
-              />
-            )}
-          </section>
-
-          <div className="xl:col-span-3 space-y-4">
-            <OverallStatsCard
-              totalGoal={totalGoal}
-              totalCompleted={totalCompleted}
-              totalLeft={totalLeft}
-              completionPercent={completionPercent}
-            />
-
-            <MonthlySummaryCard
-              selectedYear={selectedYear}
-              selectedMonthName={MONTHS[selectedMonthIndex]}
-              completionPercent={completionPercent}
-              moodAverage={average(safeMonthData.mood).toFixed(1)}
-              motivationAverage={average(safeMonthData.motivation).toFixed(1)}
-              bestHabit={monthlyInsights.bestHabit}
-              needsAttentionHabit={monthlyInsights.needsAttentionHabit}
-              strongestCurrentStreakHabit={
-                monthlyInsights.strongestCurrentStreakHabit
-              }
-            />
-
-            {showAdvancedAnalytics ? (
-              <>
-                <AnalyticsHighlightsCard
-                  consistencyScore={consistencyScore}
-                  bestDay={bestDaySummary}
-                  strongestGoalType={strongestGoalType}
-                  trendInsight={trendInsight}
-                />
-
-                <WeekdayPerformanceCard
-                  rows={weekdayPerformance.rows}
-                  bestWeekday={weekdayPerformance.bestWeekday}
-                  weakestWeekday={weekdayPerformance.weakestWeekday}
-                />
-
-                <WeeklyMomentumCard
-                  strongestWeek={weeklyMomentum.strongestWeek}
-                  weakestWeek={weeklyMomentum.weakestWeek}
-                  trend={weeklyMomentum.trend}
-                />
-              </>
-            ) : null}
-
-            {isPreviousMonthLoading ? (
-              <DashboardLoadingCard
-                compact
-                title="Loading previous month"
-                lines={3}
-              />
-            ) : (
-              <MonthComparisonCard
-                currentSummary={monthlySummary}
-                previousSummary={previousMonthSummary}
-                previousLabel={previousMonthLabel}
-                isLoading={false}
-              />
-            )}
-
-            <EditHabitModal
-              isOpen={Boolean(editingHabit)}
-              habitName={editingHabitName}
-              habitIcon={editingHabitIcon}
-              habitTargetType={editingHabitTargetType}
-              habitTargetValue={editingHabitTargetValue}
-              errorMessage={editHabitError}
-              isSaveDisabled={Boolean(editHabitError)}
-              onChangeName={setEditingHabitName}
-              onChangeIcon={setEditingHabitIcon}
-              onChangeTargetType={setEditingHabitTargetType}
-              onChangeTargetValue={setEditingHabitTargetValue}
-              onClose={closeEditHabit}
-              onSave={saveEditedHabit}
-            />
+            </section>
           </div>
         </div>
+
+        <ToastNotice toast={toast} onClose={closeToast} />
+
+        <ConfirmActionModal
+          isOpen={Boolean(confirmAction)}
+          title={confirmAction?.title || ""}
+          message={confirmAction?.message || ""}
+          confirmLabel={confirmAction?.confirmLabel || "Confirm"}
+          onConfirm={executeConfirmAction}
+          onClose={closeConfirmModal}
+        />
+
+        <CopyMonthModal
+          isOpen={isCopyMonthModalOpen}
+          currentYear={selectedYear}
+          currentMonthIndex={selectedMonthIndex}
+          targetYear={copyTargetYear}
+          targetMonthIndex={copyTargetMonthIndex}
+          yearOptions={YEAR_OPTIONS}
+          monthOptions={MONTHS}
+          isSubmitting={isSyncing}
+          onChangeTargetYear={setCopyTargetYear}
+          onChangeTargetMonthIndex={setCopyTargetMonthIndex}
+          onClose={closeCopyMonthModal}
+          onConfirm={copyCurrentMonthToSelectedMonth}
+        />
+
+        <EditHabitModal
+          isOpen={Boolean(editingHabit)}
+          habitName={editingHabitName}
+          habitIcon={editingHabitIcon}
+          habitTargetType={editingHabitTargetType}
+          habitTargetValue={editingHabitTargetValue}
+          errorMessage={editHabitError}
+          isSaveDisabled={Boolean(editHabitError)}
+          onChangeName={setEditingHabitName}
+          onChangeIcon={setEditingHabitIcon}
+          onChangeTargetType={setEditingHabitTargetType}
+          onChangeTargetValue={setEditingHabitTargetValue}
+          onClose={closeEditHabit}
+          onSave={saveEditedHabit}
+        />
       </div>
+    );
 
-      <ToastNotice toast={toast} onClose={closeToast} />
+      const analyticsPage = (
+        <div className="app-theme-bg min-h-screen p-4 md:p-8">
+          <div className="mx-auto max-w-[1600px] space-y-6">
+            <DashboardHeader
+              onExportCSV={exportMonthCSV}
+              onExportJSON={exportMonthJSON}
+              onExportFilteredCSV={exportFilteredCSV}
+              onExportFilteredJSON={exportFilteredJSON}
+              onExportBackup={exportFullBackup}
+              onImportBackup={importBackup}
+              onExportPrintableHTML={exportPrintableHTMLReport}
+              onExportPDF={exportPDFReport}
+              onCopyToNextMonth={requestCopyToNextMonth}
+              onOpenCopyToMonth={openCopyMonthModal}
+            />
 
-      <ConfirmActionModal
-        isOpen={Boolean(confirmAction)}
-        title={confirmAction?.title || ""}
-        message={confirmAction?.message || ""}
-        confirmLabel={confirmAction?.confirmLabel || "Confirm"}
-        onConfirm={executeConfirmAction}
-        onClose={closeConfirmModal}
-      />
+            <div className="theme-card p-5">
+              <div className="theme-section-title">Analytics & Insights</div>
+              <div className="theme-section-subtitle">
+                Review trends, results, and monthly summaries in a separate
+                workspace.
+              </div>
+            </div>
 
-      <CopyMonthModal
-        isOpen={isCopyMonthModalOpen}
-        currentYear={selectedYear}
-        currentMonthIndex={selectedMonthIndex}
-        targetYear={copyTargetYear}
-        targetMonthIndex={copyTargetMonthIndex}
-        yearOptions={YEAR_OPTIONS}
-        monthOptions={MONTHS}
-        isSubmitting={isSyncing}
-        onChangeTargetYear={setCopyTargetYear}
-        onChangeTargetMonthIndex={setCopyTargetMonthIndex}
-        onClose={closeCopyMonthModal}
-        onConfirm={copyCurrentMonthToSelectedMonth}
-      />
-    </div>
-  );
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-neutral-400">
+                  Logged in as {currentUser.username}
+                </div>
+
+                <SyncStatusBadge
+                  syncStatus={syncStatus}
+                  syncStatusText={syncStatusText}
+                  onRetry={retrySaveNow}
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 lg:items-end">
+                {pageTabs}
+                {accountActions}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+              <section className="space-y-4 xl:col-span-3">
+                <OverallStatsCard
+                  totalGoal={totalGoal}
+                  totalCompleted={totalCompleted}
+                  totalLeft={totalLeft}
+                  completionPercent={completionPercent}
+                />
+
+                <MonthlySummaryCard
+                  selectedYear={selectedYear}
+                  selectedMonthName={MONTHS[selectedMonthIndex]}
+                  completionPercent={completionPercent}
+                  moodAverage={average(safeMonthData.mood).toFixed(1)}
+                  motivationAverage={average(safeMonthData.motivation).toFixed(
+                    1,
+                  )}
+                  bestHabit={monthlyInsights.bestHabit}
+                  needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+                  strongestCurrentStreakHabit={
+                    monthlyInsights.strongestCurrentStreakHabit
+                  }
+                />
+
+                {showTopHabits ? (
+                  rankedHabits.length > 0 ? (
+                    <TopHabitsCard
+                      habits={rankedHabits}
+                      sortMode={habitSortMode}
+                    />
+                  ) : (
+                    <DashboardStateCard
+                      compact
+                      title="No top habits yet"
+                      description="Your best-performing habits will appear here once you add and track them."
+                    />
+                  )
+                ) : null}
+
+                <DashboardPreferencesCard
+                  autoScrollToToday={autoScrollToToday}
+                  onToggleAutoScrollToToday={() =>
+                    setAutoScrollToToday((prev) => !prev)
+                  }
+                  showArchivedHabits={showArchivedHabits}
+                  onToggleShowArchivedHabits={() =>
+                    setShowArchivedHabits((prev) => !prev)
+                  }
+                  showAdvancedAnalytics={showAdvancedAnalytics}
+                  onToggleShowAdvancedAnalytics={() =>
+                    setShowAdvancedAnalytics((prev) => !prev)
+                  }
+                  showTodayProgress={showTodayProgress}
+                  onToggleShowTodayProgress={() =>
+                    setShowTodayProgress((prev) => !prev)
+                  }
+                  showTopHabits={showTopHabits}
+                  onToggleShowTopHabits={() =>
+                    setShowTopHabits((prev) => !prev)
+                  }
+                  showYearlyOverview={showYearlyOverview}
+                  onToggleShowYearlyOverview={() =>
+                    setShowYearlyOverview((prev) => !prev)
+                  }
+                  showStreakLeaderboard={showStreakLeaderboard}
+                  onToggleShowStreakLeaderboard={() =>
+                    setShowStreakLeaderboard((prev) => !prev)
+                  }
+                  showMonthlyReview={showMonthlyReview}
+                  onToggleShowMonthlyReview={() =>
+                    setShowMonthlyReview((prev) => !prev)
+                  }
+                  onResetPreferences={resetDashboardPreferences}
+                />
+              </section>
+
+              <section className="space-y-4 xl:col-span-6">
+                {activeAnalysisRows.length > 0 ? (
+                  <ProgressCharts
+                    dailyProgress={dailyProgress}
+                    weeklyProgress={weeklyProgress}
+                  />
+                ) : (
+                  <DashboardStateCard
+                    title="No chart data yet"
+                    description="Add your first habit to start seeing daily and weekly progress charts."
+                  />
+                )}
+
+                <MentalStateSection
+                  daysInMonth={daysInMonth}
+                  mood={safeMonthData.mood}
+                  motivation={safeMonthData.motivation}
+                  mentalStateData={mentalStateData}
+                  onSetMentalMetric={setMentalMetric}
+                />
+
+                {showStreakLeaderboard ? (
+                  analysisRows.length > 0 ? (
+                    <StreakLeaderboardCard rows={analysisRows} />
+                  ) : (
+                    <DashboardStateCard
+                      compact
+                      title="No streak data yet"
+                      description="Start checking off habits to build streak rankings."
+                    />
+                  )
+                ) : null}
+
+                {sortedActiveAnalysisRows.length > 0 ? (
+                  <AnalysisPanel
+                    totalGoal={totalGoal}
+                    totalCompleted={totalCompleted}
+                    totalLeft={totalLeft}
+                    completionPercent={completionPercent}
+                    analysisRows={sortedActiveAnalysisRows}
+                  />
+                ) : (
+                  <DashboardStateCard
+                    title="No analysis available yet"
+                    description="Add active habits and start tracking them to unlock analysis and streak insights."
+                  />
+                )}
+
+                {showYearlyOverview ? (
+                  isYearlyOverviewLoading ? (
+                    <DashboardLoadingCard
+                      compact
+                      title="Loading yearly overview"
+                      lines={4}
+                    />
+                  ) : (
+                    <YearlyOverviewCard
+                      selectedYear={selectedYear}
+                      yearlyData={yearlyOverviewData}
+                      isLoading={false}
+                    />
+                  )
+                ) : null}
+
+                {showMonthlyReview ? (
+                  <MonthlyReviewCard
+                    review={safeMonthData.review}
+                    onChangeField={updateMonthlyReviewField}
+                  />
+                ) : null}
+
+                <MonthlyNotesPanel
+                  notes={safeMonthData.notes}
+                  onChangeNotes={setMonthlyNotes}
+                />
+              </section>
+
+              <div className="space-y-4 xl:col-span-3">
+                {showAdvancedAnalytics ? (
+                  <>
+                    <AnalyticsHighlightsCard
+                      consistencyScore={consistencyScore}
+                      bestDay={bestDaySummary}
+                      strongestGoalType={strongestGoalType}
+                      trendInsight={trendInsight}
+                    />
+
+                    <WeekdayPerformanceCard
+                      rows={weekdayPerformance.rows}
+                      bestWeekday={weekdayPerformance.bestWeekday}
+                      weakestWeekday={weekdayPerformance.weakestWeekday}
+                    />
+
+                    <WeeklyMomentumCard
+                      strongestWeek={weeklyMomentum.strongestWeek}
+                      weakestWeek={weeklyMomentum.weakestWeek}
+                      trend={weeklyMomentum.trend}
+                    />
+                  </>
+                ) : null}
+
+                {isPreviousMonthLoading ? (
+                  <DashboardLoadingCard
+                    compact
+                    title="Loading previous month"
+                    lines={3}
+                  />
+                ) : (
+                  <MonthComparisonCard
+                    currentSummary={monthlySummary}
+                    previousSummary={previousMonthSummary}
+                    previousLabel={previousMonthLabel}
+                    isLoading={false}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
+          <ToastNotice toast={toast} onClose={closeToast} />
+
+          <ConfirmActionModal
+            isOpen={Boolean(confirmAction)}
+            title={confirmAction?.title || ""}
+            message={confirmAction?.message || ""}
+            confirmLabel={confirmAction?.confirmLabel || "Confirm"}
+            onConfirm={executeConfirmAction}
+            onClose={closeConfirmModal}
+          />
+
+          <CopyMonthModal
+            isOpen={isCopyMonthModalOpen}
+            currentYear={selectedYear}
+            currentMonthIndex={selectedMonthIndex}
+            targetYear={copyTargetYear}
+            targetMonthIndex={copyTargetMonthIndex}
+            yearOptions={YEAR_OPTIONS}
+            monthOptions={MONTHS}
+            isSubmitting={isSyncing}
+            onChangeTargetYear={setCopyTargetYear}
+            onChangeTargetMonthIndex={setCopyTargetMonthIndex}
+            onClose={closeCopyMonthModal}
+            onConfirm={copyCurrentMonthToSelectedMonth}
+          />
+
+          <EditHabitModal
+            isOpen={Boolean(editingHabit)}
+            habitName={editingHabitName}
+            habitIcon={editingHabitIcon}
+            habitTargetType={editingHabitTargetType}
+            habitTargetValue={editingHabitTargetValue}
+            errorMessage={editHabitError}
+            isSaveDisabled={Boolean(editHabitError)}
+            onChangeName={setEditingHabitName}
+            onChangeIcon={setEditingHabitIcon}
+            onChangeTargetType={setEditingHabitTargetType}
+            onChangeTargetValue={setEditingHabitTargetValue}
+            onClose={closeEditHabit}
+            onSave={saveEditedHabit}
+          />
+        </div>
+      );
 
   return (
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={dashboardPage} />
+        <Route path="/analytics" element={analyticsPage} />
         <Route
           path="/profile"
           element={
