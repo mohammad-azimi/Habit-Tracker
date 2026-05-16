@@ -1,5 +1,11 @@
 import React from "react";
-import { ArrowLeft, LogOut, UserCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  BarChart3,
+  LayoutDashboard,
+  LogOut,
+  UserCircle,
+} from "lucide-react";
 import UserProfileCard from "./UserProfileCard";
 import ChangePasswordCard from "./ChangePasswordCard";
 import DeleteAccountCard from "./DeleteAccountCard";
@@ -7,6 +13,7 @@ import DeleteAccountCard from "./DeleteAccountCard";
 export default function ProfilePage({
   currentUser,
   onBack,
+  onGoToAnalytics,
   onLogout,
   onChangePassword,
   isChangingPassword,
@@ -15,14 +22,15 @@ export default function ProfilePage({
 }) {
   return (
     <div className="app-theme-bg min-h-screen p-4 md:p-8">
-      <div className="mx-auto max-w-5xl space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="mx-auto max-w-6xl space-y-6">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="text-3xl font-bold tracking-tight text-white md:text-4xl">
               Profile & Security
             </div>
-            <div className="mt-2 text-sm text-neutral-400">
-              Manage your account information, password, and account settings.
+            <div className="mt-2 text-sm leading-6 text-neutral-400">
+              Manage your account information, password, and account security in
+              one place.
             </div>
           </div>
 
@@ -31,6 +39,16 @@ export default function ProfilePage({
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </button>
+
+            {typeof onGoToAnalytics === "function" ? (
+              <button
+                onClick={onGoToAnalytics}
+                className="theme-button-secondary"
+              >
+                <BarChart3 className="h-4 w-4" />
+                Analytics
+              </button>
+            ) : null}
 
             <button onClick={onLogout} className="theme-button-secondary">
               <LogOut className="h-4 w-4" />
@@ -47,8 +65,8 @@ export default function ProfilePage({
                   <UserCircle className="h-8 w-8 text-neutral-300" />
                 </div>
 
-                <div>
-                  <div className="text-lg font-semibold text-white">
+                <div className="min-w-0">
+                  <div className="truncate text-lg font-semibold text-white">
                     {currentUser?.username || "User"}
                   </div>
                   <div className="text-sm text-neutral-500">
@@ -59,6 +77,35 @@ export default function ProfilePage({
             </div>
 
             <UserProfileCard user={currentUser} />
+
+            <div className="theme-card p-5">
+              <div className="mb-4">
+                <div className="theme-section-title text-lg">Workspace</div>
+                <div className="theme-section-subtitle text-xs">
+                  Quickly move between your main work areas.
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={onBack}
+                  className="theme-button-secondary w-full justify-start"
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Open Dashboard
+                </button>
+
+                {typeof onGoToAnalytics === "function" ? (
+                  <button
+                    onClick={onGoToAnalytics}
+                    className="theme-button-secondary w-full justify-start"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    Open Analytics
+                  </button>
+                ) : null}
+              </div>
+            </div>
           </section>
 
           <section className="space-y-4 xl:col-span-8">
