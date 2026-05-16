@@ -3265,6 +3265,8 @@ export default function App() {
           />
 
           <DashboardHeader
+            title="Habit Tracker Dashboard"
+            subtitle="Focus on tracking, updating, and managing your habits without distraction."
             onExportCSV={exportMonthCSV}
             onExportJSON={exportMonthJSON}
             onExportFilteredCSV={exportFilteredCSV}
@@ -3644,6 +3646,8 @@ export default function App() {
         <div className="app-theme-bg min-h-screen p-4 md:p-8">
           <div className="mx-auto max-w-[1600px] space-y-6">
             <DashboardHeader
+              title="Analytics & Insights"
+              subtitle="Review progress, trends, summaries, and monthly comparisons in a separate workspace."
               onExportCSV={exportMonthCSV}
               onExportJSON={exportMonthJSON}
               onExportFilteredCSV={exportFilteredCSV}
@@ -3655,14 +3659,6 @@ export default function App() {
               onCopyToNextMonth={requestCopyToNextMonth}
               onOpenCopyToMonth={openCopyMonthModal}
             />
-
-            <div className="theme-card p-5">
-              <div className="theme-section-title">Analytics & Insights</div>
-              <div className="theme-section-subtitle">
-                Review trends, results, and monthly summaries in a separate
-                workspace.
-              </div>
-            </div>
 
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-col gap-2">

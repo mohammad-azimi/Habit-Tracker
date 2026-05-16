@@ -12,6 +12,9 @@ import {
 } from "lucide-react";
 
 export default function DashboardHeader({
+  title = "Habit Tracker Dashboard",
+  subtitle = "Track your habits, review progress, and export monthly reports.",
+  actionButtonLabel = "Export & Actions",
   onExportCSV,
   onExportJSON,
   onExportFilteredCSV,
@@ -174,13 +177,13 @@ export default function DashboardHeader({
   ];
 
   return (
-    <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between overflow-visible">
-      <div>
+    <div className="mb-6 flex flex-col gap-4 overflow-visible lg:flex-row lg:items-start lg:justify-between">
+      <div className="min-w-0">
         <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
-          Habit Tracker Dashboard
+          {title}
         </h1>
-        <p className="mt-3 max-w-xl text-base text-neutral-400">
-          Track your habits, review progress, and export monthly reports.
+        <p className="mt-3 max-w-2xl text-base leading-7 text-neutral-400">
+          {subtitle}
         </p>
       </div>
 
@@ -193,9 +196,12 @@ export default function DashboardHeader({
           onChange={handleFileChange}
         />
 
-        <button onClick={toggleMenu} className="theme-button-secondary">
+        <button
+          onClick={toggleMenu}
+          className="theme-button-secondary whitespace-nowrap"
+        >
           <Download className="h-4 w-4" />
-          Export & Actions
+          {actionButtonLabel}
           <ChevronDown
             className={`h-4 w-4 transition-transform duration-200 ${
               isMenuOpen ? "rotate-180" : ""
