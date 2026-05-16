@@ -11,14 +11,14 @@ export default function ProfilePage({
   onChangePassword,
   isChangingPassword,
   onDeleteAccount,
-  isDeletingAccount,
+  isDeleting,
 }) {
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8">
+    <div className="app-theme-bg min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-5xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
-            <div className="text-3xl md:text-4xl font-bold tracking-tight">
+            <div className="text-3xl font-bold tracking-tight text-white md:text-4xl">
               Profile & Security
             </div>
             <div className="mt-2 text-sm text-neutral-400">
@@ -27,34 +27,28 @@ export default function ProfilePage({
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              onClick={onBack}
-              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-            >
+            <button onClick={onBack} className="theme-button-secondary">
               <ArrowLeft className="h-4 w-4" />
               Back to Dashboard
             </button>
 
-            <button
-              onClick={onLogout}
-              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-            >
+            <button onClick={onLogout} className="theme-button-secondary">
               <LogOut className="h-4 w-4" />
               Logout
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-          <section className="xl:col-span-4 space-y-4">
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+        <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+          <section className="space-y-4 xl:col-span-4">
+            <div className="theme-card p-5">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-neutral-800 p-3">
+                <div className="theme-card-muted p-3">
                   <UserCircle className="h-8 w-8 text-neutral-300" />
                 </div>
 
                 <div>
-                  <div className="text-lg font-semibold">
+                  <div className="text-lg font-semibold text-white">
                     {currentUser?.username || "User"}
                   </div>
                   <div className="text-sm text-neutral-500">
@@ -67,7 +61,7 @@ export default function ProfilePage({
             <UserProfileCard user={currentUser} />
           </section>
 
-          <section className="xl:col-span-8 space-y-4">
+          <section className="space-y-4 xl:col-span-8">
             <ChangePasswordCard
               onSubmit={onChangePassword}
               isSubmitting={isChangingPassword}
@@ -75,7 +69,7 @@ export default function ProfilePage({
 
             <DeleteAccountCard
               onDeleteAccount={onDeleteAccount}
-              isDeleting={isDeletingAccount}
+              isDeleting={isDeleting}
             />
           </section>
         </div>

@@ -176,11 +176,11 @@ export default function DashboardHeader({
   return (
     <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between overflow-visible">
       <div>
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight">
+        <h1 className="text-3xl font-bold tracking-tight text-white md:text-5xl">
           Habit Tracker Dashboard
         </h1>
         <p className="mt-3 max-w-xl text-base text-neutral-400">
-          Track your habits, review progress, and export monthly reports
+          Track your habits, review progress, and export monthly reports.
         </p>
       </div>
 
@@ -193,10 +193,7 @@ export default function DashboardHeader({
           onChange={handleFileChange}
         />
 
-        <button
-          onClick={toggleMenu}
-          className="inline-flex items-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm font-medium hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
-        >
+        <button onClick={toggleMenu} className="theme-button-secondary">
           <Download className="h-4 w-4" />
           Export & Actions
           <ChevronDown
@@ -207,13 +204,13 @@ export default function DashboardHeader({
         </button>
 
         {isMenuOpen && (
-          <div className="fixed inset-x-4 top-24 z-[100] max-h-[70vh] overflow-y-auto rounded-3xl border border-neutral-800 bg-neutral-900 shadow-2xl transition duration-150 animate-[fadeIn_.15s_ease-out] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[22rem] sm:max-h-[32rem]">
-            <div className="border-b border-neutral-800 px-4 py-4">
-              <div className="text-sm font-semibold text-white">
+          <div className="theme-card fixed inset-x-4 top-24 z-[100] max-h-[70vh] overflow-y-auto p-0 shadow-2xl transition duration-150 animate-[fadeIn_.15s_ease-out] sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:mt-3 sm:w-[24rem] sm:max-h-[32rem]">
+            <div className="border-b border-white/5 px-5 py-4">
+              <div className="theme-section-title text-base">
                 Export & Actions
               </div>
-              <div className="mt-1 text-xs leading-5 text-neutral-500">
-                Export reports, manage backups, and reuse your monthly setup
+              <div className="theme-section-subtitle text-xs leading-5">
+                Export reports, manage backups, and reuse your monthly setup.
               </div>
             </div>
 
@@ -221,10 +218,10 @@ export default function DashboardHeader({
               {menuSections.map((section, sectionIndex) => (
                 <div key={section.title}>
                   {sectionIndex > 0 && (
-                    <div className="mx-3 my-2 h-px bg-neutral-800" />
+                    <div className="mx-4 my-2 h-px bg-white/5" />
                   )}
 
-                  <div className="px-4 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">
+                  <div className="px-5 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-neutral-500">
                     {section.title}
                   </div>
 
@@ -235,9 +232,9 @@ export default function DashboardHeader({
                       <button
                         key={item.label}
                         onClick={item.onClick}
-                        className="flex w-full items-start gap-3 px-4 py-3 text-left text-sm text-neutral-200 transition duration-150 hover:bg-neutral-800 active:scale-[0.995]"
+                        className="flex w-full items-start gap-3 px-5 py-3 text-left text-sm text-neutral-200 transition duration-150 hover:bg-white/[0.04] active:scale-[0.995]"
                       >
-                        <div className="mt-0.5 shrink-0 rounded-xl bg-neutral-800 p-2">
+                        <div className="theme-card-muted mt-0.5 shrink-0 p-2">
                           <Icon className="h-4 w-4 text-neutral-300" />
                         </div>
 

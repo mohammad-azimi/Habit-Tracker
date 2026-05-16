@@ -22,41 +22,38 @@ export default function CopyMonthModal({
     currentMonthIndex === targetMonthIndex;
 
   return (
-    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
-        <div className="flex items-start justify-between gap-4 mb-5">
+    <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="theme-card w-full max-w-md p-6">
+        <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="rounded-2xl bg-neutral-800 p-2">
+            <div className="theme-card-muted p-2">
               <CalendarDays className="h-5 w-5 text-neutral-300" />
             </div>
 
             <div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold text-white">
                 Copy to Selected Month
               </div>
-              <div className="text-sm text-neutral-400 mt-1">
+              <div className="mt-1 text-sm text-neutral-400">
                 Copy this month’s habit setup into another month
               </div>
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 p-2"
-          >
+          <button onClick={onClose} className="theme-button-secondary p-2">
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <div className="space-y-4">
           <div>
-            <label className="block text-xs text-neutral-500 mb-2">
+            <label className="mb-2 block text-xs text-neutral-500">
               Target Year
             </label>
             <select
               value={targetYear}
               onChange={(e) => onChangeTargetYear(e.target.value)}
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-4 py-3 text-sm outline-none"
+              className="theme-select px-4 py-3"
             >
               {yearOptions.map((year) => (
                 <option key={year} value={year}>
@@ -67,13 +64,13 @@ export default function CopyMonthModal({
           </div>
 
           <div>
-            <label className="block text-xs text-neutral-500 mb-2">
+            <label className="mb-2 block text-xs text-neutral-500">
               Target Month
             </label>
             <select
               value={targetMonthIndex}
               onChange={(e) => onChangeTargetMonthIndex(Number(e.target.value))}
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-4 py-3 text-sm outline-none"
+              className="theme-select px-4 py-3"
             >
               {monthOptions.map((month, index) => (
                 <option key={month} value={index}>
@@ -88,7 +85,7 @@ export default function CopyMonthModal({
               Target month cannot be the same as the current month.
             </div>
           ) : (
-            <div className="rounded-2xl border border-neutral-800 bg-neutral-800 px-4 py-3 text-sm text-neutral-300">
+            <div className="theme-summary-card px-4 py-3 text-sm text-neutral-300">
               This will copy habits, order, and archive state. Daily progress,
               mood, motivation, and notes will be reset.
             </div>
@@ -96,17 +93,14 @@ export default function CopyMonthModal({
         </div>
 
         <div className="mt-6 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium"
-          >
+          <button onClick={onClose} className="theme-button-secondary flex-1">
             Cancel
           </button>
 
           <button
             onClick={onConfirm}
             disabled={isSubmitting || isSameMonth}
-            className="flex-1 rounded-2xl bg-white text-black hover:bg-neutral-200 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+            className="theme-button-primary flex-1 disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
           >
             <Copy className="h-4 w-4" />
             {isSubmitting ? "Copying..." : "Copy Month"}

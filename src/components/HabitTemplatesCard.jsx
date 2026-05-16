@@ -16,11 +16,11 @@ export default function HabitTemplatesCard({
   onImportCustomTemplates,
 }) {
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl space-y-3">
+    <div className="theme-card p-5 space-y-3">
       <div className="flex flex-col gap-3">
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
-            <Sparkles className="h-4 w-4" />
+            <Sparkles className="h-4 w-4 text-neutral-400" />
             Habit Templates
           </div>
           <div className="mt-1 text-xs text-neutral-500">
@@ -31,7 +31,7 @@ export default function HabitTemplatesCard({
         <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onSaveCurrentTemplate}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200 active:scale-[0.98] transition duration-150"
+            className="theme-button-primary px-3 py-2 text-xs font-medium"
           >
             <BookmarkPlus className="h-3.5 w-3.5" />
             Save Current
@@ -39,7 +39,7 @@ export default function HabitTemplatesCard({
 
           <button
             onClick={onExportCustomTemplates}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
+            className="theme-button-secondary px-3 py-2 text-xs font-medium"
           >
             <Download className="h-3.5 w-3.5" />
             Export Custom
@@ -47,7 +47,7 @@ export default function HabitTemplatesCard({
 
           <button
             onClick={onImportCustomTemplates}
-            className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-xs font-medium text-white hover:bg-neutral-700 active:scale-[0.98] transition duration-150"
+            className="theme-button-secondary px-3 py-2 text-xs font-medium"
           >
             <FolderUp className="h-3.5 w-3.5" />
             Import Custom
@@ -60,7 +60,7 @@ export default function HabitTemplatesCard({
           templates.map((template) => (
             <div
               key={template.id}
-              className="rounded-2xl border border-neutral-800 bg-neutral-800/60 p-4 transition duration-150 hover:border-neutral-700 hover:bg-neutral-800"
+              className="theme-summary-card p-4 transition duration-150 hover:bg-white/[0.08]"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
@@ -70,10 +70,10 @@ export default function HabitTemplatesCard({
                     </div>
 
                     <div
-                      className={`rounded-xl px-2 py-1 text-[10px] font-medium ${
+                      className={`rounded-xl border px-2 py-1 text-[10px] font-medium ${
                         template.isCustom
-                          ? "bg-blue-950/40 text-blue-300 border border-blue-900/40"
-                          : "bg-neutral-900 text-neutral-400 border border-neutral-800"
+                          ? "border-blue-900/40 bg-blue-950/40 text-blue-300"
+                          : "border-white/5 bg-black/25 text-neutral-400"
                       }`}
                     >
                       {template.isCustom ? "Custom" : "Built-in"}
@@ -93,7 +93,7 @@ export default function HabitTemplatesCard({
                   {template.isCustom ? (
                     <button
                       onClick={() => onDeleteTemplate?.(template.id)}
-                      className="rounded-2xl bg-neutral-900 p-2 text-neutral-300 hover:bg-red-900 hover:text-white"
+                      className="rounded-2xl bg-black/30 p-2 text-neutral-300 transition hover:bg-red-900 hover:text-white"
                       title="Delete template"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ export default function HabitTemplatesCard({
 
                   <button
                     onClick={() => onApplyTemplate(template)}
-                    className="shrink-0 rounded-2xl bg-white px-3 py-2 text-xs font-medium text-black hover:bg-neutral-200 active:scale-[0.98] transition duration-150"
+                    className="theme-button-primary shrink-0 px-3 py-2 text-xs font-medium"
                   >
                     Use
                   </button>
@@ -111,7 +111,7 @@ export default function HabitTemplatesCard({
             </div>
           ))
         ) : (
-          <div className="rounded-2xl border border-neutral-800 bg-neutral-800/60 p-4 text-sm text-neutral-400">
+          <div className="theme-summary-card p-4 text-sm text-neutral-400">
             No templates available yet
           </div>
         )}

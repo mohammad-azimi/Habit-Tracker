@@ -20,11 +20,11 @@ import {
 
 function StatBox({ label, value, sublabel }) {
   return (
-    <div className="rounded-2xl bg-neutral-800 p-4">
-      <div className="text-xs uppercase tracking-wide text-neutral-500">
+    <div className="theme-stat-tile p-4">
+      <div className="text-[11px] uppercase tracking-[0.18em] text-neutral-500">
         {label}
       </div>
-      <div className="mt-2 text-2xl font-semibold">{value}</div>
+      <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
       {sublabel ? (
         <div className="mt-1 text-xs text-neutral-500">{sublabel}</div>
       ) : null}
@@ -38,7 +38,7 @@ function YearlyTooltip({ active, payload, label }) {
   const row = payload[0]?.payload;
 
   return (
-    <div className="rounded-2xl border border-neutral-700 bg-neutral-900 px-3 py-2 shadow-xl">
+    <div className="rounded-2xl border border-white/5 bg-neutral-900/95 px-3 py-2 shadow-xl backdrop-blur">
       <div className="text-sm font-medium text-white">{label}</div>
 
       {row?.isEmpty ? (
@@ -147,27 +147,27 @@ export default function YearlyOverviewCard({
   const yDomain = buildChartDomain(activeMonths);
 
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+    <div className="theme-card p-5">
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
-          <div className="font-semibold">Yearly Overview</div>
-          <div className="text-xs text-neutral-500 mt-1">
+          <div className="theme-section-title">Yearly Overview</div>
+          <div className="theme-section-subtitle">
             12-month performance summary for {selectedYear}
           </div>
         </div>
 
-        <div className="rounded-2xl bg-neutral-800 p-2">
+        <div className="theme-card-muted p-2">
           <CalendarRange className="h-4 w-4 text-neutral-400" />
         </div>
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl bg-neutral-800 px-4 py-4 text-sm text-neutral-400">
+        <div className="theme-summary-card px-4 py-4 text-sm text-neutral-400">
           Loading yearly analytics...
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <StatBox
               label="Average Completion"
               value={`${averageCompletion}%`}
@@ -183,22 +183,22 @@ export default function YearlyOverviewCard({
               value={averageMotivation}
               sublabel="Year-wide motivation average"
             />
-            <div className="rounded-2xl bg-neutral-800 p-4 space-y-3">
+            <div className="theme-summary-card p-4 space-y-3">
               <div className="flex items-center gap-2 text-sm text-neutral-300">
                 <TrendingUp className="h-4 w-4 text-neutral-400" />
                 Best Month
               </div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold text-white">
                 {bestMonth
                   ? `${bestMonth.month} • ${bestMonth.completionPercent}%`
                   : "No data"}
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-neutral-300 pt-2">
+              <div className="flex items-center gap-2 pt-2 text-sm text-neutral-300">
                 <TrendingDown className="h-4 w-4 text-neutral-400" />
                 Worst Month
               </div>
-              <div className="text-lg font-semibold">
+              <div className="text-lg font-semibold text-white">
                 {worstMonth
                   ? `${worstMonth.month} • ${worstMonth.completionPercent}%`
                   : "No data"}
@@ -206,17 +206,19 @@ export default function YearlyOverviewCard({
             </div>
           </div>
 
-          <div className="rounded-2xl bg-neutral-800 p-4">
-            <div className="flex items-center justify-between mb-4">
+          <div className="theme-chart-panel p-4">
+            <div className="mb-4 flex items-center justify-between">
               <div>
                 <div className="text-sm font-medium text-neutral-200">
                   Monthly Completion Trend
                 </div>
-                <div className="text-xs text-neutral-500 mt-1">
+                <div className="mt-1 text-xs text-neutral-500">
                   Saved months are highlighted. Empty months are muted.
                 </div>
               </div>
-              <BarChart3 className="h-4 w-4 text-neutral-400" />
+              <div className="theme-card-muted p-2">
+                <BarChart3 className="h-4 w-4 text-neutral-400" />
+              </div>
             </div>
 
             <div className="h-72">
@@ -226,8 +228,8 @@ export default function YearlyOverviewCard({
                   margin={{ top: 16, right: 12, left: -8, bottom: 0 }}
                 >
                   <CartesianGrid
-                    stroke="#262626"
-                    strokeDasharray="3 3"
+                    stroke="#26262a"
+                    strokeDasharray="2 5"
                     vertical={false}
                   />
 
@@ -253,8 +255,8 @@ export default function YearlyOverviewCard({
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={entry.isEmpty ? "#404040" : "#a3a3a3"}
-                        fillOpacity={entry.isEmpty ? 0.25 : 1}
+                        fill={entry.isEmpty ? "#404040" : "#a78bfa"}
+                        fillOpacity={entry.isEmpty ? 0.25 : 0.95}
                       />
                     ))}
                     <LabelList

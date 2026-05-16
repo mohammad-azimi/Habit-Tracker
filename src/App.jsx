@@ -3192,7 +3192,7 @@ export default function App() {
   }
 
   const dashboardPage = (
-    <div className="min-h-screen bg-neutral-950 text-white p-4 md:p-8">
+    <div className="app-theme-bg min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-[1600px] space-y-6">
         <input
           ref={customTemplateFileInputRef}
@@ -3237,16 +3237,13 @@ export default function App() {
           <div className="flex flex-col gap-3 sm:flex-row">
             <button
               onClick={() => navigate("/profile")}
-              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+              className="theme-button-secondary"
             >
               <UserCircle className="h-4 w-4" />
               Profile
             </button>
 
-            <button
-              onClick={handleLogout}
-              className="rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
-            >
+            <button onClick={handleLogout} className="theme-button-secondary">
               <LogOut className="h-4 w-4" />
               Logout
             </button>
@@ -3255,87 +3252,93 @@ export default function App() {
 
         <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
           <section className="xl:col-span-3 space-y-4">
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-              <div className="text-xl font-semibold">Habit Tracker</div>
-              <div className="text-neutral-400 mt-1">
+            <div className="theme-card p-5">
+              <div className="theme-section-title">Habit Tracker</div>
+              <div className="theme-section-subtitle">
                 {MONTHS[selectedMonthIndex]} {selectedYear}
               </div>
             </div>
 
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl space-y-4">
+            <DashboardPreferencesCard
+              autoScrollToToday={autoScrollToToday}
+              onToggleAutoScrollToToday={() =>
+                setAutoScrollToToday((prev) => !prev)
+              }
+              showArchivedHabits={showArchivedHabits}
+              onToggleShowArchivedHabits={() =>
+                setShowArchivedHabits((prev) => !prev)
+              }
+              showAdvancedAnalytics={showAdvancedAnalytics}
+              onToggleShowAdvancedAnalytics={() =>
+                setShowAdvancedAnalytics((prev) => !prev)
+              }
+              showTodayProgress={showTodayProgress}
+              onToggleShowTodayProgress={() =>
+                setShowTodayProgress((prev) => !prev)
+              }
+              showTopHabits={showTopHabits}
+              onToggleShowTopHabits={() => setShowTopHabits((prev) => !prev)}
+              showYearlyOverview={showYearlyOverview}
+              onToggleShowYearlyOverview={() =>
+                setShowYearlyOverview((prev) => !prev)
+              }
+              showStreakLeaderboard={showStreakLeaderboard}
+              onToggleShowStreakLeaderboard={() =>
+                setShowStreakLeaderboard((prev) => !prev)
+              }
+              showMonthlyReview={showMonthlyReview}
+              onToggleShowMonthlyReview={() =>
+                setShowMonthlyReview((prev) => !prev)
+              }
+              onResetPreferences={resetDashboardPreferences}
+            />
+
+            <div className="theme-card p-5 space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
                 <CalendarDays className="h-4 w-4" />
                 Calendar Settings
               </div>
 
-              <DashboardPreferencesCard
-                autoScrollToToday={autoScrollToToday}
-                onToggleAutoScrollToToday={() =>
-                  setAutoScrollToToday((prev) => !prev)
-                }
-                showArchivedHabits={showArchivedHabits}
-                onToggleShowArchivedHabits={() =>
-                  setShowArchivedHabits((prev) => !prev)
-                }
-                showAdvancedAnalytics={showAdvancedAnalytics}
-                onToggleShowAdvancedAnalytics={() =>
-                  setShowAdvancedAnalytics((prev) => !prev)
-                }
-                showTodayProgress={showTodayProgress}
-                onToggleShowTodayProgress={() =>
-                  setShowTodayProgress((prev) => !prev)
-                }
-                showTopHabits={showTopHabits}
-                onToggleShowTopHabits={() => setShowTopHabits((prev) => !prev)}
-                showYearlyOverview={showYearlyOverview}
-                onToggleShowYearlyOverview={() =>
-                  setShowYearlyOverview((prev) => !prev)
-                }
-                showStreakLeaderboard={showStreakLeaderboard}
-                onToggleShowStreakLeaderboard={() =>
-                  setShowStreakLeaderboard((prev) => !prev)
-                }
-                showMonthlyReview={showMonthlyReview}
-                onToggleShowMonthlyReview={() =>
-                  setShowMonthlyReview((prev) => !prev)
-                }
-                onResetPreferences={resetDashboardPreferences}
-              />
-
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 gap-2">
                 <button
                   onClick={goToPreviousMonth}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                  Previous
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <ChevronLeft className="h-4 w-4 shrink-0" />
+                    Previous Month
+                  </span>
                 </button>
 
                 <button
                   onClick={goToCurrentMonth}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  This Month
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <RotateCcw className="h-4 w-4 shrink-0" />
+                    This Month
+                  </span>
                 </button>
 
                 <button
                   onClick={goToNextMonth}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-neutral-800 px-3 py-2 text-sm font-medium hover:bg-neutral-700"
+                  className="theme-button-secondary justify-between px-4 py-3 text-sm"
                 >
-                  Next Month
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                    <ChevronRight className="h-4 w-4 shrink-0" />
+                    Next Month
+                  </span>
                 </button>
               </div>
 
               <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
+                <label className="mb-2 block text-xs text-neutral-500">
                   Year
                 </label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(e.target.value)}
-                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                  className="theme-select"
                 >
                   {YEAR_OPTIONS.map((year) => (
                     <option key={year} value={year}>
@@ -3346,7 +3349,7 @@ export default function App() {
               </div>
 
               <div>
-                <label className="text-xs text-neutral-500 mb-2 block">
+                <label className="mb-2 block text-xs text-neutral-500">
                   Month
                 </label>
                 <select
@@ -3354,7 +3357,7 @@ export default function App() {
                   onChange={(e) =>
                     setSelectedMonthIndex(Number(e.target.value))
                   }
-                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                  className="theme-select"
                 >
                   {MONTHS.map((month, index) => (
                     <option key={month} value={index}>
@@ -3365,7 +3368,7 @@ export default function App() {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl space-y-3">
+            <div className="theme-card p-5 space-y-3">
               <div className="text-sm font-semibold text-neutral-300">
                 Add Habit
               </div>
@@ -3374,14 +3377,14 @@ export default function App() {
                 value={newHabitName}
                 onChange={(e) => setNewHabitName(e.target.value)}
                 placeholder="Habit name"
-                className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                className="theme-input"
               />
 
               <input
                 value={newHabitIcon}
                 onChange={(e) => setNewHabitIcon(e.target.value)}
                 placeholder="Icon, e.g. ✅"
-                className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                className="theme-input"
               />
 
               <div>
@@ -3391,7 +3394,7 @@ export default function App() {
                 <select
                   value={newHabitTargetType}
                   onChange={(e) => setNewHabitTargetType(e.target.value)}
-                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                  className="theme-select"
                 >
                   <option value="daily">Daily</option>
                   <option value="weekly">Weekly</option>
@@ -3408,7 +3411,7 @@ export default function App() {
                   min="1"
                   value={newHabitTargetValue}
                   onChange={(e) => setNewHabitTargetValue(e.target.value)}
-                  className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 px-3 py-2 text-sm outline-none"
+                  className="theme-input"
                   placeholder="1"
                 />
               </div>
@@ -3426,7 +3429,7 @@ export default function App() {
               <button
                 onClick={addHabit}
                 disabled={Boolean(newHabitError)}
-                className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed px-4 py-3 text-sm font-medium flex items-center justify-center gap-2"
+                className="theme-button-primary w-full disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed"
               >
                 <Plus className="h-4 w-4" />
                 Add Habit
@@ -3434,7 +3437,7 @@ export default function App() {
 
               <button
                 onClick={requestResetCurrentMonth}
-                className="w-full rounded-2xl bg-neutral-800 hover:bg-neutral-700 px-4 py-3 text-sm font-medium"
+                className="theme-button-secondary w-full"
               >
                 Reset Month
               </button>
@@ -3503,7 +3506,7 @@ export default function App() {
 
             <ActiveHabitFilters chips={activeFilterChips} />
 
-            <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
+            <div className="theme-card p-4">
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div className="min-w-0">
                   <div className="text-sm font-semibold text-neutral-300">
@@ -3518,7 +3521,7 @@ export default function App() {
                   <select
                     value={habitSortMode}
                     onChange={(e) => setHabitSortMode(e.target.value)}
-                    className="min-w-[220px] rounded-2xl bg-neutral-800 border border-neutral-700 px-4 py-2.5 text-sm outline-none"
+                    className="theme-select min-w-[220px] px-4 py-2.5"
                   >
                     <option value="progress-desc">Progress</option>
                     <option value="current-streak-desc">Current Streak</option>
@@ -3528,7 +3531,7 @@ export default function App() {
                     <option value="manual">Manual Order</option>
                   </select>
 
-                  <div className="rounded-2xl bg-neutral-800 px-3 py-2.5 text-xs text-neutral-400">
+                  <div className="theme-pill">
                     {habitSortMode === "manual"
                       ? "Drag & drop and move buttons are active."
                       : "Automatic ranking is active."}
@@ -3538,7 +3541,7 @@ export default function App() {
             </div>
 
             {showTodayProgress && todaySummary ? (
-              <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
+              <div className="theme-card p-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="text-sm font-semibold text-neutral-300">
@@ -3551,10 +3554,10 @@ export default function App() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <div className="rounded-2xl bg-neutral-800 px-4 py-2 text-sm text-neutral-300">
+                    <div className="theme-pill px-4 py-2 text-sm">
                       {todaySummary.completed}/{todaySummary.total} habits done
                     </div>
-                    <div className="rounded-2xl bg-white text-black px-4 py-2 text-sm font-semibold">
+                    <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm">
                       {todaySummary.percent}%
                     </div>
                   </div>
@@ -3583,7 +3586,7 @@ export default function App() {
                 autoScrollToToday={autoScrollToToday}
               />
             ) : (
-              <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-8 shadow-2xl text-center">
+              <div className="theme-card p-8 text-center">
                 <div className="text-lg font-semibold text-white">
                   No matching habits
                 </div>
@@ -3592,7 +3595,7 @@ export default function App() {
                 </div>
                 <button
                   onClick={resetHabitFilters}
-                  className="mt-4 rounded-2xl bg-white text-black hover:bg-neutral-200 px-4 py-2 text-sm font-medium"
+                  className="theme-button-primary mt-4"
                 >
                   Clear filters
                 </button>

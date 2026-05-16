@@ -90,7 +90,7 @@ export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
                 domain={[0, 100]}
               />
               <Tooltip content={<DailyPaceTooltip />} />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#d4d4d4" />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="#8b5cf6" />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -132,7 +132,7 @@ export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
                 domain={[0, 100]}
               />
               <Tooltip content={<WeeklyPaceTooltip />} />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="#a3a3a3" />
+              <Bar dataKey="value" radius={[8, 8, 0, 0]} fill="#8b5cf6" />
             </BarChart>
           </ResponsiveContainer>
         </div>

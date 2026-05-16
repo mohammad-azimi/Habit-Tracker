@@ -11,31 +11,12 @@ import {
   getHabitProgressTextClasses,
 } from "../lib/habitStatus";
 
-function formatGoalTypeLabel(targetType, targetValue) {
-  const safeType = targetType || "daily";
-  const safeValue = Math.max(1, Number(targetValue || 1));
-
-  if (safeType === "daily") {
-    return `${safeValue}x/day`;
-  }
-
-  if (safeType === "weekly") {
-    return `${safeValue}x/week`;
-  }
-
-  if (safeType === "monthly") {
-    return `${safeValue}x/month`;
-  }
-
-  return `${safeValue}x/day`;
-}
-
 function HabitMeta({ habit, streakMode = false }) {
   if (!habit) return null;
 
   return (
     <div className="space-y-2">
-      <div>
+      <div className="text-sm font-medium text-white">
         {habit.name}
         <span className="ml-1">{habit.icon}</span>
         <span className={`ml-2 ${getHabitProgressTextClasses(habit.progress)}`}>
@@ -70,6 +51,31 @@ function HabitMeta({ habit, streakMode = false }) {
   );
 }
 
+function MiniStatCard({ icon: Icon, label, value }) {
+  return (
+    <div className="theme-stat-tile px-4 py-3">
+      <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.18em] text-neutral-500">
+        <Icon className="h-3.5 w-3.5 text-neutral-400" />
+        {label}
+      </div>
+      <div className="mt-2 text-2xl font-semibold text-white">{value}</div>
+    </div>
+  );
+}
+
+function DetailCard({ icon: Icon, title, children }) {
+  return (
+    <div className="theme-summary-card px-4 py-4">
+      <div className="mb-2 flex items-center gap-2 text-xs text-neutral-500">
+        <Icon className="h-4 w-4 text-neutral-400" />
+        {title}
+      </div>
+
+      <div className="text-sm text-white">{children}</div>
+    </div>
+  );
+}
+
 export default function MonthlySummaryCard({
   selectedYear,
   selectedMonthName,
@@ -81,95 +87,56 @@ export default function MonthlySummaryCard({
   strongestCurrentStreakHabit,
 }) {
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+    <div className="theme-card p-5">
       <div className="mb-4">
-        <div className="font-semibold">Monthly Summary</div>
-        <div className="text-xs text-neutral-500 mt-1">
+        <div className="theme-section-title">Monthly Summary</div>
+        <div className="theme-section-subtitle">
           {selectedMonthName} {selectedYear} performance overview
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
-            <Target className="h-3.5 w-3.5" />
-            Completion
-          </div>
-          <div className="text-2xl font-semibold mt-2">
-            {completionPercent}%
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
-            <Flame className="h-3.5 w-3.5" />
-            Best Current Streak
-          </div>
-          <div className="text-2xl font-semibold mt-2">
-            {strongestCurrentStreakHabit?.currentStreak ?? 0}d
-          </div>
-        </div>
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <MiniStatCard
+          icon={Target}
+          label="Completion"
+          value={`${completionPercent}%`}
+        />
+        <MiniStatCard
+          icon={Flame}
+          label="Best Streak"
+          value={`${strongestCurrentStreakHabit?.currentStreak ?? 0}d`}
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
-            <Brain className="h-3.5 w-3.5" />
-            Mood Avg
-          </div>
-          <div className="text-xl font-semibold mt-2">{moodAverage}</div>
-        </div>
-
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wide text-neutral-500">
-            <TrendingUp className="h-3.5 w-3.5" />
-            Motivation Avg
-          </div>
-          <div className="text-xl font-semibold mt-2">{motivationAverage}</div>
-        </div>
+      <div className="mb-4 grid grid-cols-2 gap-3">
+        <MiniStatCard icon={Brain} label="Mood Avg" value={moodAverage} />
+        <MiniStatCard
+          icon={TrendingUp}
+          label="Motivation Avg"
+          value={motivationAverage}
+        />
       </div>
 
       <div className="space-y-3">
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2">
-            <Sparkles className="h-4 w-4" />
-            Best Habit This Month
-          </div>
+        <DetailCard icon={Sparkles} title="Best Habit This Month">
+          {bestHabit ? <HabitMeta habit={bestHabit} /> : "No data"}
+        </DetailCard>
 
-          <div className="text-sm text-white">
-            {bestHabit ? <HabitMeta habit={bestHabit} /> : "No data"}
-          </div>
-        </div>
+        <DetailCard icon={Target} title="Needs Attention">
+          {needsAttentionHabit ? (
+            <HabitMeta habit={needsAttentionHabit} />
+          ) : (
+            "No data"
+          )}
+        </DetailCard>
 
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2">
-            <Target className="h-4 w-4" />
-            Needs Attention
-          </div>
-
-          <div className="text-sm text-white">
-            {needsAttentionHabit ? (
-              <HabitMeta habit={needsAttentionHabit} />
-            ) : (
-              "No data"
-            )}
-          </div>
-        </div>
-
-        <div className="rounded-2xl bg-neutral-800 px-4 py-3">
-          <div className="flex items-center gap-2 text-xs text-neutral-500 mb-2">
-            <Flame className="h-4 w-4" />
-            Streak Leader
-          </div>
-
-          <div className="text-sm text-white">
-            {strongestCurrentStreakHabit ? (
-              <HabitMeta habit={strongestCurrentStreakHabit} streakMode />
-            ) : (
-              "No data"
-            )}
-          </div>
-        </div>
+        <DetailCard icon={Flame} title="Streak Leader">
+          {strongestCurrentStreakHabit ? (
+            <HabitMeta habit={strongestCurrentStreakHabit} streakMode />
+          ) : (
+            "No data"
+          )}
+        </DetailCard>
       </div>
     </div>
   );

@@ -27,11 +27,9 @@ function getSortModeLabel(sortMode) {
 
 export default function TopHabitsCard({ habits, sortMode }) {
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
-      <div className="text-sm font-semibold text-neutral-300 mb-1">
-        Top Habits
-      </div>
-      <div className="text-xs text-neutral-500 mb-4">
+    <div className="theme-card p-5">
+      <div className="theme-section-title text-lg">Top Habits</div>
+      <div className="theme-section-subtitle text-xs mb-4">
         {getSortModeLabel(sortMode)}
       </div>
 
@@ -40,16 +38,15 @@ export default function TopHabitsCard({ habits, sortMode }) {
           const status = getHabitStatus(habit.progress);
 
           return (
-            <div
-              key={habit.id}
-              className="rounded-2xl bg-neutral-800 px-3 py-3"
-            >
+            <div key={habit.id} className="theme-summary-card px-3 py-3">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div className="text-neutral-500 w-5 shrink-0">{idx + 1}</div>
+                <div className="flex min-w-0 flex-1 items-start gap-3">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-black/30 text-sm font-semibold text-neutral-400 ring-1 ring-white/5">
+                    {idx + 1}
+                  </div>
 
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm text-white font-medium">
+                    <div className="truncate text-sm font-medium text-white">
                       {habit.name}
                       <span className="ml-1">{habit.icon}</span>
                     </div>
@@ -86,7 +83,7 @@ export default function TopHabitsCard({ habits, sortMode }) {
                 </div>
 
                 <div
-                  className={`text-sm font-semibold shrink-0 ${getHabitProgressTextClasses(
+                  className={`shrink-0 text-sm font-semibold ${getHabitProgressTextClasses(
                     habit.progress,
                   )}`}
                 >

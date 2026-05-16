@@ -19,11 +19,11 @@ export default function EditHabitModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="w-full max-w-md rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="theme-card w-full max-w-md p-6">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <div className="flex items-center gap-2 text-lg font-semibold">
+            <div className="flex items-center gap-2 text-lg font-semibold text-white">
               <Pencil className="h-5 w-5" />
               Edit Habit
             </div>
@@ -32,10 +32,7 @@ export default function EditHabitModal({
             </div>
           </div>
 
-          <button
-            onClick={onClose}
-            className="rounded-2xl bg-neutral-800 p-2 hover:bg-neutral-700"
-          >
+          <button onClick={onClose} className="theme-button-secondary p-2">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -49,7 +46,7 @@ export default function EditHabitModal({
               value={habitName}
               onChange={(e) => onChangeName(e.target.value)}
               placeholder="Habit name"
-              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm outline-none"
+              className="theme-input px-4 py-3"
             />
           </div>
 
@@ -61,7 +58,7 @@ export default function EditHabitModal({
               value={habitIcon}
               onChange={(e) => onChangeIcon(e.target.value)}
               placeholder="Icon, e.g. ✅"
-              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm outline-none"
+              className="theme-input px-4 py-3"
             />
           </div>
 
@@ -72,7 +69,7 @@ export default function EditHabitModal({
             <select
               value={habitTargetType}
               onChange={(e) => onChangeTargetType(e.target.value)}
-              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm outline-none"
+              className="theme-select px-4 py-3"
             >
               <option value="daily">Daily</option>
               <option value="weekly">Weekly</option>
@@ -90,7 +87,7 @@ export default function EditHabitModal({
               value={habitTargetValue}
               onChange={(e) => onChangeTargetValue(e.target.value)}
               placeholder="1"
-              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 px-4 py-3 text-sm outline-none"
+              className="theme-input px-4 py-3"
             />
           </div>
         </div>
@@ -106,17 +103,14 @@ export default function EditHabitModal({
         )}
 
         <div className="mt-6 flex gap-3">
-          <button
-            onClick={onClose}
-            className="flex-1 rounded-2xl bg-neutral-800 px-4 py-3 text-sm font-medium hover:bg-neutral-700"
-          >
+          <button onClick={onClose} className="theme-button-secondary flex-1">
             Cancel
           </button>
 
           <button
             onClick={onSave}
             disabled={isSaveDisabled}
-            className="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-medium text-black hover:bg-neutral-200 disabled:bg-neutral-700 disabled:text-neutral-400 disabled:cursor-not-allowed"
+            className="theme-button-primary flex-1 disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
           >
             <Save className="h-4 w-4" />
             Save Changes

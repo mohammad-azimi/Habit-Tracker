@@ -53,79 +53,89 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
     }
   };
 
-  const renderVisibilityButton = (visible, onToggle) => (
+  const renderVisibilityButton = (visible, onToggle, label) => (
     <button
       type="button"
       onClick={onToggle}
-      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-1 text-neutral-400 hover:bg-white/5 hover:text-white"
+      aria-label={label}
+      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-xl p-1 text-neutral-400 transition hover:bg-white/5 hover:text-white"
     >
       {visible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
     </button>
   );
 
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+    <div className="theme-card p-5">
       <div className="mb-4">
-        <div className="font-semibold">Change Password</div>
-        <div className="text-xs text-neutral-500 mt-1">
+        <div className="theme-section-title">Change Password</div>
+        <div className="theme-section-subtitle">
           Update your account password securely
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-xs text-neutral-500 mb-2">
+          <label className="mb-2 block text-xs text-neutral-500">
             Current Password
           </label>
+
           <div className="relative">
-            <LockKeyhole className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <LockKeyhole className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
             <input
               type={showCurrentPassword ? "text" : "password"}
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
               placeholder="Current password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
+              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 py-3 pl-12 pr-12 text-sm text-white outline-none"
             />
-            {renderVisibilityButton(showCurrentPassword, () =>
-              setShowCurrentPassword((prev) => !prev),
+            {renderVisibilityButton(
+              showCurrentPassword,
+              () => setShowCurrentPassword((prev) => !prev),
+              "Toggle current password visibility",
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-neutral-500 mb-2">
+          <label className="mb-2 block text-xs text-neutral-500">
             New Password
           </label>
+
           <div className="relative">
-            <KeyRound className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
             <input
               type={showNewPassword ? "text" : "password"}
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="New password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
+              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 py-3 pl-12 pr-12 text-sm text-white outline-none"
             />
-            {renderVisibilityButton(showNewPassword, () =>
-              setShowNewPassword((prev) => !prev),
+            {renderVisibilityButton(
+              showNewPassword,
+              () => setShowNewPassword((prev) => !prev),
+              "Toggle new password visibility",
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-xs text-neutral-500 mb-2">
+          <label className="mb-2 block text-xs text-neutral-500">
             Confirm New Password
           </label>
+
           <div className="relative">
-            <KeyRound className="h-4 w-4 text-neutral-500 absolute left-3 top-1/2 -translate-y-1/2" />
+            <KeyRound className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
             <input
               type={showConfirmPassword ? "text" : "password"}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="Confirm new password"
-              className="w-full rounded-2xl bg-neutral-800 border border-neutral-700 pl-10 pr-12 py-3 text-sm outline-none"
+              className="w-full rounded-2xl border border-neutral-700 bg-neutral-800 py-3 pl-12 pr-12 text-sm text-white outline-none"
             />
-            {renderVisibilityButton(showConfirmPassword, () =>
-              setShowConfirmPassword((prev) => !prev),
+            {renderVisibilityButton(
+              showConfirmPassword,
+              () => setShowConfirmPassword((prev) => !prev),
+              "Toggle confirm password visibility",
             )}
           </div>
         </div>
@@ -139,7 +149,7 @@ export default function ChangePasswordCard({ onSubmit, isSubmitting }) {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full rounded-2xl bg-white text-black hover:bg-neutral-200 disabled:opacity-60 disabled:cursor-not-allowed px-4 py-3 text-sm font-medium inline-flex items-center justify-center gap-2"
+          className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
         >
           <Save className="h-4 w-4" />
           {isSubmitting ? "Updating..." : "Update Password"}

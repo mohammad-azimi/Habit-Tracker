@@ -5,9 +5,9 @@ export default function ActiveHabitFilters({ chips }) {
   if (!chips?.length) return null;
 
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 px-4 py-3 shadow-2xl">
+    <div className="theme-card px-4 py-3">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex items-center gap-2 text-sm font-medium text-neutral-300 shrink-0">
+        <div className="shrink-0 flex items-center gap-2 text-sm font-medium text-neutral-300">
           <SlidersHorizontal className="h-4 w-4 text-neutral-400" />
           <span>Active Filters</span>
         </div>
@@ -17,7 +17,7 @@ export default function ActiveHabitFilters({ chips }) {
             <button
               key={chip.key}
               onClick={chip.onRemove}
-              className="inline-flex items-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-3 py-2 text-sm text-neutral-200 hover:bg-neutral-700 transition"
+              className="theme-button-secondary px-3 py-2 text-sm text-neutral-200"
             >
               <span>{chip.label}</span>
               <X className="h-4 w-4 text-neutral-400" />

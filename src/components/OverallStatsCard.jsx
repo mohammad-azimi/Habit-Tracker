@@ -4,7 +4,7 @@ import { CheckCircle2, CircleDashed, Target } from "lucide-react";
 
 function StatMiniCard({ icon: Icon, label, value }) {
   return (
-    <div className="rounded-[22px] bg-white/[0.06] px-4 py-3.5 ring-1 ring-white/5 shadow-inner">
+    <div className="theme-stat-tile px-4 py-3.5">
       <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-black/35 ring-1 ring-white/10">
         <Icon className="h-5 w-5 text-white/90" />
       </div>
@@ -19,7 +19,7 @@ function StatMiniCard({ icon: Icon, label, value }) {
 
 function SummaryCard({ title, children }) {
   return (
-    <div className="rounded-[24px] bg-white/[0.06] p-4 ring-1 ring-white/5">
+    <div className="theme-summary-card p-4">
       <div className="text-[10px] tracking-[0.18em] text-neutral-500">
         {title}
       </div>
@@ -47,14 +47,12 @@ export default function OverallStatsCard({
   ];
 
   return (
-    <div className="rounded-[32px] border border-neutral-800 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.14),_transparent_30%),linear-gradient(180deg,#171717_0%,#101012_100%)] p-5 shadow-[0_20px_50px_rgba(0,0,0,0.45)]">
+    <div className="theme-card p-5">
       <div>
-        <h3 className="text-[28px] font-semibold tracking-tight text-white">
-          Overall Stats
-        </h3>
-        <p className="mt-1 text-sm text-neutral-400">
+        <div className="theme-section-title text-[28px]">Overall Stats</div>
+        <div className="theme-section-subtitle">
           Monthly habit completion overview
-        </p>
+        </div>
       </div>
 
       <div className="mt-5 grid grid-cols-3 gap-3">
@@ -68,7 +66,7 @@ export default function OverallStatsCard({
       </div>
 
       <div className="mt-6 space-y-4">
-        <div className="rounded-[26px] bg-white/[0.04] p-4 ring-1 ring-white/5">
+        <div className="theme-chart-panel p-4">
           <div className="relative mx-auto aspect-square w-full max-w-[250px]">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

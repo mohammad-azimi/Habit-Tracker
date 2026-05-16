@@ -19,7 +19,7 @@ function average(values) {
 
 function AvgCard({ icon: Icon, label, value, iconClass, valueClass }) {
   return (
-    <div className="rounded-[24px] bg-white/[0.06] p-4 ring-1 ring-white/5">
+    <div className="theme-stat-tile p-4">
       <div className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-black/35 ring-1 ring-white/10">
           <Icon className={`h-5 w-5 ${iconClass}`} />
@@ -27,7 +27,7 @@ function AvgCard({ icon: Icon, label, value, iconClass, valueClass }) {
 
         <div>
           <div className="text-sm text-neutral-400">{label}</div>
-          <div className={`mt-1 text-[30px] font-semibold ${valueClass}`}>
+          <div className={`mt-1 text-[24px] font-semibold ${valueClass}`}>
             {value}
           </div>
         </div>
@@ -43,7 +43,7 @@ function MentalTooltip({ active, payload, label }) {
   const motivationItem = payload.find((item) => item.dataKey === "Motivation");
 
   return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-900/95 px-4 py-3 shadow-2xl backdrop-blur">
+    <div className="rounded-2xl border border-white/5 bg-neutral-900/95 px-4 py-3 shadow-2xl backdrop-blur">
       <div className="text-[11px] tracking-[0.18em] text-neutral-500">
         DAY {label}
       </div>
@@ -98,10 +98,10 @@ export default function MentalTrendChart({
         />
       </div>
 
-      <div className="rounded-[28px] border border-neutral-800 bg-[radial-gradient(circle_at_top,_rgba(139,92,246,0.12),_transparent_30%),linear-gradient(180deg,#171717_0%,#101012_100%)] p-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)]">
+      <div className="theme-chart-panel p-4">
         <div className="mb-4">
-          <div className="text-lg font-semibold text-white">Mental Trend</div>
-          <div className="mt-1 text-sm text-neutral-400">
+          <div className="theme-section-title text-lg">Mental Trend</div>
+          <div className="theme-section-subtitle text-sm">
             Mood and motivation across the month
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function MentalTrendChart({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart
               data={mentalStateData}
-              margin={{ top: 10, right: 12, left: -18, bottom: 0 }}
+              margin={{ top: 16, right: 14, left: -18, bottom: 6 }}
             >
               <defs>
                 <linearGradient
@@ -137,8 +137,8 @@ export default function MentalTrendChart({
               </defs>
 
               <CartesianGrid
-                stroke="#2a2a2d"
-                strokeDasharray="3 4"
+                stroke="#26262a"
+                strokeDasharray="2 5"
                 vertical={true}
                 horizontal={true}
               />
@@ -149,6 +149,8 @@ export default function MentalTrendChart({
                 tickLine={false}
                 axisLine={false}
                 fontSize={12}
+                interval="preserveStartEnd"
+                minTickGap={18}
               />
 
               <YAxis
@@ -196,7 +198,7 @@ export default function MentalTrendChart({
           </ResponsiveContainer>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-neutral-400">
+        <div className="mt-4 flex flex-wrap items-center gap-5 border-t border-white/5 pt-3 text-xs text-neutral-400">
           <div className="inline-flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
             Mood

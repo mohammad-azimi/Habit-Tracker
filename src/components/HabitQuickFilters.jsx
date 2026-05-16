@@ -11,12 +11,10 @@ const quickFilters = [
 
 export default function HabitQuickFilters({ activeFilter, onApplyFilter }) {
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-4 shadow-2xl">
+    <div className="theme-card p-4">
       <div className="mb-3">
-        <div className="text-sm font-semibold text-neutral-300">
-          Quick Filters
-        </div>
-        <div className="text-xs text-neutral-500 mt-1">
+        <div className="theme-section-title text-lg">Quick Filters</div>
+        <div className="theme-section-subtitle text-xs">
           One-click shortcuts for common habit views
         </div>
       </div>
@@ -29,11 +27,11 @@ export default function HabitQuickFilters({ activeFilter, onApplyFilter }) {
             <button
               key={item.key}
               onClick={() => onApplyFilter(item.key)}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition ${
+              className={
                 isActive
-                  ? "bg-white text-black"
-                  : "bg-neutral-800 text-neutral-300 hover:bg-neutral-700 border border-neutral-700"
-              }`}
+                  ? "theme-button-primary px-4 py-2 text-sm"
+                  : "theme-button-secondary px-4 py-2 text-sm text-neutral-300"
+              }
             >
               {item.label}
             </button>

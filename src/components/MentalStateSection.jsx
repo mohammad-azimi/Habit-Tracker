@@ -1,6 +1,42 @@
 import { FileText } from "lucide-react";
 import MentalTrendChart from "./MentalTrendChart";
 
+function MetricRow({ label, values, metricKey, onSetMentalMetric, accent }) {
+  const labelClass =
+    accent === "violet"
+      ? "border-violet-900/30 bg-violet-950/20 text-violet-200"
+      : "border-sky-900/30 bg-sky-950/20 text-sky-200";
+
+  return (
+    <div
+      className="grid items-center gap-1"
+      style={{
+        gridTemplateColumns: `120px repeat(${values.length}, minmax(42px, 1fr))`,
+      }}
+    >
+      <div
+        className={`rounded-xl border px-3 py-2 text-sm font-medium ${labelClass}`}
+      >
+        {label}
+      </div>
+
+      {values.map((value, dayIndex) => (
+        <input
+          key={dayIndex}
+          type="number"
+          min="1"
+          max="10"
+          value={value}
+          onChange={(e) =>
+            onSetMentalMetric(metricKey, dayIndex, e.target.value)
+          }
+          className="h-10 rounded-xl border border-white/5 bg-black/25 text-center text-sm text-white outline-none transition focus:border-white/10 focus:ring-2 focus:ring-white/10"
+        />
+      ))}
+    </div>
+  );
+}
+
 export default function MentalStateSection({
   daysInMonth,
   mood,
@@ -9,10 +45,18 @@ export default function MentalStateSection({
   onSetMentalMetric,
 }) {
   return (
-    <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+    <div className="theme-card p-5">
       <div className="mb-4 flex items-center justify-between">
-        <div className="font-semibold">Mental State</div>
-        <FileText className="h-4 w-4 text-neutral-400" />
+        <div>
+          <div className="theme-section-title text-lg">Mental State</div>
+          <div className="theme-section-subtitle text-xs">
+            Track your daily mood and motivation through the month
+          </div>
+        </div>
+
+        <div className="theme-card-muted p-2">
+          <FileText className="h-4 w-4 text-neutral-400" />
+        </div>
       </div>
 
       <div className="mb-5 overflow-x-auto">
@@ -23,69 +67,42 @@ export default function MentalStateSection({
               gridTemplateColumns: `120px repeat(${daysInMonth}, minmax(42px, 1fr))`,
             }}
           >
-            <div></div>
+            <div />
             {Array.from({ length: daysInMonth }, (_, i) => (
-              <div key={i} className="text-[10px] text-center text-neutral-500">
+              <div
+                key={i}
+                className="rounded-md py-1 text-center text-[10px] text-neutral-500"
+              >
                 {i + 1}
               </div>
             ))}
           </div>
 
-          <div
-            className="grid items-center gap-1"
-            style={{
-              gridTemplateColumns: `120px repeat(${daysInMonth}, minmax(42px, 1fr))`,
-            }}
-          >
-            <div className="rounded-xl bg-neutral-800 px-3 py-2 text-sm">
-              Mood
-            </div>
-            {mood.map((value, dayIndex) => (
-              <input
-                key={dayIndex}
-                type="number"
-                min="1"
-                max="10"
-                value={value}
-                onChange={(e) =>
-                  onSetMentalMetric("mood", dayIndex, e.target.value)
-                }
-                className="h-10 rounded-xl border border-neutral-800 bg-neutral-950 text-center text-sm outline-none"
-              />
-            ))}
-          </div>
+          <MetricRow
+            label="Mood"
+            values={mood}
+            metricKey="mood"
+            onSetMentalMetric={onSetMentalMetric}
+            accent="violet"
+          />
 
-          <div
-            className="grid items-center gap-1"
-            style={{
-              gridTemplateColumns: `120px repeat(${daysInMonth}, minmax(42px, 1fr))`,
-            }}
-          >
-            <div className="rounded-xl bg-neutral-800 px-3 py-2 text-sm">
-              Motivation
-            </div>
-            {motivation.map((value, dayIndex) => (
-              <input
-                key={dayIndex}
-                type="number"
-                min="1"
-                max="10"
-                value={value}
-                onChange={(e) =>
-                  onSetMentalMetric("motivation", dayIndex, e.target.value)
-                }
-                className="h-10 rounded-xl border border-neutral-800 bg-neutral-950 text-center text-sm outline-none"
-              />
-            ))}
-          </div>
+          <MetricRow
+            label="Motivation"
+            values={motivation}
+            metricKey="motivation"
+            onSetMentalMetric={onSetMentalMetric}
+            accent="sky"
+          />
         </div>
       </div>
 
-      <MentalTrendChart
-        mood={mood}
-        motivation={motivation}
-        mentalStateData={mentalStateData}
-      />
+      <div className="theme-chart-panel p-4">
+        <MentalTrendChart
+          mood={mood}
+          motivation={motivation}
+          mentalStateData={mentalStateData}
+        />
+      </div>
     </div>
   );
 }
