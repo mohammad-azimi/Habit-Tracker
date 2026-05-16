@@ -43,15 +43,16 @@ export default function MentalStateSection({
   motivation,
   mentalStateData,
   onSetMentalMetric,
+  showChart = true,
+  title = "Mental State",
+  subtitle = "Track your daily mood and motivation through the month",
 }) {
   return (
     <div className="theme-card p-5">
       <div className="mb-4 flex items-center justify-between">
         <div>
-          <div className="theme-section-title text-lg">Mental State</div>
-          <div className="theme-section-subtitle text-xs">
-            Track your daily mood and motivation through the month
-          </div>
+          <div className="theme-section-title text-lg">{title}</div>
+          <div className="theme-section-subtitle text-xs">{subtitle}</div>
         </div>
 
         <div className="theme-card-muted p-2">
@@ -59,7 +60,7 @@ export default function MentalStateSection({
         </div>
       </div>
 
-      <div className="mb-5 overflow-x-auto">
+      <div className={showChart ? "mb-5 overflow-x-auto" : "overflow-x-auto"}>
         <div className="min-w-[900px] space-y-2">
           <div
             className="grid gap-1"
@@ -96,13 +97,15 @@ export default function MentalStateSection({
         </div>
       </div>
 
-      <div className="theme-chart-panel p-4">
-        <MentalTrendChart
-          mood={mood}
-          motivation={motivation}
-          mentalStateData={mentalStateData}
-        />
-      </div>
+      {showChart ? (
+        <div className="theme-chart-panel p-4">
+          <MentalTrendChart
+            mood={mood}
+            motivation={motivation}
+            mentalStateData={mentalStateData}
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

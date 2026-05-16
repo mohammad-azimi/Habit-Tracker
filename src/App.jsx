@@ -3477,6 +3477,43 @@ export default function App() {
             </section>
 
             <section className="space-y-4 xl:col-span-9">
+              {showTodayProgress && todaySummary ? (
+                <div className="theme-card p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <div className="text-sm font-semibold text-neutral-300">
+                        Today Progress
+                      </div>
+                      <div className="mt-1 text-xs text-neutral-500">
+                        Day {todaySummary.day} of {MONTHS[selectedMonthIndex]}{" "}
+                        {selectedYear}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="theme-pill px-4 py-2 text-sm">
+                        {todaySummary.completed}/{todaySummary.total} habits
+                        done
+                      </div>
+                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm">
+                        {todaySummary.percent}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+
+              <MentalStateSection
+                daysInMonth={daysInMonth}
+                mood={safeMonthData.mood}
+                motivation={safeMonthData.motivation}
+                mentalStateData={mentalStateData}
+                onSetMentalMetric={setMentalMetric}
+                showChart={false}
+                title="Mental Check-in"
+                subtitle="Quick daily input for mood and motivation."
+              />
+
               <HabitFilters
                 searchTerm={habitSearchTerm}
                 onChangeSearchTerm={setHabitSearchTerm}
@@ -3531,32 +3568,6 @@ export default function App() {
                   </div>
                 </div>
               </div>
-
-              {showTodayProgress && todaySummary ? (
-                <div className="theme-card p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <div className="text-sm font-semibold text-neutral-300">
-                        Today Progress
-                      </div>
-                      <div className="mt-1 text-xs text-neutral-500">
-                        Day {todaySummary.day} of {MONTHS[selectedMonthIndex]}{" "}
-                        {selectedYear}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="theme-pill px-4 py-2 text-sm">
-                        {todaySummary.completed}/{todaySummary.total} habits
-                        done
-                      </div>
-                      <div className="rounded-2xl bg-white px-4 py-2 text-sm font-semibold text-black shadow-sm">
-                        {todaySummary.percent}%
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
 
               {sortedFilteredAnalysisRows.length > 0 ? (
                 <HabitGrid
@@ -3774,6 +3785,9 @@ export default function App() {
                   motivation={safeMonthData.motivation}
                   mentalStateData={mentalStateData}
                   onSetMentalMetric={setMentalMetric}
+                  showChart
+                  title="Mental State & Trend"
+                  subtitle="Track your daily mood and motivation and review the monthly trend."
                 />
 
                 {showStreakLeaderboard ? (
