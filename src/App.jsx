@@ -3944,6 +3944,7 @@ export default function App() {
             <ProfilePage
               currentUser={currentUser}
               onBack={() => navigate("/dashboard")}
+              onGoToAnalytics={() => navigate("/analytics")}
               onLogout={handleLogout}
               onChangePassword={handleChangePassword}
               isChangingPassword={isChangingPassword}
