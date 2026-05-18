@@ -44,8 +44,6 @@ export default function DashboardPreferencesCard({
   onToggleShowYearlyOverview,
   showStreakLeaderboard,
   onToggleShowStreakLeaderboard,
-  showMonthlyReview,
-  onToggleShowMonthlyReview,
   onResetPreferences,
 }) {
   return (
@@ -97,23 +95,16 @@ export default function DashboardPreferencesCard({
 
       <PreferenceToggle
         label="Show yearly overview"
-        description="Display the yearly overview section in the dashboard."
+        description="Display the yearly overview section in analytics."
         checked={showYearlyOverview}
         onChange={onToggleShowYearlyOverview}
       />
 
       <PreferenceToggle
         label="Show streak leaderboard"
-        description="Display the streak leaderboard card."
+        description="Display the streak leaderboard card in analytics."
         checked={showStreakLeaderboard}
         onChange={onToggleShowStreakLeaderboard}
-      />
-
-      <PreferenceToggle
-        label="Show monthly review"
-        description="Display the monthly review section."
-        checked={showMonthlyReview}
-        onChange={onToggleShowMonthlyReview}
       />
 
       <button

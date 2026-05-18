@@ -1034,7 +1034,6 @@ const DEFAULT_DASHBOARD_PREFS = {
   showTopHabits: true,
   showYearlyOverview: true,
   showStreakLeaderboard: true,
-  showMonthlyReview: true,
   habitSearchTerm: "",
   habitFilterMode: "all",
   goalTypeFilter: "all",
@@ -1130,9 +1129,6 @@ export default function App() {
   );
   const [showStreakLeaderboard, setShowStreakLeaderboard] = useState(
     savedDashboardPrefs?.showStreakLeaderboard ?? true,
-  );
-  const [showMonthlyReview, setShowMonthlyReview] = useState(
-    savedDashboardPrefs?.showMonthlyReview ?? true,
   );
   const [yearlyOverviewData, setYearlyOverviewData] = useState([]);
   const [isYearlyOverviewLoading, setIsYearlyOverviewLoading] = useState(false);
@@ -1333,7 +1329,6 @@ export default function App() {
     setShowTopHabits(DEFAULT_DASHBOARD_PREFS.showTopHabits);
     setShowYearlyOverview(DEFAULT_DASHBOARD_PREFS.showYearlyOverview);
     setShowStreakLeaderboard(DEFAULT_DASHBOARD_PREFS.showStreakLeaderboard);
-    setShowMonthlyReview(DEFAULT_DASHBOARD_PREFS.showMonthlyReview);
     setHabitSearchTerm(DEFAULT_DASHBOARD_PREFS.habitSearchTerm);
     setHabitFilterMode(DEFAULT_DASHBOARD_PREFS.habitFilterMode);
     setGoalTypeFilter(DEFAULT_DASHBOARD_PREFS.goalTypeFilter);
@@ -1540,7 +1535,6 @@ export default function App() {
       showTopHabits,
       showYearlyOverview,
       showStreakLeaderboard,
-      showMonthlyReview,
       habitSearchTerm,
       habitFilterMode,
       goalTypeFilter,
@@ -1556,7 +1550,6 @@ export default function App() {
     showTopHabits,
     showYearlyOverview,
     showStreakLeaderboard,
-    showMonthlyReview,
     habitSearchTerm,
     habitFilterMode,
     goalTypeFilter,
@@ -3770,10 +3763,6 @@ export default function App() {
                   showStreakLeaderboard={showStreakLeaderboard}
                   onToggleShowStreakLeaderboard={() =>
                     setShowStreakLeaderboard((prev) => !prev)
-                  }
-                  showMonthlyReview={showMonthlyReview}
-                  onToggleShowMonthlyReview={() =>
-                    setShowMonthlyReview((prev) => !prev)
                   }
                   onResetPreferences={resetDashboardPreferences}
                 />
