@@ -42,6 +42,7 @@ import {
   loginUser,
   registerUser,
   saveMonthData,
+  updateProfile,
 } from "./lib/api";
 import {
   clearAuthSession,
@@ -1167,6 +1168,9 @@ export default function App() {
   const [authChecked, setAuthChecked] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileErrorMessage, setProfileErrorMessage] = useState("");
+  const [profileSuccessMessage, setProfileSuccessMessage] = useState("");
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const selectedMonthName = MONTHS[selectedMonthIndex];
@@ -2474,6 +2478,47 @@ export default function App() {
         </button>
       </div>
     );
+
+    const handleSaveProfile = async ({ username, email, avatarUrl }) => {
+      try {
+        setIsSavingProfile(true);
+        setProfileErrorMessage("");
+        setProfileSuccessMessage("");
+
+        const payload = {
+          username: String(username || "").trim(),
+          email: String(email || "").trim(),
+          avatarUrl: String(avatarUrl || "").trim(),
+        };
+
+        const response = await updateProfile(payload);
+
+        const updatedUser = response?.user
+          ? response.user
+          : {
+              ...currentUser,
+              ...payload,
+            };
+
+        setCurrentUser(updatedUser);
+        setProfileSuccessMessage("Profile updated successfully.");
+        showToast("Profile updated successfully.", "success");
+
+        return { ok: true };
+      } catch (error) {
+        const message = error.message || "Failed to update profile";
+        setProfileErrorMessage(message);
+        setProfileSuccessMessage("");
+        showToast(message, "error");
+
+        return {
+          ok: false,
+          message,
+        };
+      } finally {
+        setIsSavingProfile(false);
+      }
+    };
 
     const accountActions = (
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -4065,6 +4110,10 @@ export default function App() {
               onBack={() => navigate("/dashboard")}
               onGoToAnalytics={() => navigate("/analytics")}
               onLogout={handleLogout}
+              onSaveProfile={handleSaveProfile}
+              isSavingProfile={isSavingProfile}
+              profileErrorMessage={profileErrorMessage}
+              profileSuccessMessage={profileSuccessMessage}
               onChangePassword={handleChangePassword}
               isChangingPassword={isChangingPassword}
               onDeleteAccount={handleDeleteAccount}
