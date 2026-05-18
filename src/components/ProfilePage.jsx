@@ -15,11 +15,17 @@ export default function ProfilePage({
   onBack,
   onGoToAnalytics,
   onLogout,
+  onSaveProfile,
+  isSavingProfile,
+  profileErrorMessage,
+  profileSuccessMessage,
   onChangePassword,
   isChangingPassword,
   onDeleteAccount,
   isDeleting,
 }) {
+  const avatarUrl = currentUser?.avatarUrl || "";
+
   return (
     <div className="app-theme-bg min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
@@ -61,22 +67,36 @@ export default function ProfilePage({
           <section className="space-y-4 xl:col-span-4">
             <div className="theme-card p-5">
               <div className="flex items-center gap-3">
-                <div className="theme-card-muted p-3">
-                  <UserCircle className="h-8 w-8 text-neutral-300" />
-                </div>
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Profile avatar"
+                    className="h-14 w-14 rounded-2xl object-cover ring-1 ring-white/10"
+                  />
+                ) : (
+                  <div className="theme-card-muted flex h-14 w-14 items-center justify-center">
+                    <UserCircle className="h-8 w-8 text-neutral-300" />
+                  </div>
+                )}
 
                 <div className="min-w-0">
                   <div className="truncate text-lg font-semibold text-white">
                     {currentUser?.username || "User"}
                   </div>
-                  <div className="text-sm text-neutral-500">
-                    Account overview
+                  <div className="truncate text-sm text-neutral-500">
+                    {currentUser?.email || "No email"}
                   </div>
                 </div>
               </div>
             </div>
 
-            <UserProfileCard user={currentUser} />
+            <UserProfileCard
+              user={currentUser}
+              onSaveProfile={onSaveProfile}
+              isSaving={isSavingProfile}
+              errorMessage={profileErrorMessage}
+              successMessage={profileSuccessMessage}
+            />
 
             <div className="theme-card p-5">
               <div className="mb-4">
