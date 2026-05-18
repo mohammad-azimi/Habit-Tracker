@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  FileText,
   LogOut,
   Plus,
   RotateCcw,
@@ -2466,6 +2467,18 @@ export default function App() {
           <BarChart3 className="h-4 w-4" />
           Analytics
         </button>
+
+        <button
+          onClick={() => navigate("/notes-review")}
+          className={`${pageNavButtonBase} ${
+            location.pathname === "/notes-review"
+              ? "bg-white text-black"
+              : "border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          Notes & Review
+        </button>
       </div>
     );
 
@@ -3832,18 +3845,6 @@ export default function App() {
                     />
                   )
                 ) : null}
-
-                {showMonthlyReview ? (
-                  <MonthlyReviewCard
-                    review={safeMonthData.review}
-                    onChangeField={updateMonthlyReviewField}
-                  />
-                ) : null}
-
-                <MonthlyNotesPanel
-                  notes={safeMonthData.notes}
-                  onChangeNotes={setMonthlyNotes}
-                />
               </section>
 
               <div className="space-y-4 xl:col-span-3">
@@ -3932,12 +3933,141 @@ export default function App() {
         </div>
       );
 
+      const notesReviewPage = (
+        <div className="app-theme-bg min-h-screen p-4 md:p-8">
+          <div className="mx-auto max-w-[1400px] space-y-6">
+            <DashboardHeader
+              title="Notes & Review"
+              subtitle="Write your monthly review and monthly notes in one focused space."
+              onExportCSV={exportMonthCSV}
+              onExportJSON={exportMonthJSON}
+              onExportFilteredCSV={exportFilteredCSV}
+              onExportFilteredJSON={exportFilteredJSON}
+              onExportBackup={exportFullBackup}
+              onImportBackup={importBackup}
+              onExportPrintableHTML={exportPrintableHTMLReport}
+              onExportPDF={exportPDFReport}
+              onCopyToNextMonth={requestCopyToNextMonth}
+              onOpenCopyToMonth={openCopyMonthModal}
+            />
+
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2">
+                <div className="text-sm text-neutral-400">
+                  Logged in as {currentUser.username}
+                </div>
+
+                <SyncStatusBadge
+                  syncStatus={syncStatus}
+                  syncStatusText={syncStatusText}
+                  onRetry={retrySaveNow}
+                />
+              </div>
+
+              <div className="flex flex-col gap-3 lg:items-end">
+                {pageTabs}
+                {accountActions}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+              <section className="space-y-4 xl:col-span-4">
+                <MonthlySummaryCard
+                  selectedYear={selectedYear}
+                  selectedMonthName={MONTHS[selectedMonthIndex]}
+                  completionPercent={completionPercent}
+                  moodAverage={average(safeMonthData.mood).toFixed(1)}
+                  motivationAverage={average(safeMonthData.motivation).toFixed(
+                    1,
+                  )}
+                  bestHabit={monthlyInsights.bestHabit}
+                  needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+                  strongestCurrentStreakHabit={
+                    monthlyInsights.strongestCurrentStreakHabit
+                  }
+                />
+
+                {isPreviousMonthLoading ? (
+                  <DashboardLoadingCard
+                    compact
+                    title="Loading previous month"
+                    lines={3}
+                  />
+                ) : (
+                  <MonthComparisonCard
+                    currentSummary={monthlySummary}
+                    previousSummary={previousMonthSummary}
+                    previousLabel={previousMonthLabel}
+                    isLoading={false}
+                  />
+                )}
+              </section>
+
+              <section className="space-y-4 xl:col-span-8">
+                <MonthlyReviewCard
+                  review={safeMonthData.review}
+                  onChangeField={updateMonthlyReviewField}
+                />
+
+                <MonthlyNotesPanel
+                  notes={safeMonthData.notes}
+                  onChangeNotes={setMonthlyNotes}
+                />
+              </section>
+            </div>
+          </div>
+
+          <ToastNotice toast={toast} onClose={closeToast} />
+
+          <ConfirmActionModal
+            isOpen={Boolean(confirmAction)}
+            title={confirmAction?.title || ""}
+            message={confirmAction?.message || ""}
+            confirmLabel={confirmAction?.confirmLabel || "Confirm"}
+            onConfirm={executeConfirmAction}
+            onClose={closeConfirmModal}
+          />
+
+          <CopyMonthModal
+            isOpen={isCopyMonthModalOpen}
+            currentYear={selectedYear}
+            currentMonthIndex={selectedMonthIndex}
+            targetYear={copyTargetYear}
+            targetMonthIndex={copyTargetMonthIndex}
+            yearOptions={YEAR_OPTIONS}
+            monthOptions={MONTHS}
+            isSubmitting={isSyncing}
+            onChangeTargetYear={setCopyTargetYear}
+            onChangeTargetMonthIndex={setCopyTargetMonthIndex}
+            onClose={closeCopyMonthModal}
+            onConfirm={copyCurrentMonthToSelectedMonth}
+          />
+
+          <EditHabitModal
+            isOpen={Boolean(editingHabit)}
+            habitName={editingHabitName}
+            habitIcon={editingHabitIcon}
+            habitTargetType={editingHabitTargetType}
+            habitTargetValue={editingHabitTargetValue}
+            errorMessage={editHabitError}
+            isSaveDisabled={Boolean(editHabitError)}
+            onChangeName={setEditingHabitName}
+            onChangeIcon={setEditingHabitIcon}
+            onChangeTargetType={setEditingHabitTargetType}
+            onChangeTargetValue={setEditingHabitTargetValue}
+            onClose={closeEditHabit}
+            onSave={saveEditedHabit}
+          />
+        </div>
+      );
+
   return (
     <ErrorBoundary>
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={dashboardPage} />
         <Route path="/analytics" element={analyticsPage} />
+        <Route path="/notes-review" element={notesReviewPage} />
         <Route
           path="/profile"
           element={
