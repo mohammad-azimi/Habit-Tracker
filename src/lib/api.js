@@ -47,6 +47,20 @@ export function getCurrentUser() {
   return request("/auth/me");
 }
 
+export function updateProfile({ username, email, avatarUrl }) {
+  return request("/auth/me", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      username,
+      email,
+      avatarUrl,
+    }),
+  });
+}
+
 export function changePassword({ currentPassword, newPassword }) {
   return request("/auth/change-password", {
     method: "PUT",
