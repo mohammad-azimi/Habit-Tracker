@@ -165,9 +165,17 @@ export default function UserProfileCard({
       </div>
 
       <div className="theme-summary-card px-4 py-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="relative shrink-0">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleAvatarChange}
+        />
+
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="shrink-0">
               {resolvedAvatarUrl ? (
                 <img
                   src={resolvedAvatarUrl}
@@ -191,32 +199,24 @@ export default function UserProfileCard({
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 sm:items-end">
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
-
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
             <button
               type="button"
               onClick={handleOpenFilePicker}
-              className="theme-button-secondary"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-sm font-medium text-white transition duration-150 hover:bg-white/[0.08]"
             >
               <Camera className="h-4 w-4" />
-              Upload photo
+              {resolvedAvatarUrl ? "Change photo" : "Upload photo"}
             </button>
 
             {(resolvedAvatarUrl || initialAvatarUrl) && (
               <button
                 type="button"
                 onClick={handleRemoveAvatar}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-2.5 text-sm font-medium text-red-300 transition duration-150 hover:bg-red-950/35"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-red-900/40 bg-red-950/15 px-3 py-2 text-sm font-medium text-red-300 transition duration-150 hover:bg-red-950/30"
               >
                 <Trash2 className="h-4 w-4" />
-                Remove photo
+                Remove
               </button>
             )}
           </div>
