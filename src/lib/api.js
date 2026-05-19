@@ -48,7 +48,7 @@ export function getCurrentUser() {
 }
 
 export function updateProfile({ username, email, avatarUrl }) {
-  return request("/auth/me", {
+  return request("/auth/update-profile", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",

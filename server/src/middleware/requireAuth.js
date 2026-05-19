@@ -1,6 +1,7 @@
+import { prisma } from "../lib/prisma.js";
 import { verifyAccessToken } from "../lib/jwt.js";
 
-export function requireAuth(req, res, next) {
+export async function requireAuth(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
 
@@ -8,15 +9,28 @@ export function requireAuth(req, res, next) {
       return res.status(401).json({ error: "Authorization token is required" });
     }
 
-    const token = authHeader.slice(7);
+    const token = authHeader.slice(7).trim();
     const decoded = verifyAccessToken(token);
 
-    req.user = {
-      id: decoded.id,
-      username: decoded.username,
-      email: decoded.email,
-    };
+    if (!decoded?.id) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
 
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        avatarUrl: true,
+      },
+    });
+
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    req.user = user;
     next();
   } catch (error) {
     return res.status(401).json({ error: "Invalid or expired token" });
