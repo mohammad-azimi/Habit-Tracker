@@ -2479,16 +2479,49 @@ export default function App() {
       </div>
     );
 
-    const handleSaveProfile = async ({ username, email, avatarUrl }) => {
+    const fileToDataUrl = (file) =>
+      new Promise((resolve, reject) => {
+        if (!file) {
+          resolve("");
+          return;
+        }
+
+        const reader = new FileReader();
+
+        reader.onload = () => {
+          resolve(typeof reader.result === "string" ? reader.result : "");
+        };
+
+        reader.onerror = () => {
+          reject(new Error("Failed to read avatar file"));
+        };
+
+        reader.readAsDataURL(file);
+      });
+
+    const handleSaveProfile = async ({
+      username,
+      email,
+      avatarFile,
+      removeAvatar,
+    }) => {
       try {
         setIsSavingProfile(true);
         setProfileErrorMessage("");
         setProfileSuccessMessage("");
 
+        let nextAvatarUrl = currentUser?.avatarUrl || "";
+
+        if (removeAvatar) {
+          nextAvatarUrl = "";
+        } else if (avatarFile) {
+          nextAvatarUrl = await fileToDataUrl(avatarFile);
+        }
+
         const payload = {
           username: String(username || "").trim(),
           email: String(email || "").trim(),
-          avatarUrl: String(avatarUrl || "").trim(),
+          avatarUrl: String(nextAvatarUrl || "").trim(),
         };
 
         const response = await updateProfile(payload);
