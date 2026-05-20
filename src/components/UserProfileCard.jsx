@@ -1,5 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Camera, Mail, Save, ShieldCheck, Trash2, User } from "lucide-react";
+import {
+  Camera,
+  Mail,
+  RotateCcw,
+  Save,
+  ShieldCheck,
+  Trash2,
+  User,
+} from "lucide-react";
 
 function InfoCard({ icon: Icon, label, value }) {
   return (
@@ -49,6 +57,22 @@ function getUsernameError(username) {
   return "";
 }
 
+function getAvatarFileError(file) {
+  if (!file) return "";
+
+  if (!file.type?.startsWith("image/")) {
+    return "Please choose an image file.";
+  }
+
+  const maxSizeInBytes = 3 * 1024 * 1024;
+
+  if (file.size > maxSizeInBytes) {
+    return "Image must be 3 MB or smaller.";
+  }
+
+  return "";
+}
+
 export default function UserProfileCard({
   user,
   onSaveProfile,
@@ -63,13 +87,23 @@ export default function UserProfileCard({
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState("");
   const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
   const [removeAvatar, setRemoveAvatar] = useState(false);
+  const [avatarErrorMessage, setAvatarErrorMessage] = useState("");
+
+  const clearPreviewUrl = () => {
+    if (avatarPreviewUrl && avatarPreviewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+  };
 
   useEffect(() => {
     setUsername(user?.username || "");
     setEmail(user?.email || "");
     setSelectedAvatarFile(null);
-    setAvatarPreviewUrl("");
     setRemoveAvatar(false);
+    setAvatarErrorMessage("");
+    clearPreviewUrl();
+    setAvatarPreviewUrl("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, user?.username, user?.email, user?.avatarUrl]);
 
   useEffect(() => {
@@ -87,7 +121,8 @@ export default function UserProfileCard({
 
   const usernameError = getUsernameError(trimmedUsername);
   const emailError = getEmailError(trimmedEmail);
-  const validationMessage = usernameError || emailError;
+  const validationMessage =
+    usernameError || emailError || avatarErrorMessage || "";
 
   const initialUsername = String(user?.username || "")
     .trim()
@@ -102,11 +137,13 @@ export default function UserProfileCard({
   const hasAvatarChanges =
     Boolean(selectedAvatarFile) || (removeAvatar && Boolean(initialAvatarUrl));
 
+  const hasPendingChanges = hasProfileTextChanges || hasAvatarChanges;
+
   const canSave =
     typeof onSaveProfile === "function" &&
     !isSaving &&
     !validationMessage &&
-    (hasProfileTextChanges || hasAvatarChanges);
+    hasPendingChanges;
 
   const resolvedAvatarUrl = removeAvatar
     ? ""
@@ -120,11 +157,18 @@ export default function UserProfileCard({
     const file = event.target.files?.[0];
 
     if (!file) return;
-    if (!file.type?.startsWith("image/")) return;
 
-    if (avatarPreviewUrl && avatarPreviewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreviewUrl);
+    const fileError = getAvatarFileError(file);
+
+    if (fileError) {
+      setAvatarErrorMessage(fileError);
+      event.target.value = "";
+      return;
     }
+
+    setAvatarErrorMessage("");
+
+    clearPreviewUrl();
 
     const nextPreviewUrl = URL.createObjectURL(file);
 
@@ -135,13 +179,21 @@ export default function UserProfileCard({
   };
 
   const handleRemoveAvatar = () => {
-    if (avatarPreviewUrl && avatarPreviewUrl.startsWith("blob:")) {
-      URL.revokeObjectURL(avatarPreviewUrl);
-    }
-
+    clearPreviewUrl();
     setAvatarPreviewUrl("");
     setSelectedAvatarFile(null);
     setRemoveAvatar(true);
+    setAvatarErrorMessage("");
+  };
+
+  const handleResetChanges = () => {
+    clearPreviewUrl();
+    setUsername(user?.username || "");
+    setEmail(user?.email || "");
+    setAvatarPreviewUrl("");
+    setSelectedAvatarFile(null);
+    setRemoveAvatar(false);
+    setAvatarErrorMessage("");
   };
 
   const handleSave = async () => {
@@ -196,6 +248,15 @@ export default function UserProfileCard({
               <div className="mt-1 truncate text-xs text-neutral-400">
                 @{user?.id || "unknown"}
               </div>
+              <div className="mt-2 text-xs text-neutral-500">
+                {selectedAvatarFile
+                  ? `Selected image: ${selectedAvatarFile.name}`
+                  : removeAvatar
+                    ? "Avatar will be removed after saving."
+                    : resolvedAvatarUrl
+                      ? "Current avatar is active."
+                      : "No avatar uploaded yet."}
+              </div>
             </div>
           </div>
 
@@ -222,8 +283,16 @@ export default function UserProfileCard({
           </div>
         </div>
 
-        <div className="mt-3 text-xs text-neutral-500">
-          Recommended: square image, JPG/PNG/WEBP.
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+          <span>Recommended: square image, JPG/PNG/WEBP.</span>
+          <span className="rounded-full border border-white/5 bg-white/[0.03] px-2 py-1">
+            Max size: 3 MB
+          </span>
+          {hasPendingChanges ? (
+            <span className="rounded-full border border-amber-900/40 bg-amber-950/20 px-2 py-1 text-amber-300">
+              Unsaved changes
+            </span>
+          ) : null}
         </div>
       </div>
 
@@ -270,15 +339,27 @@ export default function UserProfileCard({
         </div>
       ) : null}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={!canSave}
-        className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
-      >
-        <Save className="h-4 w-4" />
-        {isSaving ? "Saving..." : "Save profile changes"}
-      </button>
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!canSave}
+          className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
+        >
+          <Save className="h-4 w-4" />
+          {isSaving ? "Saving..." : "Save profile changes"}
+        </button>
+
+        <button
+          type="button"
+          onClick={handleResetChanges}
+          disabled={isSaving || !hasPendingChanges}
+          className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <RotateCcw className="h-4 w-4" />
+          Reset changes
+        </button>
+      </div>
 
       <div className="space-y-3">
         <InfoCard
