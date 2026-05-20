@@ -2,8 +2,11 @@ import React from "react";
 import {
   ArrowLeft,
   BarChart3,
+  Download,
   LayoutDashboard,
   LogOut,
+  ShieldCheck,
+  Upload,
   UserCircle,
 } from "lucide-react";
 import UserProfileCard from "./UserProfileCard";
@@ -19,6 +22,8 @@ export default function ProfilePage({
   isSavingProfile,
   profileErrorMessage,
   profileSuccessMessage,
+  onExportAccountData,
+  onImportAccountData,
   onChangePassword,
   isChangingPassword,
   onDeleteAccount,
@@ -97,6 +102,42 @@ export default function ProfilePage({
               errorMessage={profileErrorMessage}
               successMessage={profileSuccessMessage}
             />
+
+            <div className="theme-card p-5">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
+                  <ShieldCheck className="h-4 w-4 text-neutral-400" />
+                  Account Data
+                </div>
+                <div className="mt-1 text-xs leading-5 text-neutral-500">
+                  Export your full account data or restore it from a previous
+                  full account backup.
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={onExportAccountData}
+                  className="theme-button-secondary w-full justify-start"
+                >
+                  <Download className="h-4 w-4" />
+                  Export Account Data
+                </button>
+
+                <button
+                  onClick={onImportAccountData}
+                  className="theme-button-secondary w-full justify-start"
+                >
+                  <Upload className="h-4 w-4" />
+                  Import Account Data
+                </button>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs leading-5 text-neutral-500">
+                Full account export includes your profile data and all saved
+                month records. Password is not included.
+              </div>
+            </div>
 
             <div className="theme-card p-5">
               <div className="mb-4">
