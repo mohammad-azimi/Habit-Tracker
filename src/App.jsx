@@ -37,9 +37,11 @@ import { downloadBlob, toCSV } from "./lib/export";
 import {
   changePassword,
   deleteAccount,
+  exportAccountData,
   getAllMonthsExport,
   getCurrentUser,
   getMonthData,
+  importAccountData,
   loginUser,
   registerUser,
   saveMonthData,
@@ -1084,6 +1086,7 @@ export default function App() {
   const location = useLocation();
   const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
   const customTemplateFileInputRef = React.useRef(null);
+  const fullAccountImportInputRef = React.useRef(null);
 
   const [selectedYear, setSelectedYear] = useState(
     savedDashboardPrefs?.selectedYear || String(currentDate.getFullYear()),
@@ -3190,6 +3193,58 @@ export default function App() {
     }
   };
 
+  const exportFullAccountJSON = async () => {
+    try {
+      const payload = await exportAccountData();
+
+      downloadBlob(
+        `habit-tracker-account-${currentUser?.username || "user"}.json`,
+        JSON.stringify(payload, null, 2),
+        "application/json",
+      );
+
+      showToast("Full account data exported successfully.", "success");
+    } catch (error) {
+      console.error("Failed to export account data:", error);
+      showToast(error.message || "Failed to export account data.", "error");
+    }
+  };
+
+  const triggerImportFullAccount = () => {
+    fullAccountImportInputRef.current?.click();
+  };
+
+  const importFullAccountFromFile = async (file) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      const response = await importAccountData(parsed);
+
+      if (response?.token && response?.user) {
+        saveAuthSession({
+          token: response.token,
+          user: response.user,
+        });
+        setCurrentUser(response.user);
+      } else if (response?.user) {
+        setCurrentUser(response.user);
+      }
+
+      setMonthData(null);
+      setIsMonthLoaded(false);
+      setLoadedMonthKey(null);
+      setProfileErrorMessage("");
+      setProfileSuccessMessage("");
+
+      showToast("Full account data imported successfully.", "success");
+      navigate("/dashboard");
+    } catch (error) {
+      console.error("Failed to import account data:", error);
+      showToast(error.message || "Failed to import account data.", "error");
+    }
+  };
+
   const exportPrintableHTMLReport = () => {
     const html = buildPrintableReportHTML({
       selectedYear,
@@ -3385,6 +3440,8 @@ export default function App() {
             onExportFilteredCSV={exportFilteredCSV}
             onExportFilteredJSON={exportFilteredJSON}
             onExportAllMonths={exportAllMonthsJSON}
+            onExportAccountData={exportFullAccountJSON}
+            onImportAccountData={triggerImportFullAccount}
             onExportBackup={exportFullBackup}
             onImportBackup={importBackup}
             onExportPrintableHTML={exportPrintableHTMLReport}
@@ -3778,6 +3835,8 @@ export default function App() {
               onExportFilteredCSV={exportFilteredCSV}
               onExportFilteredJSON={exportFilteredJSON}
               onExportAllMonths={exportAllMonthsJSON}
+              onExportAccountData={exportFullAccountJSON}
+              onImportAccountData={triggerImportFullAccount}
               onExportBackup={exportFullBackup}
               onImportBackup={importBackup}
               onExportPrintableHTML={exportPrintableHTMLReport}
@@ -4042,6 +4101,8 @@ export default function App() {
               onExportFilteredCSV={exportFilteredCSV}
               onExportFilteredJSON={exportFilteredJSON}
               onExportAllMonths={exportAllMonthsJSON}
+              onExportAccountData={exportFullAccountJSON}
+              onImportAccountData={triggerImportFullAccount}
               onExportBackup={exportFullBackup}
               onImportBackup={importBackup}
               onExportPrintableHTML={exportPrintableHTMLReport}
@@ -4162,6 +4223,19 @@ export default function App() {
 
   return (
     <ErrorBoundary>
+      <input
+        ref={fullAccountImportInputRef}
+        type="file"
+        accept=".json,application/json"
+        className="hidden"
+        onChange={async (event) => {
+          const file = event.target.files?.[0];
+          if (file) {
+            await importFullAccountFromFile(file);
+          }
+          event.target.value = "";
+        }}
+      />
       <Routes>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={dashboardPage} />
