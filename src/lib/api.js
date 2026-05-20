@@ -98,6 +98,22 @@ export function getAllMonthsExport() {
   return request("/dashboard/export/all");
 }
 
+export function getDeletedMonthBackups() {
+  return request("/dashboard/deleted-backups");
+}
+
+export function restoreDeletedMonthBackup(year, month) {
+  return request(`/dashboard/restore/${year}/${month}`, {
+    method: "POST",
+  });
+}
+
+export function deleteDeletedMonthBackup(year, month) {
+  return request(`/dashboard/deleted-backups/${year}/${month}`, {
+    method: "DELETE",
+  });
+}
+
 export function getMonthData(year, month) {
   return request(`/dashboard/${year}/${month}`);
 }
