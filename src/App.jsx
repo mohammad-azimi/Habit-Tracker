@@ -4253,6 +4253,8 @@ export default function App() {
               isSavingProfile={isSavingProfile}
               profileErrorMessage={profileErrorMessage}
               profileSuccessMessage={profileSuccessMessage}
+              onExportAccountData={exportFullAccountJSON}
+              onImportAccountData={triggerImportFullAccount}
               onChangePassword={handleChangePassword}
               isChangingPassword={isChangingPassword}
               onDeleteAccount={handleDeleteAccount}
