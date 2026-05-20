@@ -19,6 +19,7 @@ export default function DashboardHeader({
   onExportJSON,
   onExportFilteredCSV,
   onExportFilteredJSON,
+  onExportAllMonths,
   onExportBackup,
   onImportBackup,
   onExportPrintableHTML,
@@ -102,6 +103,16 @@ export default function DashboardHeader({
           icon: FileJson,
           onClick: () => {
             onExportJSON?.();
+            closeMenu();
+          },
+        },
+        {
+          label: "Export All Months",
+          description:
+            "Download all saved months from your account as one JSON file.",
+          icon: Database,
+          onClick: () => {
+            onExportAllMonths?.();
             closeMenu();
           },
         },
