@@ -37,6 +37,7 @@ import { downloadBlob, toCSV } from "./lib/export";
 import {
   changePassword,
   deleteAccount,
+  getAllMonthsExport,
   getCurrentUser,
   getMonthData,
   loginUser,
@@ -3161,6 +3162,34 @@ export default function App() {
     showToast("Backup exported successfully.", "success");
   };
 
+  const exportAllMonthsJSON = async () => {
+    try {
+      const response = await getAllMonthsExport();
+
+      const payload = {
+        metadata: {
+          exportedAt: new Date().toISOString(),
+          exportType: "all-months-json",
+          totalMonths: Array.isArray(response?.months)
+            ? response.months.length
+            : 0,
+        },
+        months: response?.months || [],
+      };
+
+      downloadBlob(
+        `habit-tracker-all-months-${currentUser?.username || "user"}.json`,
+        JSON.stringify(payload, null, 2),
+        "application/json",
+      );
+
+      showToast("All months exported successfully.", "success");
+    } catch (error) {
+      console.error("Failed to export all months:", error);
+      showToast(error.message || "Failed to export all months.", "error");
+    }
+  };
+
   const exportPrintableHTMLReport = () => {
     const html = buildPrintableReportHTML({
       selectedYear,
@@ -3355,6 +3384,7 @@ export default function App() {
             onExportJSON={exportMonthJSON}
             onExportFilteredCSV={exportFilteredCSV}
             onExportFilteredJSON={exportFilteredJSON}
+            onExportAllMonths={exportAllMonthsJSON}
             onExportBackup={exportFullBackup}
             onImportBackup={importBackup}
             onExportPrintableHTML={exportPrintableHTMLReport}
@@ -3747,6 +3777,7 @@ export default function App() {
               onExportJSON={exportMonthJSON}
               onExportFilteredCSV={exportFilteredCSV}
               onExportFilteredJSON={exportFilteredJSON}
+              onExportAllMonths={exportAllMonthsJSON}
               onExportBackup={exportFullBackup}
               onImportBackup={importBackup}
               onExportPrintableHTML={exportPrintableHTMLReport}
@@ -4010,6 +4041,7 @@ export default function App() {
               onExportJSON={exportMonthJSON}
               onExportFilteredCSV={exportFilteredCSV}
               onExportFilteredJSON={exportFilteredJSON}
+              onExportAllMonths={exportAllMonthsJSON}
               onExportBackup={exportFullBackup}
               onImportBackup={importBackup}
               onExportPrintableHTML={exportPrintableHTMLReport}
