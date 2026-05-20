@@ -9,6 +9,7 @@ import {
   FileSpreadsheet,
   FileText,
   FolderUp,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function DashboardHeader({
@@ -20,6 +21,8 @@ export default function DashboardHeader({
   onExportFilteredCSV,
   onExportFilteredJSON,
   onExportAllMonths,
+  onExportAccountData,
+  onImportAccountData,
   onExportBackup,
   onImportBackup,
   onExportPrintableHTML,
@@ -28,7 +31,7 @@ export default function DashboardHeader({
   onOpenCopyToMonth,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const fileInputRef = useRef(null);
+  const backupFileInputRef = useRef(null);
   const menuRef = useRef(null);
 
   const closeMenu = () => {
@@ -39,17 +42,22 @@ export default function DashboardHeader({
     setIsMenuOpen((prev) => !prev);
   };
 
-  const handleImportClick = () => {
-    fileInputRef.current?.click();
+  const handleImportBackupClick = () => {
+    backupFileInputRef.current?.click();
     closeMenu();
   };
 
-  const handleFileChange = async (event) => {
+  const handleBackupFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (file && onImportBackup) {
       await onImportBackup(file);
     }
     event.target.value = "";
+  };
+
+  const handleImportAccountClick = () => {
+    onImportAccountData?.();
+    closeMenu();
   };
 
   useEffect(() => {
@@ -117,6 +125,16 @@ export default function DashboardHeader({
           },
         },
         {
+          label: "Export Account Data",
+          description:
+            "Download your full account data including profile and all months.",
+          icon: ShieldCheck,
+          onClick: () => {
+            onExportAccountData?.();
+            closeMenu();
+          },
+        },
+        {
           label: "Export Filtered CSV",
           description:
             "Download only the habits shown in your current filtered view.",
@@ -178,10 +196,17 @@ export default function DashboardHeader({
           },
         },
         {
+          label: "Import Account Data",
+          description:
+            "Restore profile and month data from a full account export file.",
+          icon: ShieldCheck,
+          onClick: handleImportAccountClick,
+        },
+        {
           label: "Import Backup",
           description: "Restore dashboard data from a backup file.",
           icon: FolderUp,
-          onClick: handleImportClick,
+          onClick: handleImportBackupClick,
         },
       ],
     },
@@ -200,11 +225,11 @@ export default function DashboardHeader({
 
       <div className="relative self-start overflow-visible" ref={menuRef}>
         <input
-          ref={fileInputRef}
+          ref={backupFileInputRef}
           type="file"
           accept=".json,application/json"
           className="hidden"
-          onChange={handleFileChange}
+          onChange={handleBackupFileChange}
         />
 
         <button
