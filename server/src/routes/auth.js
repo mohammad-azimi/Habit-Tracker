@@ -49,6 +49,102 @@ function buildAccessToken(user) {
   });
 }
 
+function createMonthKey(year, month) {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function normalizeImportedMonths(months) {
+  if (!Array.isArray(months)) return [];
+
+  const deduped = new Map();
+
+  for (const item of months) {
+    const year = Number(item?.year);
+    const month = Number(item?.month);
+    const data = item?.data;
+
+    if (!Number.isInteger(year)) continue;
+    if (!Number.isInteger(month) || month < 1 || month > 12) continue;
+    if (!data || typeof data !== "object" || Array.isArray(data)) continue;
+
+    const monthKey = createMonthKey(year, month);
+
+    deduped.set(monthKey, {
+      year,
+      month,
+      monthKey,
+      data,
+    });
+  }
+
+  return Array.from(deduped.values()).sort(
+    (a, b) => a.year - b.year || a.month - b.month,
+  );
+}
+
+function buildAccountExportPayload(user, months) {
+  return {
+    metadata: {
+      exportType: "full-account-data",
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      totalMonths: months.length,
+    },
+    user: buildSafeUser(user),
+    months: months.map((record) => ({
+      year: record.year,
+      month: record.month,
+      monthKey: record.monthKey,
+      data: record.data,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    })),
+  };
+}
+
+async function validateImportedProfileFields({ userId, username, email }) {
+  if (!username) {
+    return "Username is required";
+  }
+
+  if (username.length < 2) {
+    return "Username must be at least 2 characters";
+  }
+
+  if (username.length > 40) {
+    return "Username must be 40 characters or less";
+  }
+
+  if (!email) {
+    return "Email is required";
+  }
+
+  if (!isValidEmail(email)) {
+    return "Email is not valid";
+  }
+
+  const duplicateUser = await prisma.user.findFirst({
+    where: {
+      id: { not: userId },
+      OR: [{ username }, { email }],
+    },
+  });
+
+  if (duplicateUser) {
+    if (duplicateUser.username === username) {
+      return "Username is already taken";
+    }
+
+    if (duplicateUser.email === email) {
+      return "Email is already taken";
+    }
+
+    return "Username or email is already taken";
+  }
+
+  return "";
+}
+
 router.post("/register", async (req, res) => {
   try {
     const username = String(req.body.username || "").trim();
@@ -173,6 +269,130 @@ router.get("/me", requireAuth, async (req, res) => {
   } catch (error) {
     console.error("Get current user error:", error);
     return res.status(500).json({ error: "Failed to load current user" });
+  }
+});
+
+router.get("/export-account", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const [user, months] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+      }),
+      prisma.dashboardMonth.findMany({
+        where: { userId },
+        orderBy: [{ year: "asc" }, { month: "asc" }],
+      }),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json(buildAccountExportPayload(user, months));
+  } catch (error) {
+    console.error("Export account error:", error);
+    return res.status(500).json({ error: "Failed to export account data" });
+  }
+});
+
+router.put("/import-account", requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const payload = req.body;
+
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      return res
+        .status(400)
+        .json({ error: "A valid import payload is required" });
+    }
+
+    const currentUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!currentUser) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const importedUser =
+      payload.user && typeof payload.user === "object" ? payload.user : {};
+
+    const nextUsername =
+      importedUser.username !== undefined
+        ? String(importedUser.username || "").trim()
+        : currentUser.username;
+
+    const nextEmail =
+      importedUser.email !== undefined
+        ? normalizeEmail(importedUser.email)
+        : currentUser.email;
+
+    const nextAvatarUrl =
+      importedUser.avatarUrl !== undefined
+        ? normalizeAvatarUrl(importedUser.avatarUrl)
+        : currentUser.avatarUrl;
+
+    const profileValidationError = await validateImportedProfileFields({
+      userId,
+      username: nextUsername,
+      email: nextEmail,
+    });
+
+    if (profileValidationError) {
+      return res.status(400).json({ error: profileValidationError });
+    }
+
+    const normalizedMonths = normalizeImportedMonths(payload.months);
+
+    const updatedUser = await prisma.$transaction(async (tx) => {
+      const savedUser = await tx.user.update({
+        where: { id: userId },
+        data: {
+          username: nextUsername,
+          email: nextEmail,
+          avatarUrl: nextAvatarUrl,
+        },
+      });
+
+      for (const month of normalizedMonths) {
+        await tx.dashboardMonth.upsert({
+          where: {
+            userId_monthKey: {
+              userId,
+              monthKey: month.monthKey,
+            },
+          },
+          create: {
+            userId,
+            year: month.year,
+            month: month.month,
+            monthKey: month.monthKey,
+            data: month.data,
+          },
+          update: {
+            year: month.year,
+            month: month.month,
+            data: month.data,
+          },
+        });
+      }
+
+      return savedUser;
+    });
+
+    const token = buildAccessToken(updatedUser);
+
+    return res.json({
+      message: "Account data imported successfully",
+      token,
+      user: buildSafeUser(updatedUser),
+      importedMonths: normalizedMonths.length,
+    });
+  } catch (error) {
+    console.error("Import account error:", error);
+    return res.status(500).json({ error: "Failed to import account data" });
   }
 });
 
