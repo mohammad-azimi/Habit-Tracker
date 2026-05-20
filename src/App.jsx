@@ -8,6 +8,7 @@ import {
   LogOut,
   Plus,
   RotateCcw,
+  Trash2,
   UserCircle,
 } from "lucide-react";
 import StreakLeaderboardCard from "./components/StreakLeaderboardCard";
@@ -37,13 +38,17 @@ import { downloadBlob, toCSV } from "./lib/export";
 import {
   changePassword,
   deleteAccount,
+  deleteDeletedMonthBackup,
+  deleteMonthData,
   exportAccountData,
   getAllMonthsExport,
   getCurrentUser,
+  getDeletedMonthBackups,
   getMonthData,
   importAccountData,
   loginUser,
   registerUser,
+  restoreDeletedMonthBackup,
   saveMonthData,
   updateProfile,
 } from "./lib/api";
@@ -1087,6 +1092,7 @@ export default function App() {
   const savedDashboardPrefs = useMemo(() => loadDashboardPrefs(), []);
   const customTemplateFileInputRef = React.useRef(null);
   const fullAccountImportInputRef = React.useRef(null);
+  const skipNextAutoSaveRef = React.useRef(false);
 
   const [selectedYear, setSelectedYear] = useState(
     savedDashboardPrefs?.selectedYear || String(currentDate.getFullYear()),
@@ -1175,6 +1181,9 @@ export default function App() {
   const [isSavingProfile, setIsSavingProfile] = useState(false);
   const [profileErrorMessage, setProfileErrorMessage] = useState("");
   const [profileSuccessMessage, setProfileSuccessMessage] = useState("");
+  const [deletedMonthBackups, setDeletedMonthBackups] = useState([]);
+  const [isDeletedMonthBackupsLoading, setIsDeletedMonthBackupsLoading] =
+    useState(false);
 
   const monthKey = createMonthKey(selectedYear, selectedMonthIndex);
   const selectedMonthName = MONTHS[selectedMonthIndex];
@@ -1756,11 +1765,48 @@ export default function App() {
   }, [currentUser, selectedYear]);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadDeletedMonthBackups = async () => {
+      if (!currentUser) return;
+
+      setIsDeletedMonthBackupsLoading(true);
+
+      try {
+        const response = await getDeletedMonthBackups();
+
+        if (cancelled) return;
+
+        setDeletedMonthBackups(
+          Array.isArray(response?.backups) ? response.backups : [],
+        );
+      } catch (error) {
+        if (cancelled) return;
+        setDeletedMonthBackups([]);
+      } finally {
+        if (!cancelled) {
+          setIsDeletedMonthBackupsLoading(false);
+        }
+      }
+    };
+
+    loadDeletedMonthBackups();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
+
+  useEffect(() => {
     if (!authChecked) return;
     if (!currentUser) return;
     if (!isMonthLoaded) return;
     if (!monthData) return;
     if (loadedMonthKey !== monthKey) return;
+    if (skipNextAutoSaveRef.current) {
+      skipNextAutoSaveRef.current = false;
+      return;
+    }
 
     const timeoutId = setTimeout(async () => {
       try {
@@ -2333,6 +2379,66 @@ export default function App() {
     });
   };
 
+  const deleteCurrentMonthFromServer = async () => {
+    try {
+      setIsSyncing(true);
+      setSyncStatus("saving");
+      setSyncErrorMessage("");
+
+      await deleteMonthData(Number(selectedYear), selectedMonthIndex + 1);
+
+      skipNextAutoSaveRef.current = true;
+
+      setMonthData(buildDefaultMonthData(selectedYear, selectedMonthIndex));
+      setLoadedMonthKey(monthKey);
+      setSyncStatus("saved");
+      setLastSavedAt(new Date());
+
+      setYearlyOverviewData((prev) =>
+        prev.map((item) =>
+          item.month === MONTHS[selectedMonthIndex]
+            ? {
+                ...item,
+                completionPercent: 0,
+                moodAverage: "0.0",
+                motivationAverage: "0.0",
+                isEmpty: true,
+              }
+            : item,
+        ),
+      );
+
+      const backupsResponse = await getDeletedMonthBackups();
+
+      setDeletedMonthBackups(
+        Array.isArray(backupsResponse?.backups) ? backupsResponse.backups : [],
+      );
+
+      showToast(
+        `${MONTHS[selectedMonthIndex]} ${selectedYear} deleted. Backup created.`,
+        "success",
+      );
+    } catch (error) {
+      console.error("Failed to delete current month:", error);
+      setSyncStatus("error");
+      setSyncErrorMessage(error?.message || "Failed to delete current month.");
+      showToast(error.message || "Failed to delete current month.", "error");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const requestDeleteCurrentMonth = () => {
+    openConfirmModal({
+      title: "Delete current month?",
+      message: `This will delete ${MONTHS[selectedMonthIndex]} ${selectedYear} from your dashboard and create a restore backup.`,
+      confirmLabel: "Delete Month",
+      onConfirm: () => {
+        deleteCurrentMonthFromServer();
+      },
+    });
+  };
+
   const handleRegister = async ({ username, email, password }) => {
     try {
       setAuthLoading(true);
@@ -2482,6 +2588,117 @@ export default function App() {
         </button>
       </div>
     );
+
+    const restoreDeletedMonthBackupNow = async (backup) => {
+      try {
+        setIsSyncing(true);
+
+        await restoreDeletedMonthBackup(backup.year, backup.month);
+
+        setDeletedMonthBackups((prev) =>
+          prev.filter((item) => item.monthKey !== backup.monthKey),
+        );
+
+        if (
+          Number(selectedYear) === backup.year &&
+          selectedMonthIndex === backup.month - 1
+        ) {
+          const refreshedMonth = await getMonthData(backup.year, backup.month);
+
+          const nextMonthData = refreshedMonth?.data
+            ? ensureMonthShape(
+                refreshedMonth.data,
+                backup.year,
+                backup.month - 1,
+              )
+            : buildDefaultMonthData(backup.year, backup.month - 1);
+
+          setMonthData(nextMonthData);
+          setLoadedMonthKey(monthKey);
+          setIsMonthLoaded(true);
+        }
+
+        if (
+          previousMonthMeta.year === backup.year &&
+          previousMonthMeta.monthIndex === backup.month - 1
+        ) {
+          const refreshedPreviousMonth = await getMonthData(
+            backup.year,
+            backup.month,
+          );
+
+          setPreviousMonthData(
+            refreshedPreviousMonth?.data
+              ? ensureMonthShape(
+                  refreshedPreviousMonth.data,
+                  backup.year,
+                  backup.month - 1,
+                )
+              : null,
+          );
+        }
+
+        showToast(
+          `${MONTHS[backup.month - 1]} ${backup.year} restored successfully.`,
+          "success",
+        );
+      } catch (error) {
+        console.error("Failed to restore deleted month backup:", error);
+        showToast(
+          error.message || "Failed to restore deleted month backup.",
+          "error",
+        );
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    const deleteDeletedMonthBackupNow = async (backup) => {
+      try {
+        setIsSyncing(true);
+
+        await deleteDeletedMonthBackup(backup.year, backup.month);
+
+        setDeletedMonthBackups((prev) =>
+          prev.filter((item) => item.monthKey !== backup.monthKey),
+        );
+
+        showToast(
+          `Backup for ${MONTHS[backup.month - 1]} ${backup.year} was deleted.`,
+          "success",
+        );
+      } catch (error) {
+        console.error("Failed to delete deleted month backup:", error);
+        showToast(
+          error.message || "Failed to delete deleted month backup.",
+          "error",
+        );
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    const requestRestoreDeletedMonthBackup = (backup) => {
+      openConfirmModal({
+        title: "Restore deleted month?",
+        message: `This will restore ${MONTHS[backup.month - 1]} ${backup.year} from backup.`,
+        confirmLabel: "Restore Month",
+        onConfirm: () => {
+          restoreDeletedMonthBackupNow(backup);
+        },
+      });
+    };
+
+    const requestDeleteDeletedMonthBackup = (backup) => {
+      openConfirmModal({
+        title: "Delete month backup?",
+        message: `This will permanently remove the backup for ${MONTHS[backup.month - 1]} ${backup.year}.`,
+        confirmLabel: "Delete Backup",
+        onConfirm: () => {
+          deleteDeletedMonthBackupNow(backup);
+        },
+      });
+    };
 
     const fileToDataUrl = (file) =>
       new Promise((resolve, reject) => {
@@ -3514,6 +3731,14 @@ export default function App() {
                       Next Month
                     </span>
                   </button>
+
+                  <button
+                    onClick={requestDeleteCurrentMonth}
+                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-3 text-sm font-medium text-red-200 transition duration-150 hover:bg-red-950/35 active:scale-[0.98]"
+                  >
+                    <Trash2 className="h-4 w-4 shrink-0" />
+                    Delete Current Month
+                  </button>
                 </div>
 
                 <div>
@@ -3636,6 +3861,73 @@ export default function App() {
                 onExportCustomTemplates={exportCustomHabitTemplates}
                 onImportCustomTemplates={triggerImportCustomTemplates}
               />
+
+              <div className="theme-card p-5 space-y-3">
+                <div>
+                  <div className="theme-section-title text-base">
+                    Deleted Month Backups
+                  </div>
+                  <div className="theme-section-subtitle text-xs">
+                    Restore previously deleted months or remove old backups
+                    permanently.
+                  </div>
+                </div>
+
+                {isDeletedMonthBackupsLoading ? (
+                  <div className="text-sm text-neutral-500">
+                    Loading deleted backups...
+                  </div>
+                ) : deletedMonthBackups.length > 0 ? (
+                  <div className="space-y-3">
+                    {deletedMonthBackups.map((backup) => (
+                      <div
+                        key={backup.monthKey}
+                        className="theme-summary-card px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-3">
+                          <div>
+                            <div className="text-sm font-medium text-white">
+                              {MONTHS[backup.month - 1]} {backup.year}
+                            </div>
+                            <div className="mt-1 text-xs text-neutral-500">
+                              Deleted{" "}
+                              {backup.deletedAt
+                                ? new Date(backup.deletedAt).toLocaleString()
+                                : "recently"}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                requestRestoreDeletedMonthBackup(backup)
+                              }
+                              className="theme-button-secondary w-full sm:w-auto"
+                            >
+                              Restore
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                requestDeleteDeletedMonthBackup(backup)
+                              }
+                              className="theme-button-secondary w-full sm:w-auto"
+                            >
+                              Delete Backup
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-sm text-neutral-500">
+                    No deleted month backups yet.
+                  </div>
+                )}
+              </div>
 
               {showArchivedHabits ? (
                 <ArchivedHabitsPanel
