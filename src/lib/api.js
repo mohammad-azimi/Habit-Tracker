@@ -80,6 +80,10 @@ export function deleteAccount() {
   });
 }
 
+export function getAllMonthsExport() {
+  return request("/dashboard/export/all");
+}
+
 export function getMonthData(year, month) {
   return request(`/dashboard/${year}/${month}`);
 }

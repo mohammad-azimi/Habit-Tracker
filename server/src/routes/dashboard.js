@@ -22,6 +22,25 @@ function createMonthKey(year, month) {
   return `${year}-${String(month).padStart(2, "0")}`;
 }
 
+function buildAllMonthsExportPayload(records) {
+  return {
+    metadata: {
+      exportType: "all-months",
+      exportedAt: new Date().toISOString(),
+      totalMonths: records.length,
+    },
+    months: records.map((record) => ({
+      id: record.id,
+      year: record.year,
+      month: record.month,
+      monthKey: record.monthKey,
+      data: record.data,
+      createdAt: record.createdAt,
+      updatedAt: record.updatedAt,
+    })),
+  };
+}
+
 router.get("/", async (req, res) => {
   try {
     const userId = req.user.id;
@@ -35,6 +54,24 @@ router.get("/", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Failed to fetch dashboard data" });
+  }
+});
+
+router.get("/export/all", async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const records = await prisma.dashboardMonth.findMany({
+      where: { userId },
+      orderBy: [{ year: "asc" }, { month: "asc" }],
+    });
+
+    const payload = buildAllMonthsExportPayload(records);
+
+    res.json(payload);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to export all months" });
   }
 });
 
