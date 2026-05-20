@@ -61,6 +61,20 @@ export function updateProfile({ username, email, avatarUrl }) {
   });
 }
 
+export function exportAccountData() {
+  return request("/auth/export-account");
+}
+
+export function importAccountData(payload) {
+  return request("/auth/import-account", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function changePassword({ currentPassword, newPassword }) {
   return request("/auth/change-password", {
     method: "PUT",
