@@ -91,6 +91,7 @@ import DashboardPreferencesCard from "./components/DashboardPreferencesCard";
 import FullScreenStatus from "./components/FullScreenStatus";
 import SyncStatusBadge from "./components/SyncStatusBadge";
 import AchievementsCard from "./components/AchievementsCard";
+import TodayReminderCard from "./components/TodayReminderCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -4044,6 +4045,14 @@ export default function App() {
                   </div>
                 </div>
               ) : null}
+
+              <TodayReminderCard
+                habits={safeMonthData.habits}
+                todayIndex={todayIndex}
+                selectedMonthName={MONTHS[selectedMonthIndex]}
+                selectedYear={selectedYear}
+                onToggleHabitDay={toggleHabitDay}
+              />
 
               <MentalStateSection
                 daysInMonth={daysInMonth}
