@@ -1154,6 +1154,8 @@ export default function App() {
   );
   const [draggedHabitId, setDraggedHabitId] = useState(null);
   const [confirmAction, setConfirmAction] = useState(null);
+  const [isConfirmActionSubmitting, setIsConfirmActionSubmitting] =
+    useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [habitSearchTerm, setHabitSearchTerm] = useState(
@@ -1465,24 +1467,39 @@ export default function App() {
     title,
     message,
     confirmLabel = "Confirm",
+    cancelLabel = "Cancel",
+    variant = "danger",
+    helperText = "",
+    requireTypedConfirmation = "",
     onConfirm,
   }) => {
     setConfirmAction({
       title,
       message,
       confirmLabel,
+      cancelLabel,
+      variant,
+      helperText,
+      requireTypedConfirmation,
       onConfirm,
     });
   };
 
   const closeConfirmModal = () => {
+    if (isConfirmActionSubmitting) return;
     setConfirmAction(null);
   };
 
-  const executeConfirmAction = () => {
+  const executeConfirmAction = async () => {
     if (!confirmAction?.onConfirm) return;
-    confirmAction.onConfirm();
-    closeConfirmModal();
+
+    try {
+      setIsConfirmActionSubmitting(true);
+      await Promise.resolve(confirmAction.onConfirm());
+      setConfirmAction(null);
+    } finally {
+      setIsConfirmActionSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -2171,6 +2188,9 @@ export default function App() {
       title: "Delete habit?",
       message: `This will permanently remove "${habit.name}" from the current month.`,
       confirmLabel: "Delete Habit",
+      variant: "danger",
+      helperText:
+        "This only affects the current month. You can still undo it immediately from the toast message.",
       onConfirm: () => {
         const originalHabit = safeMonthData.habits.find(
           (item) => item.id === habit.id,
@@ -2195,6 +2215,9 @@ export default function App() {
       title: "Archive habit?",
       message: `"${habit.name}" will be removed from the main list and moved to archived habits.`,
       confirmLabel: "Archive Habit",
+      variant: "info",
+      helperText:
+        "Archived habits are not deleted. You can restore them later from the archived habits panel.",
       onConfirm: () => {
         archiveHabit(habit.id, { showUndo: true });
       },
@@ -2365,8 +2388,11 @@ export default function App() {
     openConfirmModal({
       title: "Reset current month?",
       message:
-        "This will replace the current month's habits, mood, motivation, and notes with fresh default values.",
+        "This will replace the current month's habits, mood, motivation, notes, and review with fresh default values.",
       confirmLabel: "Reset Month",
+      variant: "warning",
+      helperText:
+        "This action resets the visible month only. You can undo it immediately after reset.",
       onConfirm: () => {
         const monthSnapshot = JSON.parse(JSON.stringify(safeMonthData));
 
@@ -2433,9 +2459,11 @@ export default function App() {
       title: "Delete current month?",
       message: `This will delete ${MONTHS[selectedMonthIndex]} ${selectedYear} from your dashboard and create a restore backup.`,
       confirmLabel: "Delete Month",
-      onConfirm: () => {
-        deleteCurrentMonthFromServer();
-      },
+      variant: "danger",
+      helperText:
+        "A restore backup will be created, but the current month data will disappear from the dashboard until restored.",
+      requireTypedConfirmation: "DELETE",
+      onConfirm: deleteCurrentMonthFromServer,
     });
   };
 
@@ -2683,9 +2711,10 @@ export default function App() {
         title: "Restore deleted month?",
         message: `This will restore ${MONTHS[backup.month - 1]} ${backup.year} from backup.`,
         confirmLabel: "Restore Month",
-        onConfirm: () => {
-          restoreDeletedMonthBackupNow(backup);
-        },
+        variant: "success",
+        helperText:
+          "The restored month will be available again in your dashboard.",
+        onConfirm: () => restoreDeletedMonthBackupNow(backup),
       });
     };
 
@@ -2694,9 +2723,11 @@ export default function App() {
         title: "Delete month backup?",
         message: `This will permanently remove the backup for ${MONTHS[backup.month - 1]} ${backup.year}.`,
         confirmLabel: "Delete Backup",
-        onConfirm: () => {
-          deleteDeletedMonthBackupNow(backup);
-        },
+        variant: "danger",
+        helperText:
+          "After deleting this backup, you will not be able to restore this deleted month from the backup list.",
+        requireTypedConfirmation: "DELETE",
+        onConfirm: () => deleteDeletedMonthBackupNow(backup),
       });
     };
 
@@ -2790,6 +2821,20 @@ export default function App() {
         </button>
       </div>
     );
+
+  const requestDeleteAccount = () => {
+    openConfirmModal({
+      title: "Delete account?",
+      message:
+        "This will permanently delete your account and all saved habit data connected to it.",
+      confirmLabel: "Delete Account",
+      variant: "danger",
+      helperText:
+        "This action cannot be undone. Export your account data first if you want to keep a backup.",
+      requireTypedConfirmation: "DELETE",
+      onConfirm: handleDeleteAccount,
+    });
+  };
 
   const analysisRows = useMemo(() => {
     const weekRanges = getWeekRanges(daysInMonth);
@@ -4074,15 +4119,6 @@ export default function App() {
 
         <ToastNotice toast={toast} onClose={closeToast} />
 
-        <ConfirmActionModal
-          isOpen={Boolean(confirmAction)}
-          title={confirmAction?.title || ""}
-          message={confirmAction?.message || ""}
-          confirmLabel={confirmAction?.confirmLabel || "Confirm"}
-          onConfirm={executeConfirmAction}
-          onClose={closeConfirmModal}
-        />
-
         <CopyMonthModal
           isOpen={isCopyMonthModalOpen}
           currentYear={selectedYear}
@@ -4340,15 +4376,6 @@ export default function App() {
 
           <ToastNotice toast={toast} onClose={closeToast} />
 
-          <ConfirmActionModal
-            isOpen={Boolean(confirmAction)}
-            title={confirmAction?.title || ""}
-            message={confirmAction?.message || ""}
-            confirmLabel={confirmAction?.confirmLabel || "Confirm"}
-            onConfirm={executeConfirmAction}
-            onClose={closeConfirmModal}
-          />
-
           <CopyMonthModal
             isOpen={isCopyMonthModalOpen}
             currentYear={selectedYear}
@@ -4471,15 +4498,6 @@ export default function App() {
 
           <ToastNotice toast={toast} onClose={closeToast} />
 
-          <ConfirmActionModal
-            isOpen={Boolean(confirmAction)}
-            title={confirmAction?.title || ""}
-            message={confirmAction?.message || ""}
-            confirmLabel={confirmAction?.confirmLabel || "Confirm"}
-            onConfirm={executeConfirmAction}
-            onClose={closeConfirmModal}
-          />
-
           <CopyMonthModal
             isOpen={isCopyMonthModalOpen}
             currentYear={selectedYear}
@@ -4549,13 +4567,27 @@ export default function App() {
               onImportAccountData={triggerImportFullAccount}
               onChangePassword={handleChangePassword}
               isChangingPassword={isChangingPassword}
-              onDeleteAccount={handleDeleteAccount}
+              onDeleteAccount={requestDeleteAccount}
               isDeleting={isDeletingAccount}
             />
           }
         />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+
+      <ConfirmActionModal
+        isOpen={Boolean(confirmAction)}
+        title={confirmAction?.title || ""}
+        message={confirmAction?.message || ""}
+        confirmLabel={confirmAction?.confirmLabel || "Confirm"}
+        cancelLabel={confirmAction?.cancelLabel || "Cancel"}
+        variant={confirmAction?.variant || "danger"}
+        helperText={confirmAction?.helperText || ""}
+        requireTypedConfirmation={confirmAction?.requireTypedConfirmation || ""}
+        isSubmitting={isConfirmActionSubmitting}
+        onConfirm={executeConfirmAction}
+        onClose={closeConfirmModal}
+      />
     </ErrorBoundary>
   );
 }
