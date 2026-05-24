@@ -7,46 +7,12 @@ import {
   ListChecks,
   Sparkles,
 } from "lucide-react";
-
-const REMINDER_PREFS_KEY = "habit-tracker-reminder-prefs-v1";
-const REMINDER_SENT_KEY = "habit-tracker-reminder-sent-v1";
-
-function loadReminderPrefs() {
-  if (typeof window === "undefined") {
-    return {
-      enabled: true,
-      time: "20:00",
-      browserNotifications: false,
-    };
-  }
-
-  try {
-    const raw = localStorage.getItem(REMINDER_PREFS_KEY);
-    const parsed = raw ? JSON.parse(raw) : {};
-
-    return {
-      enabled: parsed.enabled ?? true,
-      time: parsed.time || "20:00",
-      browserNotifications: parsed.browserNotifications ?? false,
-    };
-  } catch (error) {
-    return {
-      enabled: true,
-      time: "20:00",
-      browserNotifications: false,
-    };
-  }
-}
-
-function saveReminderPrefs(prefs) {
-  if (typeof window === "undefined") return;
-
-  try {
-    localStorage.setItem(REMINDER_PREFS_KEY, JSON.stringify(prefs));
-  } catch (error) {
-    console.error("Failed to save reminder preferences:", error);
-  }
-}
+import {
+  REMINDER_SENT_KEY,
+  loadReminderPrefs,
+  subscribeReminderPrefs,
+  updateReminderPrefs,
+} from "../lib/reminderPrefs";
 
 function getTodayKey() {
   const now = new Date();
@@ -98,15 +64,8 @@ export default function TodayReminderCard({
     todayIndex !== null;
 
   const updatePrefs = (patch) => {
-    setPrefs((prev) => {
-      const next = {
-        ...prev,
-        ...patch,
-      };
-
-      saveReminderPrefs(next);
-      return next;
-    });
+    const nextPrefs = updateReminderPrefs(patch);
+    setPrefs(nextPrefs);
   };
 
   const requestBrowserNotifications = async () => {
@@ -116,11 +75,9 @@ export default function TodayReminderCard({
 
     const permission = await Notification.requestPermission();
 
-    if (permission === "granted") {
-      updatePrefs({
-        browserNotifications: true,
-      });
-    }
+    updatePrefs({
+      browserNotifications: permission === "granted",
+    });
   };
 
   useEffect(() => {
@@ -129,6 +86,12 @@ export default function TodayReminderCard({
     }, 30000);
 
     return () => clearInterval(intervalId);
+  }, []);
+
+  useEffect(() => {
+    return subscribeReminderPrefs((nextPrefs) => {
+      setPrefs(nextPrefs);
+    });
   }, []);
 
   useEffect(() => {

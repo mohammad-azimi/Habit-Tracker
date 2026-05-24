@@ -92,6 +92,7 @@ import FullScreenStatus from "./components/FullScreenStatus";
 import SyncStatusBadge from "./components/SyncStatusBadge";
 import AchievementsCard from "./components/AchievementsCard";
 import TodayReminderCard from "./components/TodayReminderCard";
+import ReminderSettingsCard from "./components/ReminderSettingsCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -4307,6 +4308,8 @@ export default function App() {
                   }
                   onResetPreferences={resetDashboardPreferences}
                 />
+
+                <ReminderSettingsCard />
               </section>
 
               <section className="space-y-4 xl:col-span-6">
