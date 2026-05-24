@@ -90,6 +90,7 @@ import HabitTemplatesCard from "./components/HabitTemplatesCard";
 import DashboardPreferencesCard from "./components/DashboardPreferencesCard";
 import FullScreenStatus from "./components/FullScreenStatus";
 import SyncStatusBadge from "./components/SyncStatusBadge";
+import AchievementsCard from "./components/AchievementsCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -3245,6 +3246,39 @@ export default function App() {
     return getWeeklyMomentum(weeklyProgress);
   }, [weeklyProgress]);
 
+  const achievementStats = useMemo(() => {
+    const bestCurrentStreak = activeAnalysisRows.reduce(
+      (max, row) => Math.max(max, Number(row.currentStreak || 0)),
+      0,
+    );
+
+    const bestOverallStreak = activeAnalysisRows.reduce(
+      (max, row) => Math.max(max, Number(row.bestStreak || 0)),
+      0,
+    );
+
+    const completedHabitsCount = activeAnalysisRows.filter(
+      (row) => Number(row.progress || 0) >= 100,
+    ).length;
+
+    return {
+      totalCompleted,
+      completionPercent,
+      activeHabitsCount: activeAnalysisRows.length,
+      completedHabitsCount,
+      bestCurrentStreak,
+      bestOverallStreak,
+      moodAverage: Number(average(safeMonthData.mood).toFixed(1)),
+      motivationAverage: Number(average(safeMonthData.motivation).toFixed(1)),
+    };
+  }, [
+    activeAnalysisRows,
+    totalCompleted,
+    completionPercent,
+    safeMonthData.mood,
+    safeMonthData.motivation,
+  ]);
+
   const exportMonthJSON = () => {
     const payload = {
       metadata: buildExportMetadata({
@@ -4215,6 +4249,8 @@ export default function App() {
                     monthlyInsights.strongestCurrentStreakHabit
                   }
                 />
+
+                <AchievementsCard stats={achievementStats} />
 
                 {showTopHabits ? (
                   rankedHabits.length > 0 ? (
