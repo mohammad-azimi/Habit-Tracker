@@ -25,16 +25,40 @@ export function getClientTimezone() {
 export function isPushSupported() {
   return (
     typeof window !== "undefined" &&
+    window.isSecureContext &&
     "serviceWorker" in navigator &&
     "PushManager" in window &&
     "Notification" in window
   );
 }
 
-export async function getCurrentPushSubscription() {
+async function getReadyServiceWorkerRegistration() {
   if (!isPushSupported()) return null;
 
-  const registration = await navigator.serviceWorker.ready;
+  const baseUrl = import.meta.env.BASE_URL || "/";
+
+  const existingRegistration =
+    (await navigator.serviceWorker.getRegistration(baseUrl)) ||
+    (await navigator.serviceWorker.getRegistration());
+
+  if (existingRegistration?.active) {
+    return existingRegistration;
+  }
+
+  // In npm run dev, service worker is intentionally disabled.
+  // Do not wait forever for navigator.serviceWorker.ready.
+  if (import.meta.env.DEV) {
+    return null;
+  }
+
+  return navigator.serviceWorker.ready;
+}
+
+export async function getCurrentPushSubscription() {
+  const registration = await getReadyServiceWorkerRegistration();
+
+  if (!registration) return null;
+
   return registration.pushManager.getSubscription();
 }
 
@@ -53,7 +77,13 @@ export async function subscribeBrowserToPush(vapidPublicKey) {
     throw new Error("Notification permission was not granted.");
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await getReadyServiceWorkerRegistration();
+
+  if (!registration) {
+    throw new Error(
+      "Service worker is not active. Use npm run build and npm run preview to test backend push.",
+    );
+  }
 
   const existingSubscription = await registration.pushManager.getSubscription();
 

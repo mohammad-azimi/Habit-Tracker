@@ -3,7 +3,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import dashboardRoutes from "./routes/dashboard.js";
 import authRoutes from "./routes/auth.js";
+import pushRoutes from "./routes/push.js";
 import { requireAuth } from "./middleware/requireAuth.js";
+import { startReminderScheduler } from "./jobs/reminderScheduler.js";
 
 dotenv.config();
 
@@ -34,6 +36,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", requireAuth, dashboardRoutes);
+app.use("/api/push", requireAuth, pushRoutes);
 
 app.use((error, req, res, next) => {
   console.error("SERVER ERROR:", error);
@@ -44,4 +47,10 @@ app.use((error, req, res, next) => {
 
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
+
+  if (process.env.ENABLE_REMINDER_SCHEDULER === "true") {
+    startReminderScheduler();
+  } else {
+    console.log("Reminder scheduler is disabled");
+  }
 });
