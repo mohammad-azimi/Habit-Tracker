@@ -1,7 +1,8 @@
 import { getAuthToken } from "./auth";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:4000/api";
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV ? "/api" : "http://localhost:4000/api");
 
 async function request(path, options = {}) {
   const token = getAuthToken();
@@ -131,5 +132,57 @@ export function saveMonthData(year, month, data) {
 export function deleteMonthData(year, month) {
   return request(`/dashboard/${year}/${month}`, {
     method: "DELETE",
+  });
+}
+
+export function getVapidPublicKey() {
+  return request("/push/vapid-public-key");
+}
+
+export function getPushPreferences() {
+  return request("/push/preferences");
+}
+
+export function savePushPreferences({ enabled, time, timezone }) {
+  return request("/push/preferences", {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      enabled,
+      time,
+      timezone,
+    }),
+  });
+}
+
+export function subscribePushNotification(subscription) {
+  return request("/push/subscribe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      subscription,
+    }),
+  });
+}
+
+export function unsubscribePushNotification(endpoint) {
+  return request("/push/unsubscribe", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      endpoint,
+    }),
+  });
+}
+
+export function sendBackendPushTest() {
+  return request("/push/test", {
+    method: "POST",
   });
 }

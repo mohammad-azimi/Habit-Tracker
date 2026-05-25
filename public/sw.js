@@ -1,4 +1,4 @@
-const CACHE_NAME = "habit-tracker-v1";
+const CACHE_NAME = "habit-tracker-v3";
 
 function fromScope(path) {
   return new URL(path, self.registration.scope).toString();
@@ -38,15 +38,55 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const requestUrl = new URL(event.request.url);
+
+  // Do not intercept API calls or cross-origin requests.
+  if (requestUrl.origin !== self.location.origin) return;
+  if (requestUrl.pathname.includes("/api/")) return;
+
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request)),
+    fetch(event.request).catch(async () => {
+      const cachedResponse = await caches.match(event.request);
+
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+
+      return caches.match(fromScope("./"));
+    }),
   );
+});
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (error) {
+    payload = {
+      title: "Habit Tracker Reminder",
+      body: event.data?.text() || "You have pending habits today.",
+    };
+  }
+
+  const title = payload.title || "Habit Tracker Reminder";
+
+  const options = {
+    body: payload.body || "You have pending habits today.",
+    icon: fromScope("./icon-192.png"),
+    badge: fromScope("./icon-192.png"),
+    data: {
+      url: payload.url || fromScope("./#/dashboard"),
+    },
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  const dashboardUrl = fromScope("./#/dashboard");
+  const targetUrl = event.notification.data?.url || fromScope("./#/dashboard");
 
   event.waitUntil(
     clients
@@ -60,7 +100,7 @@ self.addEventListener("notificationclick", (event) => {
         }
 
         if (clients.openWindow) {
-          return clients.openWindow(dashboardUrl);
+          return clients.openWindow(targetUrl);
         }
       }),
   );

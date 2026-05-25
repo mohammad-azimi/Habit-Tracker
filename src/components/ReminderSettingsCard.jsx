@@ -7,10 +7,27 @@ import {
   Clock,
   RotateCcw,
   Send,
+  Server,
   ShieldCheck,
   ShieldX,
   Smartphone,
+  Unplug,
 } from "lucide-react";
+import {
+  getPushPreferences,
+  getVapidPublicKey,
+  savePushPreferences,
+  sendBackendPushTest,
+  subscribePushNotification,
+  unsubscribePushNotification,
+} from "../lib/api";
+import {
+  getClientTimezone,
+  getCurrentPushSubscription,
+  isPushSupported,
+  subscribeBrowserToPush,
+  unsubscribeBrowserFromPush,
+} from "../lib/pushSubscription";
 import {
   getNotificationPermissionStatus,
   loadReminderPrefs,
@@ -38,104 +55,232 @@ function getPermissionClasses(permissionStatus) {
   return "border-violet-900/40 bg-violet-950/20 text-violet-200";
 }
 
+function normalizeTime(value) {
+  return /^([01]\d|2[0-3]):[0-5]\d$/.test(String(value || ""))
+    ? value
+    : "20:00";
+}
+
 export default function ReminderSettingsCard() {
   const [prefs, setPrefs] = useState(() => loadReminderPrefs());
   const [permissionStatus, setPermissionStatus] = useState(() =>
     getNotificationPermissionStatus(),
   );
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [timezone, setTimezone] = useState(() => getClientTimezone());
+  const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
 
-  const updatePrefs = (patch) => {
+  const pushSupported = isPushSupported();
+
+  const updateLocalPrefs = (patch) => {
     const nextPrefs = updateReminderPrefs(patch);
     setPrefs(nextPrefs);
+    return nextPrefs;
+  };
+
+  const loadBackendSettings = async () => {
+    try {
+      setIsLoading(true);
+      setStatusMessage("");
+
+      const [preferenceResponse, browserSubscription] = await Promise.all([
+        getPushPreferences(),
+        getCurrentPushSubscription(),
+      ]);
+
+      const backendPreference = preferenceResponse?.preference;
+
+      if (backendPreference) {
+        const nextPrefs = updateReminderPrefs({
+          enabled: Boolean(backendPreference.enabled),
+          time: normalizeTime(backendPreference.time),
+          browserNotifications: Boolean(browserSubscription),
+        });
+
+        setPrefs(nextPrefs);
+        setTimezone(backendPreference.timezone || getClientTimezone());
+      }
+
+      setIsSubscribed(Boolean(browserSubscription));
+      setPermissionStatus(getNotificationPermissionStatus());
+    } catch (error) {
+      console.error("Failed to load backend reminder settings:", error);
+      setStatusMessage(
+        error.message || "Failed to load backend reminder settings.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveSettingsToBackend = async (nextPrefs = prefs) => {
+    try {
+      setIsLoading(true);
+      setStatusMessage("");
+
+      const response = await savePushPreferences({
+        enabled: Boolean(nextPrefs.enabled),
+        time: normalizeTime(nextPrefs.time),
+        timezone,
+      });
+
+      setStatusMessage(response?.message || "Reminder settings saved.");
+    } catch (error) {
+      console.error("Failed to save reminder settings:", error);
+      setStatusMessage(error.message || "Failed to save reminder settings.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const requestPermission = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setStatusMessage("Browser notifications are not supported here.");
+    if (!pushSupported) {
+      setStatusMessage("Push notifications are not supported in this browser.");
       return;
     }
 
     const permission = await Notification.requestPermission();
 
     setPermissionStatus(permission);
-    updatePrefs({
-      browserNotifications: permission === "granted",
-    });
 
     if (permission === "granted") {
-      setStatusMessage("Browser notifications are now enabled.");
+      const nextPrefs = updateLocalPrefs({
+        browserNotifications: true,
+      });
+
+      await saveSettingsToBackend(nextPrefs);
+      setStatusMessage("Browser notifications are now allowed.");
       return;
     }
 
-    if (permission === "denied") {
-      setStatusMessage(
-        "Notifications are blocked. You need to allow them from browser settings.",
-      );
-      return;
-    }
+    const nextPrefs = updateLocalPrefs({
+      browserNotifications: false,
+    });
 
+    await saveSettingsToBackend(nextPrefs);
     setStatusMessage("Notification permission was not enabled.");
   };
 
-  const sendTestNotification = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      setStatusMessage("Browser notifications are not supported here.");
-      return;
-    }
-
-    let permission = Notification.permission;
-
-    if (permission !== "granted") {
-      permission = await Notification.requestPermission();
-      setPermissionStatus(permission);
-    }
-
-    if (permission !== "granted") {
-      updatePrefs({
-        browserNotifications: false,
-      });
-      setStatusMessage("Allow notifications first, then try the test again.");
-      return;
-    }
-
-    updatePrefs({
-      browserNotifications: true,
-    });
-
-    const baseUrl = import.meta.env.BASE_URL || "/";
-
+  const enableBackendPush = async () => {
     try {
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.ready;
+      setIsLoading(true);
+      setStatusMessage("");
 
-        await registration.showNotification("Habit Tracker Reminder", {
-          body: "This is a test reminder notification.",
-          icon: `${baseUrl}icon-192.png`,
-          badge: `${baseUrl}icon-192.png`,
-        });
-      } else {
-        new Notification("Habit Tracker Reminder", {
-          body: "This is a test reminder notification.",
-          icon: `${baseUrl}icon-192.png`,
-        });
+      if (!pushSupported) {
+        throw new Error(
+          "Push notifications are not supported in this browser.",
+        );
       }
 
-      setStatusMessage("Test notification sent successfully.");
+      const keyResponse = await getVapidPublicKey();
+      const vapidPublicKey = keyResponse?.publicKey;
+
+      const browserSubscription = await subscribeBrowserToPush(vapidPublicKey);
+
+      await subscribePushNotification(browserSubscription);
+
+      const nextPrefs = updateLocalPrefs({
+        enabled: true,
+        browserNotifications: true,
+      });
+
+      await savePushPreferences({
+        enabled: true,
+        time: normalizeTime(nextPrefs.time),
+        timezone,
+      });
+
+      setIsSubscribed(true);
+      setPermissionStatus(getNotificationPermissionStatus());
+      setStatusMessage("Backend push reminders are enabled.");
     } catch (error) {
-      console.error("Failed to send test notification:", error);
-      setStatusMessage("Failed to send test notification.");
+      console.error("Failed to enable backend push:", error);
+      setStatusMessage(error.message || "Failed to enable backend push.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const resetSettings = () => {
+  const disableBackendPush = async () => {
+    try {
+      setIsLoading(true);
+      setStatusMessage("");
+
+      const result = await unsubscribeBrowserFromPush();
+
+      if (result.endpoint) {
+        await unsubscribePushNotification(result.endpoint);
+      }
+
+      const nextPrefs = updateLocalPrefs({
+        enabled: false,
+        browserNotifications: false,
+      });
+
+      await savePushPreferences({
+        enabled: false,
+        time: normalizeTime(nextPrefs.time),
+        timezone,
+      });
+
+      setIsSubscribed(false);
+      setPermissionStatus(getNotificationPermissionStatus());
+      setStatusMessage("Backend push reminders are disabled.");
+    } catch (error) {
+      console.error("Failed to disable backend push:", error);
+      setStatusMessage(error.message || "Failed to disable backend push.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendTestNotification = async () => {
+    try {
+      setIsLoading(true);
+      setStatusMessage("");
+
+      if (!isSubscribed) {
+        throw new Error("Enable backend push first, then send a test.");
+      }
+
+      const response = await sendBackendPushTest();
+
+      setStatusMessage(
+        `Backend test processed. Sent: ${response?.sent ?? 0}, removed: ${
+          response?.removed ?? 0
+        }.`,
+      );
+    } catch (error) {
+      console.error("Failed to send backend test notification:", error);
+      setStatusMessage(error.message || "Failed to send test notification.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resetSettings = async () => {
     const nextPrefs = resetReminderPrefs();
+
     setPrefs(nextPrefs);
-    setStatusMessage("Reminder settings reset to default.");
+
+    try {
+      await savePushPreferences({
+        enabled: Boolean(nextPrefs.enabled),
+        time: normalizeTime(nextPrefs.time),
+        timezone,
+      });
+
+      setStatusMessage("Reminder settings reset to default.");
+    } catch (error) {
+      setStatusMessage(
+        "Local reminder settings reset, but backend save failed.",
+      );
+    }
   };
 
   useEffect(() => {
-    setPermissionStatus(getNotificationPermissionStatus());
+    loadBackendSettings();
 
     return subscribeReminderPrefs((nextPrefs) => {
       setPrefs(nextPrefs);
@@ -148,7 +293,7 @@ export default function ReminderSettingsCard() {
         <div>
           <div className="theme-section-title">Reminder Settings</div>
           <div className="theme-section-subtitle">
-            Control today reminders, notification permission, and reminder time.
+            Control local reminders and backend push notifications.
           </div>
         </div>
 
@@ -181,12 +326,15 @@ export default function ReminderSettingsCard() {
 
           <button
             type="button"
-            onClick={() =>
-              updatePrefs({
+            onClick={async () => {
+              const nextPrefs = updateLocalPrefs({
                 enabled: !prefs.enabled,
-              })
-            }
-            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition duration-150 active:scale-[0.98] ${
+              });
+
+              await saveSettingsToBackend(nextPrefs);
+            }}
+            disabled={isLoading}
+            className={`inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-medium transition duration-150 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 ${
               prefs.enabled
                 ? "bg-violet-300 text-black hover:bg-violet-200"
                 : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
@@ -207,53 +355,94 @@ export default function ReminderSettingsCard() {
             type="time"
             value={prefs.time}
             onChange={(event) =>
-              updatePrefs({
-                time: event.target.value,
+              updateLocalPrefs({
+                time: normalizeTime(event.target.value),
               })
             }
+            onBlur={() => saveSettingsToBackend()}
+            disabled={isLoading}
             className="theme-input"
           />
 
           <div className="mt-2 text-xs text-neutral-500">
-            The reminder card checks this time while the app is open.
+            Timezone: {timezone}
           </div>
         </div>
 
         <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
           <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
             <Smartphone className="h-4 w-4 text-violet-300" />
-            Browser notification
+            Browser permission
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <button
+            type="button"
+            onClick={requestPermission}
+            disabled={isLoading || !pushSupported}
+            className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <CheckCircle2 className="h-4 w-4" />
+            Allow Notification
+          </button>
+
+          <div className="mt-2 text-xs text-neutral-500">
+            Browser permission is required before backend push can work.
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-violet-900/30 bg-violet-950/10 p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
+            <Server className="h-4 w-4 text-violet-300" />
+            Backend Push
+          </div>
+
+          <div className="mb-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-2 text-xs text-neutral-400">
+            Status:{" "}
+            <span
+              className={isSubscribed ? "text-emerald-300" : "text-red-300"}
+            >
+              {isSubscribed ? "Subscribed" : "Not subscribed"}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2">
             <button
               type="button"
-              onClick={requestPermission}
-              className="theme-button-secondary w-full"
+              onClick={enableBackendPush}
+              disabled={isLoading || !pushSupported}
+              className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
             >
-              <CheckCircle2 className="h-4 w-4" />
-              Allow Notification
+              <BellRing className="h-4 w-4" />
+              Enable Backend Push
             </button>
 
             <button
               type="button"
               onClick={sendTestNotification}
-              className="theme-button-secondary w-full"
+              disabled={isLoading || !isSubscribed}
+              className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Send className="h-4 w-4" />
-              Send Test
+              Send Backend Test
             </button>
-          </div>
 
-          <div className="mt-2 text-xs text-neutral-500">
-            For real reminders, notification permission must be allowed.
+            <button
+              type="button"
+              onClick={disableBackendPush}
+              disabled={isLoading}
+              className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Unplug className="h-4 w-4" />
+              Disable Backend Push
+            </button>
           </div>
         </div>
 
         <button
           type="button"
           onClick={resetSettings}
-          className="theme-button-secondary w-full"
+          disabled={isLoading}
+          className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
         >
           <RotateCcw className="h-4 w-4" />
           Reset Reminder Settings

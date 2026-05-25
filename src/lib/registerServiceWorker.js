@@ -2,9 +2,19 @@ export function registerServiceWorker() {
   if (typeof window === "undefined") return;
   if (!("serviceWorker" in navigator)) return;
 
-  // Do not register service worker during development.
-  // This prevents cache problems while using npm run dev.
-  if (import.meta.env.DEV) return;
+  // In development, remove old service workers so they do not break API calls.
+  if (import.meta.env.DEV) {
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((registrations) => {
+        registrations.forEach((registration) => registration.unregister());
+      })
+      .catch((error) => {
+        console.error("Failed to unregister service workers in dev:", error);
+      });
+
+    return;
+  }
 
   window.addEventListener("load", () => {
     const baseUrl = import.meta.env.BASE_URL || "/";
