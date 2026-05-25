@@ -1,17 +1,18 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import {
   Bell,
   BellRing,
   CheckCircle2,
   Clock,
   ListChecks,
+  Settings,
   Sparkles,
 } from "lucide-react";
 import {
   REMINDER_SENT_KEY,
   loadReminderPrefs,
   subscribeReminderPrefs,
-  updateReminderPrefs,
 } from "../lib/reminderPrefs";
 
 function getTodayKey() {
@@ -24,6 +25,37 @@ function getCurrentTimeValue() {
   const hours = String(now.getHours()).padStart(2, "0");
   const minutes = String(now.getMinutes()).padStart(2, "0");
   return `${hours}:${minutes}`;
+}
+
+async function showReminderNotification(pendingCount) {
+  if (typeof window === "undefined") return;
+  if (!("Notification" in window)) return;
+  if (Notification.permission !== "granted") return;
+
+  const baseUrl = import.meta.env.BASE_URL || "/";
+
+  const notificationOptions = {
+    body: `You still have ${pendingCount} habit(s) left for today.`,
+    icon: `${baseUrl}icon-192.png`,
+    badge: `${baseUrl}icon-192.png`,
+  };
+
+  try {
+    if ("serviceWorker" in navigator) {
+      const registration = await navigator.serviceWorker.ready;
+
+      await registration.showNotification(
+        "Habit Tracker Reminder",
+        notificationOptions,
+      );
+
+      return;
+    }
+
+    new Notification("Habit Tracker Reminder", notificationOptions);
+  } catch (error) {
+    console.error("Failed to show reminder notification:", error);
+  }
 }
 
 export default function TodayReminderCard({
@@ -53,6 +85,7 @@ export default function TodayReminderCard({
 
   const completedTodayCount = todayHabits.length - pendingHabits.length;
   const totalTodayCount = todayHabits.length;
+
   const todayPercent = totalTodayCount
     ? Math.round((completedTodayCount / totalTodayCount) * 100)
     : 0;
@@ -62,23 +95,6 @@ export default function TodayReminderCard({
     pendingHabits.length > 0 &&
     nowTime >= prefs.time &&
     todayIndex !== null;
-
-  const updatePrefs = (patch) => {
-    const nextPrefs = updateReminderPrefs(patch);
-    setPrefs(nextPrefs);
-  };
-
-  const requestBrowserNotifications = async () => {
-    if (typeof window === "undefined" || !("Notification" in window)) {
-      return;
-    }
-
-    const permission = await Notification.requestPermission();
-
-    updatePrefs({
-      browserNotifications: permission === "granted",
-    });
-  };
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -98,9 +114,7 @@ export default function TodayReminderCard({
     if (!prefs.enabled) return;
     if (!prefs.browserNotifications) return;
     if (!isReminderDue) return;
-    if (typeof window === "undefined") return;
-    if (!("Notification" in window)) return;
-    if (Notification.permission !== "granted") return;
+    if (pendingHabits.length <= 0) return;
 
     const todayKey = getTodayKey();
     const sentKey = `${todayKey}-${prefs.time}`;
@@ -110,13 +124,10 @@ export default function TodayReminderCard({
 
       if (previousSentKey === sentKey) return;
 
-      new Notification("Habit Tracker Reminder", {
-        body: `You still have ${pendingHabits.length} habit(s) left for today.`,
-      });
-
+      showReminderNotification(pendingHabits.length);
       localStorage.setItem(REMINDER_SENT_KEY, sentKey);
     } catch (error) {
-      console.error("Failed to send reminder notification:", error);
+      console.error("Failed to save reminder sent status:", error);
     }
   }, [
     prefs.enabled,
@@ -178,36 +189,33 @@ export default function TodayReminderCard({
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <button
-            type="button"
-            onClick={() =>
-              updatePrefs({
-                enabled: !prefs.enabled,
-              })
-            }
-            className={`inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition duration-150 active:scale-[0.98] ${
+          <div
+            className={`inline-flex items-center justify-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium ${
               prefs.enabled
-                ? "bg-violet-300 text-black hover:bg-violet-200"
-                : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700"
+                ? "border-violet-900/40 bg-violet-950/25 text-violet-200"
+                : "border-neutral-800 bg-neutral-900 text-neutral-500"
             }`}
           >
-            <Bell className="h-4 w-4" />
+            {prefs.enabled ? (
+              <BellRing className="h-4 w-4" />
+            ) : (
+              <Bell className="h-4 w-4" />
+            )}
             {prefs.enabled ? "Reminder On" : "Reminder Off"}
-          </button>
+          </div>
 
-          <label className="inline-flex items-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-2 text-sm text-neutral-300">
+          <div className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-2 text-xs font-medium text-neutral-300">
             <Clock className="h-4 w-4 text-neutral-500" />
-            <input
-              type="time"
-              value={prefs.time}
-              onChange={(event) =>
-                updatePrefs({
-                  time: event.target.value,
-                })
-              }
-              className="bg-transparent text-sm text-white outline-none"
-            />
-          </label>
+            {prefs.time}
+          </div>
+
+          <Link
+            to="/analytics"
+            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-neutral-700 bg-neutral-800 px-3 py-2 text-xs font-medium text-neutral-300 transition duration-150 hover:bg-neutral-700"
+          >
+            <Settings className="h-4 w-4" />
+            Settings
+          </Link>
         </div>
       </div>
 
@@ -261,8 +269,14 @@ export default function TodayReminderCard({
       ) : null}
 
       <div className="mt-5">
-        <div className="mb-3 text-sm font-semibold text-neutral-300">
-          Pending Today
+        <div className="mb-3 flex items-center justify-between gap-3">
+          <div className="text-sm font-semibold text-neutral-300">
+            Pending Today
+          </div>
+
+          <div className="rounded-xl bg-white/[0.04] px-2.5 py-1 text-[11px] text-neutral-500">
+            {pendingHabits.length} left
+          </div>
         </div>
 
         {pendingHabits.length > 0 ? (
@@ -293,7 +307,7 @@ export default function TodayReminderCard({
             ))}
 
             {pendingHabits.length > 6 ? (
-              <div className="text-xs text-neutral-500">
+              <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs text-neutral-500">
                 +{pendingHabits.length - 6} more pending habit(s) in the habit
                 grid.
               </div>
@@ -305,23 +319,6 @@ export default function TodayReminderCard({
           </div>
         )}
       </div>
-
-      {typeof window !== "undefined" && "Notification" in window ? (
-        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="text-xs text-neutral-500">
-            Browser notifications work while the site is open or allowed by the
-            browser.
-          </div>
-
-          <button
-            type="button"
-            onClick={requestBrowserNotifications}
-            className="theme-button-secondary w-full sm:w-auto"
-          >
-            Enable Browser Notification
-          </button>
-        </div>
-      ) : null}
     </div>
   );
 }
