@@ -76,7 +76,7 @@ self.addEventListener("push", (event) => {
     icon: fromScope("./icon-192.png"),
     badge: fromScope("./icon-192.png"),
     data: {
-      url: payload.url || fromScope("./#/dashboard"),
+      url: fromScope("./#/dashboard"),
     },
   };
 
