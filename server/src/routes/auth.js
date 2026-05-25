@@ -556,6 +556,15 @@ router.delete("/delete-account", requireAuth, async (req, res) => {
     const userId = req.user.id;
 
     await prisma.$transaction([
+      prisma.pushSubscription.deleteMany({
+        where: { userId },
+      }),
+      prisma.reminderPreference.deleteMany({
+        where: { userId },
+      }),
+      prisma.deletedMonthBackup.deleteMany({
+        where: { userId },
+      }),
       prisma.dashboardMonth.deleteMany({
         where: { userId },
       }),

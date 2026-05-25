@@ -44,3 +44,27 @@ model DeletedMonthBackup {
 
   @@unique([userId, monthKey])
 }
+
+model PushSubscription {
+  id        Int      @id @default(autoincrement())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model ReminderPreference {
+  id           Int      @id @default(autoincrement())
+  userId       String   @unique
+  enabled      Boolean  @default(false)
+  time         String   @default("20:00")
+  timezone     String   @default("UTC")
+  lastSentDate String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
