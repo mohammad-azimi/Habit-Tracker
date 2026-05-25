@@ -6,8 +6,10 @@ import {
 } from "../lib/push.js";
 
 function getLocalDateParts(timezone) {
+  const safeTimezone = timezone || "UTC";
+
   const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: timezone,
+    timeZone: safeTimezone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
@@ -17,7 +19,6 @@ function getLocalDateParts(timezone) {
   });
 
   const parts = formatter.formatToParts(new Date());
-
   const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
 
   const year = Number(map.year);
@@ -55,10 +56,22 @@ function countPendingHabitsForDay(monthData, dayIndex) {
   };
 }
 
+function isReminderDue(localTime, reminderTime) {
+  // HH:mm strings compare correctly when both are normalized.
+  // Example: "20:05" >= "20:00" is true.
+  return localTime >= reminderTime;
+}
+
 async function sendReminderForPreference(preference) {
   const local = getLocalDateParts(preference.timezone || "UTC");
 
-  if (local.time !== preference.time) return;
+  if (!preference.enabled) return;
+
+  // Before: notification was sent only if local.time === preference.time.
+  // Now: if reminder time has already passed today and we have not sent today,
+  // send it as soon as the server is awake.
+  if (!isReminderDue(local.time, preference.time)) return;
+
   if (preference.lastSentDate === local.dateKey) return;
 
   const monthRecord = await prisma.dashboardMonth.findUnique({
@@ -70,19 +83,33 @@ async function sendReminderForPreference(preference) {
     },
   });
 
-  if (!monthRecord?.data) return;
+  if (!monthRecord?.data) {
+    console.log(
+      `Reminder skipped for ${preference.userId}: no month data for ${local.monthKey}`,
+    );
+    return;
+  }
 
   const habitCounts = countPendingHabitsForDay(
     monthRecord.data,
     local.dayIndex,
   );
 
-  if (habitCounts.total <= 0) return;
+  if (habitCounts.total <= 0) {
+    console.log(`Reminder skipped for ${preference.userId}: no active habits`);
+    return;
+  }
+
   if (habitCounts.pending <= 0) {
     await prisma.reminderPreference.update({
       where: { userId: preference.userId },
       data: { lastSentDate: local.dateKey },
     });
+
+    console.log(
+      `Reminder marked as done for ${preference.userId}: all habits completed`,
+    );
+
     return;
   }
 
@@ -92,7 +119,12 @@ async function sendReminderForPreference(preference) {
     },
   });
 
-  if (!subscriptions.length) return;
+  if (!subscriptions.length) {
+    console.log(
+      `Reminder skipped for ${preference.userId}: no push subscriptions`,
+    );
+    return;
+  }
 
   const payload = {
     title: "Habit Tracker Reminder",
@@ -101,6 +133,7 @@ async function sendReminderForPreference(preference) {
   };
 
   let sentCount = 0;
+  let removedCount = 0;
 
   for (const record of subscriptions) {
     try {
@@ -108,6 +141,7 @@ async function sendReminderForPreference(preference) {
         buildPushSubscriptionFromRecord(record),
         payload,
       );
+
       sentCount += 1;
     } catch (error) {
       if (error.statusCode === 404 || error.statusCode === 410) {
@@ -116,6 +150,8 @@ async function sendReminderForPreference(preference) {
             id: record.id,
           },
         });
+
+        removedCount += 1;
       } else {
         console.error("Failed to send scheduled push:", error);
       }
@@ -130,6 +166,10 @@ async function sendReminderForPreference(preference) {
       },
     });
   }
+
+  console.log(
+    `Reminder processed for ${preference.userId}: sent=${sentCount}, removed=${removedCount}, pending=${habitCounts.pending}`,
+  );
 }
 
 export function startReminderScheduler() {
