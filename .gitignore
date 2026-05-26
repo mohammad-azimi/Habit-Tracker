@@ -26,6 +26,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Prisma local artifacts if any
+# Prisma local artifacts
 server/prisma/dev.db
 server/prisma/dev.db-journal
