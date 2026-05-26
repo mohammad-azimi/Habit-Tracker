@@ -214,6 +214,19 @@ router.post("/test", async (req, res) => {
       }
     }
 
+    await prisma.reminderLog.create({
+      data: {
+        userId,
+        type: "test",
+        status: sent > 0 ? "sent" : "failed",
+        title: payload.title,
+        body: payload.body,
+        sentCount: sent,
+        removedCount: removed,
+        error: sent > 0 ? null : "No test notification was sent",
+      },
+    });
+
     res.json({
       message: "Test notification processed",
       sent,
@@ -222,6 +235,25 @@ router.post("/test", async (req, res) => {
   } catch (error) {
     console.error("Failed to send test push notification:", error);
     res.status(500).json({ error: "Failed to send test push notification" });
+  }
+});
+
+router.get("/logs", async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const logs = await prisma.reminderLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+
+    res.json({
+      logs,
+    });
+  } catch (error) {
+    console.error("Failed to load reminder logs:", error);
+    res.status(500).json({ error: "Failed to load reminder logs" });
   }
 });
 

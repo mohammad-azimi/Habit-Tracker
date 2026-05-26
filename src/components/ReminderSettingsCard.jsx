@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import {
   getPushPreferences,
+  getReminderLogs,
   getVapidPublicKey,
   savePushPreferences,
   sendBackendPushTest,
@@ -77,6 +78,7 @@ export default function ReminderSettingsCard() {
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [backendPreference, setBackendPreference] = useState(null);
+  const [reminderLogs, setReminderLogs] = useState([]);
 
   const pushSupported = isPushSupported();
 
@@ -84,6 +86,15 @@ export default function ReminderSettingsCard() {
     const nextPrefs = updateReminderPrefs(patch);
     setPrefs(nextPrefs);
     return nextPrefs;
+  };
+
+  const loadReminderLogs = async () => {
+    try {
+      const response = await getReminderLogs();
+      setReminderLogs(Array.isArray(response?.logs) ? response.logs : []);
+    } catch (error) {
+      console.error("Failed to load reminder logs:", error);
+    }
   };
 
   const loadBackendSettings = async () => {
@@ -113,6 +124,8 @@ export default function ReminderSettingsCard() {
 
       setIsSubscribed(Boolean(browserSubscription));
       setPermissionStatus(getNotificationPermissionStatus());
+      
+      await loadReminderLogs();
     } catch (error) {
       console.error("Failed to load backend reminder settings:", error);
       setStatusMessage(
@@ -264,6 +277,8 @@ export default function ReminderSettingsCard() {
           response?.removed ?? 0
         }.`,
       );
+
+      await loadReminderLogs();
     } catch (error) {
       console.error("Failed to send backend test notification:", error);
       setStatusMessage(error.message || "Failed to send test notification.");
@@ -506,6 +521,75 @@ export default function ReminderSettingsCard() {
             Scheduled reminders are sent by the backend when the reminder time
             has passed and there are pending habits for today.
           </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
+            <Server className="h-4 w-4 text-violet-300" />
+            Reminder Activity
+          </div>
+
+          {reminderLogs.length > 0 ? (
+            <div className="space-y-2">
+              {reminderLogs.map((log) => (
+                <div
+                  key={log.id}
+                  className="rounded-2xl border border-white/5 bg-black/10 px-3 py-3"
+                >
+                  <div className="mb-2 flex items-center justify-between gap-3">
+                    <div className="text-xs font-semibold text-neutral-200">
+                      {log.type === "test"
+                        ? "Test Notification"
+                        : "Scheduled Reminder"}
+                    </div>
+
+                    <div
+                      className={`rounded-xl px-2 py-1 text-[11px] font-medium ${
+                        log.status === "sent"
+                          ? "bg-emerald-950/40 text-emerald-300"
+                          : "bg-red-950/40 text-red-300"
+                      }`}
+                    >
+                      {log.status}
+                    </div>
+                  </div>
+
+                  <div className="text-xs leading-5 text-neutral-500">
+                    Sent:{" "}
+                    <span className="text-neutral-300">{log.sentCount}</span>
+                    {" · "}
+                    Removed:{" "}
+                    <span className="text-neutral-300">{log.removedCount}</span>
+                    {log.pendingCount !== null &&
+                    log.pendingCount !== undefined ? (
+                      <>
+                        {" · "}
+                        Pending:{" "}
+                        <span className="text-neutral-300">
+                          {log.pendingCount}
+                        </span>
+                      </>
+                    ) : null}
+                  </div>
+
+                  <div className="mt-1 text-[11px] text-neutral-600">
+                    {new Date(log.createdAt).toLocaleString()}
+                  </div>
+
+                  {log.error ? (
+                    <div className="mt-2 rounded-xl border border-red-900/30 bg-red-950/10 px-3 py-2 text-[11px] text-red-200">
+                      {log.error}
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-white/5 bg-black/10 px-3 py-3 text-xs text-neutral-500">
+              No reminder activity yet. Send a backend test or wait for a
+              scheduled reminder.
+            </div>
+          )}
         </div>
 
         <button

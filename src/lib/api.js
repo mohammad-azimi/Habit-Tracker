@@ -184,3 +184,7 @@ export function sendBackendPushTest() {
     method: "POST",
   });
 }
+
+export function getReminderLogs() {
+  return request("/push/logs");
+}

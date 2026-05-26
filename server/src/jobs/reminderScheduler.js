@@ -57,8 +57,6 @@ function countPendingHabitsForDay(monthData, dayIndex) {
 }
 
 function isReminderDue(localTime, reminderTime) {
-  // HH:mm strings compare correctly when both are normalized.
-  // Example: "20:05" >= "20:00" is true.
   return localTime >= reminderTime;
 }
 
@@ -66,12 +64,7 @@ async function sendReminderForPreference(preference) {
   const local = getLocalDateParts(preference.timezone || "UTC");
 
   if (!preference.enabled) return;
-
-  // Before: notification was sent only if local.time === preference.time.
-  // Now: if reminder time has already passed today and we have not sent today,
-  // send it as soon as the server is awake.
   if (!isReminderDue(local.time, preference.time)) return;
-
   if (preference.lastSentDate === local.dateKey) return;
 
   const monthRecord = await prisma.dashboardMonth.findUnique({
@@ -166,6 +159,20 @@ async function sendReminderForPreference(preference) {
       },
     });
   }
+
+  await prisma.reminderLog.create({
+    data: {
+      userId: preference.userId,
+      type: "scheduled",
+      status: sentCount > 0 ? "sent" : "failed",
+      title: payload.title,
+      body: payload.body,
+      pendingCount: habitCounts.pending,
+      sentCount,
+      removedCount,
+      error: sentCount > 0 ? null : "No scheduled notification was sent",
+    },
+  });
 
   console.log(
     `Reminder processed for ${preference.userId}: sent=${sentCount}, removed=${removedCount}, pending=${habitCounts.pending}`,
