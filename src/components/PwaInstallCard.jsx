@@ -7,95 +7,63 @@ import {
   Share2,
   Smartphone,
 } from "lucide-react";
-
-function isStandaloneMode() {
-  if (typeof window === "undefined") return false;
-
-  return (
-    window.matchMedia?.("(display-mode: standalone)")?.matches ||
-    window.navigator.standalone === true
-  );
-}
+import {
+  getPwaInstallSnapshot,
+  subscribePwaInstallPrompt,
+  triggerPwaInstallPrompt,
+} from "../lib/pwaInstallPrompt";
 
 function getBrowserHint() {
-  if (typeof window === "undefined")
+  if (typeof window === "undefined") {
     return "Install support depends on your browser.";
+  }
 
   const userAgent = window.navigator.userAgent.toLowerCase();
 
   if (/iphone|ipad|ipod/.test(userAgent)) {
-    return "On iPhone/iPad: tap Share, then choose Add to Home Screen.";
+    return "On iPhone/iPad: open Safari, tap Share, then choose Add to Home Screen.";
   }
 
   if (/android/.test(userAgent)) {
     return "On Android: use the Install button or the browser menu.";
   }
 
-  return "On desktop: use the Install button or the browser install icon in the address bar.";
+  return "On desktop: use the browser install icon in the address bar if the button is not available.";
 }
 
 export default function PwaInstallCard() {
-  const [installPrompt, setInstallPrompt] = useState(null);
-  const [isInstalled, setIsInstalled] = useState(() => isStandaloneMode());
+  const [installState, setInstallState] = useState(() =>
+    getPwaInstallSnapshot(),
+  );
   const [statusMessage, setStatusMessage] = useState("");
 
   const browserHint = useMemo(() => getBrowserHint(), []);
 
-  const canInstall = Boolean(installPrompt) && !isInstalled;
-
   const handleInstall = async () => {
-    if (!installPrompt) {
-      setStatusMessage(
-        "Install prompt is not available yet. Try the browser menu or refresh the page.",
-      );
-      return;
+    try {
+      if (!installState.canInstall) {
+        setStatusMessage(
+          "Install prompt is not available right now. Use the browser install icon or menu if available.",
+        );
+        return;
+      }
+
+      const choice = await triggerPwaInstallPrompt();
+
+      if (choice.outcome === "accepted") {
+        setStatusMessage("Habit Tracker installation started.");
+      } else {
+        setStatusMessage("Installation was dismissed.");
+      }
+    } catch (error) {
+      setStatusMessage(error.message || "Install prompt is not available.");
     }
-
-    installPrompt.prompt();
-
-    const choice = await installPrompt.userChoice;
-
-    if (choice.outcome === "accepted") {
-      setStatusMessage("Habit Tracker installation started.");
-    } else {
-      setStatusMessage("Installation was dismissed.");
-    }
-
-    setInstallPrompt(null);
   };
 
   useEffect(() => {
-    const handleBeforeInstallPrompt = (event) => {
-      event.preventDefault();
-      setInstallPrompt(event);
-      setStatusMessage("");
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true);
-      setInstallPrompt(null);
-      setStatusMessage("Habit Tracker is installed.");
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    window.addEventListener("appinstalled", handleAppInstalled);
-
-    const mediaQuery = window.matchMedia?.("(display-mode: standalone)");
-
-    const handleDisplayModeChange = () => {
-      setIsInstalled(isStandaloneMode());
-    };
-
-    mediaQuery?.addEventListener?.("change", handleDisplayModeChange);
-
-    return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
-      window.removeEventListener("appinstalled", handleAppInstalled);
-      mediaQuery?.removeEventListener?.("change", handleDisplayModeChange);
-    };
+    return subscribePwaInstallPrompt((nextState) => {
+      setInstallState(nextState);
+    });
   }, []);
 
   return (
@@ -110,17 +78,23 @@ export default function PwaInstallCard() {
 
         <div
           className={`inline-flex w-fit items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium ${
-            isInstalled
+            installState.isInstalled
               ? "border-emerald-900/40 bg-emerald-950/20 text-emerald-200"
-              : "border-violet-900/40 bg-violet-950/20 text-violet-200"
+              : installState.canInstall
+                ? "border-violet-900/40 bg-violet-950/20 text-violet-200"
+                : "border-neutral-800 bg-neutral-900 text-neutral-400"
           }`}
         >
-          {isInstalled ? (
+          {installState.isInstalled ? (
             <CheckCircle2 className="h-4 w-4" />
           ) : (
             <MonitorSmartphone className="h-4 w-4" />
           )}
-          {isInstalled ? "Installed" : "PWA Ready"}
+          {installState.isInstalled
+            ? "Installed"
+            : installState.canInstall
+              ? "Ready to Install"
+              : "PWA Ready"}
         </div>
       </div>
 
@@ -134,11 +108,15 @@ export default function PwaInstallCard() {
           <button
             type="button"
             onClick={handleInstall}
-            disabled={!canInstall}
+            disabled={!installState.canInstall || installState.isInstalled}
             className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
           >
             <Download className="h-4 w-4" />
-            {isInstalled ? "Already Installed" : "Install Habit Tracker"}
+            {installState.isInstalled
+              ? "Already Installed"
+              : installState.canInstall
+                ? "Install Habit Tracker"
+                : "Install Not Available"}
           </button>
 
           <div className="mt-3 rounded-2xl border border-white/5 bg-black/10 px-3 py-3 text-xs leading-5 text-neutral-500">
@@ -146,9 +124,12 @@ export default function PwaInstallCard() {
               <Info className="h-4 w-4 text-violet-300" />
               Install note
             </div>
-            {canInstall
-              ? "Your browser says Habit Tracker can be installed."
-              : browserHint}
+
+            {installState.isInstalled
+              ? "Habit Tracker is already installed on this device."
+              : installState.canInstall
+                ? "Your browser says Habit Tracker can be installed now."
+                : browserHint}
           </div>
         </div>
 
