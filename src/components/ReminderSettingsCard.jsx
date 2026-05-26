@@ -14,6 +14,7 @@ import {
   Unplug,
 } from "lucide-react";
 import {
+  clearReminderLogs,
   getPushPreferences,
   getReminderLogs,
   getVapidPublicKey,
@@ -86,6 +87,23 @@ export default function ReminderSettingsCard() {
     const nextPrefs = updateReminderPrefs(patch);
     setPrefs(nextPrefs);
     return nextPrefs;
+  };
+
+  const clearLogs = async () => {
+    try {
+      setIsLoading(true);
+      setStatusMessage("");
+
+      const response = await clearReminderLogs();
+
+      setReminderLogs([]);
+      setStatusMessage(response?.message || "Reminder activity logs cleared.");
+    } catch (error) {
+      console.error("Failed to clear reminder logs:", error);
+      setStatusMessage(error.message || "Failed to clear reminder logs.");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const loadReminderLogs = async () => {
@@ -524,9 +542,20 @@ export default function ReminderSettingsCard() {
         </div>
 
         <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
-          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
-            <Server className="h-4 w-4 text-violet-300" />
-            Reminder Activity
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
+              <Server className="h-4 w-4 text-violet-300" />
+              Reminder Activity
+            </div>
+
+            <button
+              type="button"
+              onClick={clearLogs}
+              disabled={isLoading || reminderLogs.length === 0}
+              className="rounded-xl border border-neutral-700 bg-neutral-800 px-3 py-1.5 text-[11px] font-medium text-neutral-300 transition hover:bg-neutral-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Clear
+            </button>
           </div>
 
           {reminderLogs.length > 0 ? (

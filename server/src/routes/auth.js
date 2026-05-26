@@ -555,6 +555,9 @@ router.delete("/delete-account", requireAuth, async (req, res) => {
     const userId = req.user.id;
 
     await prisma.$transaction([
+      prisma.reminderLog.deleteMany({
+        where: { userId },
+      }),
       prisma.pushSubscription.deleteMany({
         where: { userId },
       }),
@@ -580,6 +583,23 @@ router.delete("/delete-account", requireAuth, async (req, res) => {
     return res.status(500).json({
       error: "Failed to delete account",
     });
+  }
+});
+
+router.delete("/logs", async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await prisma.reminderLog.deleteMany({
+      where: { userId },
+    });
+
+    res.json({
+      message: "Reminder activity logs cleared",
+    });
+  } catch (error) {
+    console.error("Failed to clear reminder logs:", error);
+    res.status(500).json({ error: "Failed to clear reminder logs" });
   }
 });
 

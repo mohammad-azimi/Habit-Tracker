@@ -188,3 +188,9 @@ export function sendBackendPushTest() {
 export function getReminderLogs() {
   return request("/push/logs");
 }
+
+export function clearReminderLogs() {
+  return request("/push/logs", {
+    method: "DELETE",
+  });
+}
