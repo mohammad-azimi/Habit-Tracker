@@ -257,4 +257,21 @@ router.get("/logs", async (req, res) => {
   }
 });
 
+router.delete("/logs", async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    await prisma.reminderLog.deleteMany({
+      where: { userId },
+    });
+
+    res.json({
+      message: "Reminder activity logs cleared",
+    });
+  } catch (error) {
+    console.error("Failed to clear reminder logs:", error);
+    res.status(500).json({ error: "Failed to clear reminder logs" });
+  }
+});
+
 export default router;
