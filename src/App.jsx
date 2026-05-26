@@ -93,6 +93,7 @@ import SyncStatusBadge from "./components/SyncStatusBadge";
 import AchievementsCard from "./components/AchievementsCard";
 import TodayReminderCard from "./components/TodayReminderCard";
 import ReminderSettingsCard from "./components/ReminderSettingsCard";
+import PwaInstallCard from "./components/PwaInstallCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -4310,6 +4311,8 @@ export default function App() {
                 />
 
                 <ReminderSettingsCard />
+
+                <PwaInstallCard />
               </section>
 
               <section className="space-y-4 xl:col-span-6">
