@@ -4607,6 +4607,19 @@ export default function App() {
           element={
             <ProfilePage
               currentUser={currentUser}
+              profileStats={{
+                monthLabel: `${MONTHS[selectedMonthIndex]} ${selectedYear}`,
+                activeHabitsCount: activeAnalysisRows.length,
+                archivedHabitsCount: archivedAnalysisRows.length,
+                completedHabitsCount: achievementStats.completedHabitsCount,
+                completionPercent,
+                totalCompleted,
+                totalLeft,
+                bestCurrentStreak: achievementStats.bestCurrentStreak,
+                bestOverallStreak: achievementStats.bestOverallStreak,
+                moodAverage: achievementStats.moodAverage,
+                motivationAverage: achievementStats.motivationAverage,
+              }}
               onBack={() => navigate("/dashboard")}
               onGoToAnalytics={() => navigate("/analytics")}
               onLogout={handleLogout}

@@ -1,11 +1,16 @@
 import React from "react";
 import {
+  Archive,
   ArrowLeft,
   BarChart3,
+  CalendarCheck,
   Download,
+  Flame,
   LayoutDashboard,
   LogOut,
   ShieldCheck,
+  Target,
+  Trophy,
   Upload,
   UserCircle,
 } from "lucide-react";
@@ -13,8 +18,26 @@ import UserProfileCard from "./UserProfileCard";
 import ChangePasswordCard from "./ChangePasswordCard";
 import DeleteAccountCard from "./DeleteAccountCard";
 
+function ProfileStatTile({ icon: Icon, label, value, helper }) {
+  return (
+    <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+      <div className="mb-3 flex items-center gap-2 text-xs font-medium text-neutral-500">
+        <Icon className="h-4 w-4 text-violet-300" />
+        {label}
+      </div>
+
+      <div className="text-2xl font-semibold text-white">{value}</div>
+
+      {helper ? (
+        <div className="mt-1 text-xs leading-5 text-neutral-500">{helper}</div>
+      ) : null}
+    </div>
+  );
+}
+
 export default function ProfilePage({
   currentUser,
+  profileStats = {},
   onBack,
   onGoToAnalytics,
   onLogout,
@@ -102,6 +125,82 @@ export default function ProfilePage({
               errorMessage={profileErrorMessage}
               successMessage={profileSuccessMessage}
             />
+
+            <div className="theme-card p-5">
+              <div className="mb-4">
+                <div className="theme-section-title text-lg">
+                  Profile Snapshot
+                </div>
+                <div className="theme-section-subtitle text-xs">
+                  A quick summary of your current habit performance and account
+                  activity.
+                </div>
+              </div>
+
+              <div className="mb-4 rounded-3xl border border-violet-900/30 bg-violet-950/15 px-4 py-3">
+                <div className="flex items-center gap-2 text-xs font-medium text-violet-200">
+                  <CalendarCheck className="h-4 w-4" />
+                  Current workspace
+                </div>
+
+                <div className="mt-1 text-lg font-semibold text-white">
+                  {profileStats.monthLabel || "Current month"}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <ProfileStatTile
+                  icon={Target}
+                  label="Active Habits"
+                  value={profileStats.activeHabitsCount ?? 0}
+                  helper="Habits currently visible in your dashboard."
+                />
+
+                <ProfileStatTile
+                  icon={Archive}
+                  label="Archived"
+                  value={profileStats.archivedHabitsCount ?? 0}
+                  helper="Habits saved outside the main list."
+                />
+
+                <ProfileStatTile
+                  icon={Trophy}
+                  label="Completed"
+                  value={profileStats.completedHabitsCount ?? 0}
+                  helper="Habits that reached 100% this month."
+                />
+
+                <ProfileStatTile
+                  icon={Flame}
+                  label="Best Streak"
+                  value={`${profileStats.bestOverallStreak ?? 0} days`}
+                  helper="Your strongest streak among active habits."
+                />
+              </div>
+
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-3xl border border-white/5 bg-black/10 p-4">
+                  <div className="text-xs text-neutral-500">Completion</div>
+                  <div className="mt-2 text-xl font-semibold text-white">
+                    {profileStats.completionPercent ?? 0}%
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-white/5 bg-black/10 p-4">
+                  <div className="text-xs text-neutral-500">Mood Avg</div>
+                  <div className="mt-2 text-xl font-semibold text-white">
+                    {profileStats.moodAverage ?? 0}
+                  </div>
+                </div>
+
+                <div className="rounded-3xl border border-white/5 bg-black/10 p-4">
+                  <div className="text-xs text-neutral-500">Motivation Avg</div>
+                  <div className="mt-2 text-xl font-semibold text-white">
+                    {profileStats.motivationAverage ?? 0}
+                  </div>
+                </div>
+              </div>
+            </div>
 
             <div className="theme-card p-5">
               <div className="mb-4">
