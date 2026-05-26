@@ -61,6 +61,12 @@ function normalizeTime(value) {
     : "20:00";
 }
 
+function formatLastSentDate(value) {
+  if (!value) return "Not sent yet";
+
+  return value;
+}
+
 export default function ReminderSettingsCard() {
   const [prefs, setPrefs] = useState(() => loadReminderPrefs());
   const [permissionStatus, setPermissionStatus] = useState(() =>
@@ -70,6 +76,7 @@ export default function ReminderSettingsCard() {
   const [timezone, setTimezone] = useState(() => getClientTimezone());
   const [isLoading, setIsLoading] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [backendPreference, setBackendPreference] = useState(null);
 
   const pushSupported = isPushSupported();
 
@@ -90,6 +97,8 @@ export default function ReminderSettingsCard() {
       ]);
 
       const backendPreference = preferenceResponse?.preference;
+
+      setBackendPreference(backendPreference || null);
 
       if (backendPreference) {
         const nextPrefs = updateReminderPrefs({
@@ -124,6 +133,10 @@ export default function ReminderSettingsCard() {
         time: normalizeTime(nextPrefs.time),
         timezone,
       });
+
+      if (response?.preference) {
+        setBackendPreference(response.preference);
+      }
 
       setStatusMessage(response?.message || "Reminder settings saved.");
     } catch (error) {
@@ -435,6 +448,63 @@ export default function ReminderSettingsCard() {
               <Unplug className="h-4 w-4" />
               Disable Backend Push
             </button>
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
+            <Server className="h-4 w-4 text-violet-300" />
+            Reminder Status
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 text-xs">
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/10 px-3 py-2">
+              <span className="text-neutral-500">Backend reminder</span>
+              <span
+                className={
+                  backendPreference?.enabled
+                    ? "text-emerald-300"
+                    : "text-neutral-400"
+                }
+              >
+                {backendPreference?.enabled ? "Enabled" : "Disabled"}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/10 px-3 py-2">
+              <span className="text-neutral-500">Reminder time</span>
+              <span className="text-neutral-200">
+                {backendPreference?.time || prefs.time}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/10 px-3 py-2">
+              <span className="text-neutral-500">Timezone</span>
+              <span className="max-w-[160px] truncate text-neutral-200">
+                {backendPreference?.timezone || timezone}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/10 px-3 py-2">
+              <span className="text-neutral-500">Last sent</span>
+              <span className="text-neutral-200">
+                {formatLastSentDate(backendPreference?.lastSentDate)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-black/10 px-3 py-2">
+              <span className="text-neutral-500">Subscription</span>
+              <span
+                className={isSubscribed ? "text-emerald-300" : "text-red-300"}
+              >
+                {isSubscribed ? "Active" : "Inactive"}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-3 text-xs leading-5 text-neutral-500">
+            Scheduled reminders are sent by the backend when the reminder time
+            has passed and there are pending habits for today.
           </div>
         </div>
 
