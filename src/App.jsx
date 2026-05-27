@@ -95,6 +95,7 @@ import TodayReminderCard from "./components/TodayReminderCard";
 import ReminderSettingsCard from "./components/ReminderSettingsCard";
 import PwaInstallCard from "./components/PwaInstallCard";
 import MobileBottomNav from "./components/MobileBottomNav";
+import NetworkStatusBanner from "./components/NetworkStatusBanner";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -3864,6 +3865,12 @@ export default function App() {
             </div>
           </div>
 
+          <NetworkStatusBanner
+            syncStatus={syncStatus}
+            syncErrorMessage={syncErrorMessage}
+            onRetry={retrySaveNow}
+          />
+
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
             <section className="space-y-4 xl:col-span-3">
               <div className="theme-card p-5">
@@ -4333,6 +4340,12 @@ export default function App() {
               </div>
             </div>
 
+            <NetworkStatusBanner
+              syncStatus={syncStatus}
+              syncErrorMessage={syncErrorMessage}
+              onRetry={retrySaveNow}
+            />
+
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
               <section className="space-y-4 xl:col-span-3">
                 <OverallStatsCard
@@ -4595,6 +4608,12 @@ export default function App() {
                 {accountActions}
               </div>
             </div>
+
+            <NetworkStatusBanner
+              syncStatus={syncStatus}
+              syncErrorMessage={syncErrorMessage}
+              onRetry={retrySaveNow}
+            />
 
             <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
               <section className="space-y-4 xl:col-span-4">
