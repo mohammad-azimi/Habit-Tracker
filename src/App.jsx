@@ -3716,7 +3716,7 @@ export default function App() {
   }
 
     const dashboardPage = (
-      <div className="app-theme-bg min-h-screen p-4 pb-24 md:p-8">
+      <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
         <div className="mx-auto max-w-[1600px] space-y-6">
           <input
             ref={customTemplateFileInputRef}
@@ -4199,7 +4199,7 @@ export default function App() {
     );
 
       const analyticsPage = (
-        <div className="app-theme-bg min-h-screen p-4 pb-24 md:p-8">
+        <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
           <div className="mx-auto max-w-[1600px] space-y-6">
             <DashboardHeader
               title="Analytics & Insights"
@@ -4462,7 +4462,7 @@ export default function App() {
       );
 
       const notesReviewPage = (
-        <div className="app-theme-bg min-h-screen p-4 pb-24 md:p-8">
+        <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
           <div className="mx-auto max-w-[1400px] space-y-6">
             <DashboardHeader
               title="Notes & Review"

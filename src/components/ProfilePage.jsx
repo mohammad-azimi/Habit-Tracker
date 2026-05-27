@@ -55,7 +55,7 @@ export default function ProfilePage({
   const avatarUrl = currentUser?.avatarUrl || "";
 
   return (
-    <div className="app-theme-bg min-h-screen p-4 pb-24 md:p-8">
+    <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
       <div className="mx-auto max-w-6xl space-y-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
