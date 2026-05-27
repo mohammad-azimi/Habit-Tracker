@@ -945,6 +945,114 @@ function drawReviewBox(doc, { x, y, w, h, title, text }) {
   doc.text(lines.slice(0, 5), x + 4, y + 12);
 }
 
+function clampProgress(value, target) {
+  if (!target) return 0;
+  return Math.max(0, Math.min(100, Math.round((Number(value) / target) * 100)));
+}
+
+function buildPdfAchievements(summary, habits = []) {
+  const activeHabits = habits.filter((habit) => !habit.archived);
+
+  const totalCompleted = Number(summary.totalCompleted || 0);
+  const completionPercent = Number(summary.completionPercent || 0);
+  const completedHabitsCount = activeHabits.filter(
+    (habit) => Number(habit.progress || 0) >= 100,
+  ).length;
+
+  const bestCurrentStreak = activeHabits.reduce(
+    (max, habit) => Math.max(max, Number(habit.currentStreak || 0)),
+    0,
+  );
+
+  const bestOverallStreak = activeHabits.reduce(
+    (max, habit) => Math.max(max, Number(habit.bestStreak || 0)),
+    0,
+  );
+
+  const moodAverage = Number(summary.moodAverage || 0);
+  const motivationAverage = Number(summary.motivationAverage || 0);
+
+  return [
+    {
+      title: "First Win",
+      description: "Complete your first habit action.",
+      value: `${totalCompleted}/1`,
+      progress: clampProgress(totalCompleted, 1),
+      unlocked: totalCompleted >= 1,
+    },
+    {
+      title: "Daily Starter",
+      description: "Complete 10 habit actions this month.",
+      value: `${totalCompleted}/10`,
+      progress: clampProgress(totalCompleted, 10),
+      unlocked: totalCompleted >= 10,
+    },
+    {
+      title: "Consistency Builder",
+      description: "Reach 50% monthly completion.",
+      value: `${completionPercent}%/50%`,
+      progress: clampProgress(completionPercent, 50),
+      unlocked: completionPercent >= 50,
+    },
+    {
+      title: "Monthly Champion",
+      description: "Reach 80% monthly completion.",
+      value: `${completionPercent}%/80%`,
+      progress: clampProgress(completionPercent, 80),
+      unlocked: completionPercent >= 80,
+    },
+    {
+      title: "Perfect Habit",
+      description: "Finish at least one habit at 100%.",
+      value: `${completedHabitsCount}/1`,
+      progress: clampProgress(completedHabitsCount, 1),
+      unlocked: completedHabitsCount >= 1,
+    },
+    {
+      title: "Habit Master",
+      description: "Finish 3 habits at 100%.",
+      value: `${completedHabitsCount}/3`,
+      progress: clampProgress(completedHabitsCount, 3),
+      unlocked: completedHabitsCount >= 3,
+    },
+    {
+      title: "Streak Spark",
+      description: "Build a 3-day current streak.",
+      value: `${bestCurrentStreak}/3 days`,
+      progress: clampProgress(bestCurrentStreak, 3),
+      unlocked: bestCurrentStreak >= 3,
+    },
+    {
+      title: "Streak Legend",
+      description: "Reach a 7-day best streak.",
+      value: `${bestOverallStreak}/7 days`,
+      progress: clampProgress(bestOverallStreak, 7),
+      unlocked: bestOverallStreak >= 7,
+    },
+    {
+      title: "Mind Balance",
+      description: "Keep mood average at 7.0 or higher.",
+      value: `${moodAverage}/7.0`,
+      progress: clampProgress(moodAverage, 7),
+      unlocked: moodAverage >= 7,
+    },
+    {
+      title: "Motivation Boost",
+      description: "Keep motivation average at 7.0 or higher.",
+      value: `${motivationAverage}/7.0`,
+      progress: clampProgress(motivationAverage, 7),
+      unlocked: motivationAverage >= 7,
+    },
+    {
+      title: "Full Roster",
+      description: "Track at least 5 active habits this month.",
+      value: `${activeHabits.length}/5`,
+      progress: clampProgress(activeHabits.length, 5),
+      unlocked: activeHabits.length >= 5,
+    },
+  ];
+}
+
 export function exportDashboardPdf(summary) {
   const doc = new jsPDF({
     orientation: "portrait",
@@ -964,6 +1072,14 @@ export function exportDashboardPdf(summary) {
   const weeklyProgress = summary.weeklyProgress || [];
   const dailyProgress = summary.dailyProgress || [];
   const yearlyOverviewData = summary.yearlyOverviewData || [];
+
+  const pdfAchievements = buildPdfAchievements(summary, habits);
+  const unlockedAchievements = pdfAchievements.filter(
+    (achievement) => achievement.unlocked,
+  );
+  const lockedAchievements = pdfAchievements.filter(
+    (achievement) => !achievement.unlocked,
+  );
 
   const bestHabit = getBestHabit(habits);
   const weakestHabit = getWeakestHabit(habits);
@@ -1052,6 +1168,110 @@ export function exportDashboardPdf(summary) {
   });
 
   y += cardH * 2 + gap + 8;
+
+  y = ensurePageSpace(doc, y, 72, margin);
+
+  y = drawSectionTitle(
+    doc,
+    "Achievement Summary",
+    "Unlocked badge progress for this month",
+    y,
+    pageWidth,
+    margin,
+  );
+
+  const achievementSummaryCardW = (contentWidth - gap * 2) / 3;
+  const achievementSummaryCardH = 20;
+
+  drawCard(doc, {
+    x: margin,
+    y: y + 3,
+    w: achievementSummaryCardW,
+    h: achievementSummaryCardH,
+    title: "Unlocked",
+    value: `${unlockedAchievements.length}/${pdfAchievements.length}`,
+    subtitle: "Badges completed",
+    fillColor: [245, 252, 247],
+    borderColor: [187, 247, 208],
+    valueColor: [22, 101, 52],
+  });
+
+  drawCard(doc, {
+    x: margin + achievementSummaryCardW + gap,
+    y: y + 3,
+    w: achievementSummaryCardW,
+    h: achievementSummaryCardH,
+    title: "Locked",
+    value: lockedAchievements.length,
+    subtitle: "Badges remaining",
+    fillColor: [250, 250, 250],
+    borderColor: [229, 231, 235],
+  });
+
+  drawCard(doc, {
+    x: margin + (achievementSummaryCardW + gap) * 2,
+    y: y + 3,
+    w: achievementSummaryCardW,
+    h: achievementSummaryCardH,
+    title: "Completion",
+    value: `${Math.round(
+      (unlockedAchievements.length / Math.max(pdfAchievements.length, 1)) * 100,
+    )}%`,
+    subtitle: "Achievement progress",
+    fillColor: [245, 243, 255],
+    borderColor: [221, 214, 254],
+    valueColor: [109, 40, 217],
+  });
+
+  autoTable(doc, {
+    startY: y + achievementSummaryCardH + 8,
+    head: [["Achievement", "Status", "Progress", "Requirement"]],
+    body: pdfAchievements.map((achievement) => [
+      pdfSafeText(achievement.title),
+      achievement.unlocked ? "Unlocked" : "Locked",
+      `${achievement.progress}%`,
+      pdfSafeText(achievement.description),
+    ]),
+    theme: "grid",
+    headStyles: {
+      fillColor: [17, 24, 39],
+      textColor: [255, 255, 255],
+      fontSize: 8,
+    },
+    styles: {
+      fontSize: 7.4,
+      cellPadding: 2,
+      textColor: [31, 41, 55],
+      lineColor: [229, 231, 235],
+      lineWidth: 0.1,
+    },
+    alternateRowStyles: {
+      fillColor: [249, 250, 251],
+    },
+    margin: { left: margin, right: margin },
+    columnStyles: {
+      0: { cellWidth: 42 },
+      1: { cellWidth: 24, halign: "center" },
+      2: { cellWidth: 22, halign: "center" },
+      3: { cellWidth: 78 },
+    },
+    didParseCell(data) {
+      if (data.section !== "body") return;
+
+      const status = data.row.raw?.[1];
+
+      if (data.column.index === 1 && status === "Unlocked") {
+        data.cell.styles.textColor = [22, 101, 52];
+        data.cell.styles.fontStyle = "bold";
+      }
+
+      if (data.column.index === 1 && status === "Locked") {
+        data.cell.styles.textColor = [107, 114, 128];
+      }
+    },
+  });
+
+  y = doc.lastAutoTable.finalY + 8;
 
   y = drawSectionTitle(
     doc,
