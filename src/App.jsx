@@ -96,6 +96,7 @@ import ReminderSettingsCard from "./components/ReminderSettingsCard";
 import PwaInstallCard from "./components/PwaInstallCard";
 import MobileBottomNav from "./components/MobileBottomNav";
 import NetworkStatusBanner from "./components/NetworkStatusBanner";
+import BackendHealthCard from "./components/BackendHealthCard";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -4354,6 +4355,8 @@ export default function App() {
                   totalLeft={totalLeft}
                   completionPercent={completionPercent}
                 />
+
+                <BackendHealthCard />
 
                 <MonthlySummaryCard
                   selectedYear={selectedYear}

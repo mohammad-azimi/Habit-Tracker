@@ -194,3 +194,7 @@ export function clearReminderLogs() {
     method: "DELETE",
   });
 }
+
+export function checkApiHealth() {
+  return request("/health");
+}
