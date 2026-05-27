@@ -234,7 +234,8 @@ export default function ProfilePage({
 
               <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs leading-5 text-neutral-500">
                 Full account export includes your profile data and all saved
-                month records. Password is not included.
+                month records. Password is not included. Importing an account
+                backup now requires confirmation before restore.
               </div>
             </div>
 

@@ -3493,6 +3493,71 @@ export default function App() {
     }
   };
 
+  const getAccountImportPreview = (payload, fileName = "selected file") => {
+    const months = Array.isArray(payload?.months)
+      ? payload.months
+      : Array.isArray(payload?.data?.months)
+        ? payload.data.months
+        : Array.isArray(payload?.account?.months)
+          ? payload.account.months
+          : [];
+
+    const user =
+      payload?.user || payload?.profile || payload?.account?.user || {};
+
+    const username =
+      user?.username ||
+      payload?.username ||
+      payload?.profile?.username ||
+      "Unknown";
+
+    const email =
+      user?.email || payload?.email || payload?.profile?.email || "Unknown";
+
+    const exportedAt =
+      payload?.metadata?.exportedAt || payload?.exportedAt || "Unknown";
+
+    const exportType =
+      payload?.metadata?.exportType || payload?.exportType || "account-backup";
+
+    return {
+      fileName,
+      username,
+      email,
+      exportedAt,
+      exportType,
+      monthCount: months.length,
+    };
+  };
+
+  const validateAccountImportPayload = (payload) => {
+    if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
+      throw new Error("This file is not a valid Habit Tracker account backup.");
+    }
+
+    const hasUserData = Boolean(
+      payload.user ||
+      payload.profile ||
+      payload.account?.user ||
+      payload.username ||
+      payload.email,
+    );
+
+    const hasMonthData = Boolean(
+      Array.isArray(payload.months) ||
+      Array.isArray(payload.data?.months) ||
+      Array.isArray(payload.account?.months),
+    );
+
+    const hasMetadata = Boolean(payload.metadata || payload.exportedAt);
+
+    if (!hasUserData && !hasMonthData && !hasMetadata) {
+      throw new Error(
+        "This file does not look like a Habit Tracker account export.",
+      );
+    }
+  };
+
   const exportFullAccountJSON = async () => {
     try {
       const payload = await exportAccountData();
@@ -3514,11 +3579,8 @@ export default function App() {
     fullAccountImportInputRef.current?.click();
   };
 
-  const importFullAccountFromFile = async (file) => {
+  const importParsedFullAccount = async (parsed) => {
     try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-
       const response = await importAccountData(parsed);
 
       if (response?.token && response?.user) {
@@ -3539,9 +3601,42 @@ export default function App() {
 
       showToast("Full account data imported successfully.", "success");
       navigate("/dashboard");
+
+      return { ok: true };
     } catch (error) {
       console.error("Failed to import account data:", error);
       showToast(error.message || "Failed to import account data.", "error");
+
+      return {
+        ok: false,
+        message: error.message || "Failed to import account data.",
+      };
+    }
+  };
+
+  const importFullAccountFromFile = async (file) => {
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+
+      validateAccountImportPayload(parsed);
+
+      const preview = getAccountImportPreview(parsed, file.name);
+
+      openConfirmModal({
+        title: "Import account backup?",
+        message: `You are about to import "${preview.fileName}". Detected user: ${preview.username} (${preview.email}). Detected months: ${preview.monthCount}. Export type: ${preview.exportType}. Exported at: ${preview.exportedAt}.`,
+        confirmLabel: "Import Account Data",
+        cancelLabel: "Cancel",
+        variant: "warning",
+        helperText:
+          "This can replace or overwrite account data. Export your current account first if you want a backup before importing.",
+        requireTypedConfirmation: "IMPORT",
+        onConfirm: () => importParsedFullAccount(parsed),
+      });
+    } catch (error) {
+      console.error("Failed to prepare account import:", error);
+      showToast(error.message || "Failed to prepare account import.", "error");
     }
   };
 
