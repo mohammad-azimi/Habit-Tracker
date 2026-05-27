@@ -2583,7 +2583,7 @@ export default function App() {
       "inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition duration-150";
 
     const pageTabs = (
-      <div className="flex flex-wrap gap-2">
+      <div className="hidden flex-wrap gap-2 md:flex">
         <button
           onClick={() => navigate("/dashboard")}
           className={`${pageNavButtonBase} ${
@@ -2811,7 +2811,7 @@ export default function App() {
     };
 
     const accountActions = (
-      <div className="flex flex-col gap-3 sm:flex-row">
+      <div className="hidden flex-col gap-3 sm:flex-row md:flex">
         <button
           onClick={() => navigate("/profile")}
           className="theme-button-secondary"
