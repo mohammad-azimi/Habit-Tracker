@@ -45,7 +45,7 @@ export default function HabitGrid({
   const canReorder = isManualSort === true;
 
   const gridCols =
-    "grid-cols-[290px_repeat(31,minmax(24px,1fr))] sm:grid-cols-[520px_repeat(31,minmax(26px,1fr))]";
+    "grid-cols-[220px_repeat(31,32px)] sm:grid-cols-[420px_repeat(31,34px)] lg:grid-cols-[520px_repeat(31,minmax(32px,1fr))]";
 
   const getDayButtonClasses = (checked, idx) => {
     const isToday = idx === todayIndex;
@@ -105,16 +105,31 @@ export default function HabitGrid({
   return (
     <div
       ref={scrollContainerRef}
-      className="theme-card overflow-x-auto p-3 sm:p-4"
+      className="theme-card habit-grid-scroll overflow-x-auto p-3 pb-4 sm:p-4"
     >
-      <div className="min-w-[900px] sm:min-w-[1150px]">
+      <div className="mb-3 flex items-center justify-between gap-3 md:hidden">
+        <div>
+          <div className="text-sm font-semibold text-white">Habit Grid</div>
+          <div className="mt-1 text-xs text-neutral-500">
+            Swipe sideways to track all days.
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-white/5 bg-white/[0.04] px-3 py-2 text-[11px] text-neutral-400">
+          {daysInMonth} days
+        </div>
+      </div>
+
+      <div className="w-max min-w-full">
         <div className={`mb-2 grid ${gridCols} items-center gap-1`}>
           <div
             ref={stickyColumnRef}
             className="sticky left-0 z-30 rounded-2xl border border-white/5 bg-[linear-gradient(180deg,#1b1b1f_0%,#121216_100%)] px-3 py-2.5 shadow-[12px_0_30px_-18px_rgba(0,0,0,0.85)]"
           >
-            <div className="text-sm font-semibold text-white">My Habits</div>
-            <div className="mt-1 text-[10px] text-neutral-500 sm:text-[11px]">
+            <div className="text-xs font-semibold text-white sm:text-sm">
+              My Habits
+            </div>
+            <div className="mt-1 line-clamp-2 text-[10px] leading-4 text-neutral-500 sm:text-[11px]">
               {isManualSort
                 ? "Manual reorder is enabled"
                 : "Switch sort mode to Manual Order to reorder habits"}
@@ -193,7 +208,7 @@ export default function HabitGrid({
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                         <div className="min-w-0 flex-1">
-                          <div className="truncate text-[14px] font-medium text-white sm:text-[15px]">
+                          <div className="line-clamp-2 text-[13px] font-medium leading-5 text-white sm:text-[15px]">
                             {habit.name}
                             <span className="ml-1">{habit.icon}</span>
                           </div>
@@ -310,7 +325,7 @@ export default function HabitGrid({
                     onClick={() => onToggleHabitDay(habit.id, idx)}
                     aria-label={getDayButtonLabel(habit.name, idx, checked)}
                     title={getDayButtonLabel(habit.name, idx, checked)}
-                    className={`flex h-6 w-6 touch-manipulation items-center justify-center rounded-md border text-[11px] transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-95 ${getDayButtonClasses(
+                    className={`flex h-8 w-8 touch-manipulation items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-95 sm:h-7 sm:w-7 sm:text-[11px] ${getDayButtonClasses(
                       checked,
                       idx,
                     )}`}
