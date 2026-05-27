@@ -312,6 +312,14 @@ This helps keep the backend awake so the reminder scheduler can run.
 
 ---
 
+## Testing Checklist
+
+Before deploying or presenting the project, use the full testing checklist:
+
+[Testing Checklist](./TESTING_CHECKLIST.md)
+
+---
+
 ## Security Notes
 
 - Do not commit `.env` files.
