@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Award,
   BadgeCheck,
   Brain,
   CalendarCheck2,
+  Clock3,
   Flame,
+  History,
   Lock,
   Medal,
   Sparkles,
@@ -13,9 +15,45 @@ import {
   Zap,
 } from "lucide-react";
 
+const ACHIEVEMENT_HISTORY_KEY = "habit-tracker-achievement-history";
+
 function clampProgress(value, target) {
   if (!target) return 0;
   return Math.max(0, Math.min(100, Math.round((value / target) * 100)));
+}
+
+function loadAchievementHistory() {
+  if (typeof window === "undefined") return {};
+
+  try {
+    const raw = localStorage.getItem(ACHIEVEMENT_HISTORY_KEY);
+    const parsed = raw ? JSON.parse(raw) : {};
+
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch (error) {
+    console.error("Failed to load achievement history:", error);
+    return {};
+  }
+}
+
+function saveAchievementHistory(history) {
+  if (typeof window === "undefined") return;
+
+  try {
+    localStorage.setItem(ACHIEVEMENT_HISTORY_KEY, JSON.stringify(history));
+  } catch (error) {
+    console.error("Failed to save achievement history:", error);
+  }
+}
+
+function formatUnlockDate(value) {
+  if (!value) return "Not unlocked yet";
+
+  try {
+    return new Date(value).toLocaleString();
+  } catch {
+    return value;
+  }
 }
 
 function buildAchievements(stats) {
@@ -121,6 +159,15 @@ function buildAchievements(stats) {
       progress: clampProgress(motivationAverage, 7),
       unlocked: motivationAverage >= 7,
     },
+    {
+      id: "full-roster",
+      title: "Full Roster",
+      description: "Track at least 5 active habits this month.",
+      icon: Target,
+      value: `${activeHabitsCount}/5`,
+      progress: clampProgress(activeHabitsCount, 5),
+      unlocked: activeHabitsCount >= 5,
+    },
   ].map((achievement) => ({
     ...achievement,
     locked: !achievement.unlocked,
@@ -128,8 +175,53 @@ function buildAchievements(stats) {
 }
 
 export default function AchievementsCard({ stats }) {
-  const achievements = buildAchievements(stats);
-  const unlockedCount = achievements.filter((item) => item.unlocked).length;
+  const [history, setHistory] = useState(() => loadAchievementHistory());
+
+  const achievements = useMemo(() => buildAchievements(stats), [stats]);
+
+  useEffect(() => {
+    const unlockedAchievements = achievements.filter((item) => item.unlocked);
+
+    if (!unlockedAchievements.length) return;
+
+    let changed = false;
+    const nextHistory = { ...history };
+
+    unlockedAchievements.forEach((achievement) => {
+      if (!nextHistory[achievement.id]) {
+        nextHistory[achievement.id] = {
+          id: achievement.id,
+          title: achievement.title,
+          unlockedAt: new Date().toISOString(),
+        };
+
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      setHistory(nextHistory);
+      saveAchievementHistory(nextHistory);
+    }
+  }, [achievements, history]);
+
+  const achievementsWithHistory = achievements.map((achievement) => ({
+    ...achievement,
+    unlockedAt: history[achievement.id]?.unlockedAt || null,
+  }));
+
+  const unlockedAchievements = achievementsWithHistory.filter(
+    (item) => item.unlocked,
+  );
+
+  const lockedAchievements = achievementsWithHistory.filter(
+    (item) => !item.unlocked,
+  );
+
+  const unlockedCount = unlockedAchievements.length;
+  const latestUnlocked = [...unlockedAchievements]
+    .filter((item) => item.unlockedAt)
+    .sort((a, b) => new Date(b.unlockedAt) - new Date(a.unlockedAt))[0];
 
   return (
     <div className="theme-card p-5">
@@ -148,8 +240,45 @@ export default function AchievementsCard({ stats }) {
         </div>
       </div>
 
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-2 flex items-center gap-2 text-xs text-neutral-500">
+            <Trophy className="h-4 w-4 text-violet-300" />
+            Unlocked
+          </div>
+          <div className="text-2xl font-semibold text-white">
+            {unlockedCount}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-2 flex items-center gap-2 text-xs text-neutral-500">
+            <Lock className="h-4 w-4 text-violet-300" />
+            Locked
+          </div>
+          <div className="text-2xl font-semibold text-white">
+            {lockedAchievements.length}
+          </div>
+        </div>
+
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-2 flex items-center gap-2 text-xs text-neutral-500">
+            <Clock3 className="h-4 w-4 text-violet-300" />
+            Latest
+          </div>
+          <div className="truncate text-sm font-semibold text-white">
+            {latestUnlocked?.title || "No unlock yet"}
+          </div>
+          <div className="mt-1 truncate text-[11px] text-neutral-500">
+            {latestUnlocked?.unlockedAt
+              ? formatUnlockDate(latestUnlocked.unlockedAt)
+              : "Complete habits to unlock badges."}
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 gap-3">
-        {achievements.map((achievement) => {
+        {achievementsWithHistory.map((achievement) => {
           const Icon = achievement.unlocked ? achievement.icon : Lock;
 
           return (
@@ -218,12 +347,57 @@ export default function AchievementsCard({ stats }) {
                       />
                     </div>
                   </div>
+
+                  <div className="mt-3 flex items-center gap-2 text-[11px] text-neutral-500">
+                    <History className="h-3.5 w-3.5" />
+                    {achievement.unlocked
+                      ? `Unlocked: ${formatUnlockDate(achievement.unlockedAt)}`
+                      : "Not unlocked yet"}
+                  </div>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {unlockedAchievements.length > 0 ? (
+        <div className="mt-5 rounded-3xl border border-white/5 bg-black/10 p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
+            <History className="h-4 w-4 text-violet-300" />
+            Achievement History
+          </div>
+
+          <div className="space-y-2">
+            {[...unlockedAchievements]
+              .filter((item) => item.unlockedAt)
+              .sort((a, b) => new Date(b.unlockedAt) - new Date(a.unlockedAt))
+              .map((achievement) => {
+                const Icon = achievement.icon;
+
+                return (
+                  <div
+                    key={`history-${achievement.id}`}
+                    className="flex items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3"
+                  >
+                    <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-violet-400/10 text-violet-200 ring-1 ring-violet-800/30">
+                      <Icon className="h-4 w-4" />
+                    </div>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs font-semibold text-neutral-200">
+                        {achievement.title}
+                      </div>
+                      <div className="truncate text-[11px] text-neutral-500">
+                        {formatUnlockDate(achievement.unlockedAt)}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
