@@ -98,6 +98,7 @@ import MobileBottomNav from "./components/MobileBottomNav";
 import NetworkStatusBanner from "./components/NetworkStatusBanner";
 import BackendHealthCard from "./components/BackendHealthCard";
 import AnalyticsSectionTabs from "./components/AnalyticsSectionTabs";
+import DashboardSectionTabs from "./components/DashboardSectionTabs";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -1177,6 +1178,7 @@ export default function App() {
   );
   const [toast, setToast] = useState(null);
   const [analyticsSection, setAnalyticsSection] = useState("overview");
+  const [dashboardSection, setDashboardSection] = useState("today");
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
 
@@ -3874,260 +3876,15 @@ export default function App() {
             onRetry={retrySaveNow}
           />
 
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <section className="space-y-4 xl:col-span-3">
-              <div className="theme-card p-5">
-                <div className="theme-section-title">Habit Tracker</div>
-                <div className="theme-section-subtitle">
-                  {MONTHS[selectedMonthIndex]} {selectedYear}
-                </div>
-              </div>
+          <div className="mx-auto max-w-[1400px] space-y-4">
+            <DashboardSectionTabs
+              activeSection={dashboardSection}
+              onChangeSection={setDashboardSection}
+            />
+          </div>
 
-              <div className="theme-card p-5 space-y-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
-                  <CalendarDays className="h-4 w-4" />
-                  Calendar Settings
-                </div>
-
-                <div className="grid grid-cols-1 gap-2">
-                  <button
-                    onClick={goToPreviousMonth}
-                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                  >
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                      <ChevronLeft className="h-4 w-4 shrink-0" />
-                      Previous Month
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={goToCurrentMonth}
-                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                  >
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                      <RotateCcw className="h-4 w-4 shrink-0" />
-                      This Month
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={goToNextMonth}
-                    className="theme-button-secondary justify-between px-4 py-3 text-sm"
-                  >
-                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
-                      <ChevronRight className="h-4 w-4 shrink-0" />
-                      Next Month
-                    </span>
-                  </button>
-
-                  <button
-                    onClick={requestDeleteCurrentMonth}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-3 text-sm font-medium text-red-200 transition duration-150 hover:bg-red-950/35 active:scale-[0.98]"
-                  >
-                    <Trash2 className="h-4 w-4 shrink-0" />
-                    Delete Current Month
-                  </button>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs text-neutral-500">
-                    Year
-                  </label>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                    className="theme-select"
-                  >
-                    {YEAR_OPTIONS.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs text-neutral-500">
-                    Month
-                  </label>
-                  <select
-                    value={selectedMonthIndex}
-                    onChange={(e) =>
-                      setSelectedMonthIndex(Number(e.target.value))
-                    }
-                    className="theme-select"
-                  >
-                    {MONTHS.map((month, index) => (
-                      <option key={month} value={index}>
-                        {month}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="theme-card p-5 space-y-3">
-                <div className="text-sm font-semibold text-neutral-300">
-                  Add Habit
-                </div>
-
-                <input
-                  value={newHabitName}
-                  onChange={(e) => setNewHabitName(e.target.value)}
-                  placeholder="Habit name"
-                  className="theme-input"
-                />
-
-                <input
-                  value={newHabitIcon}
-                  onChange={(e) => setNewHabitIcon(e.target.value)}
-                  placeholder="Icon, e.g. ✅"
-                  className="theme-input"
-                />
-
-                <div>
-                  <label className="mb-2 block text-xs text-neutral-500">
-                    Target Type
-                  </label>
-                  <select
-                    value={newHabitTargetType}
-                    onChange={(e) => setNewHabitTargetType(e.target.value)}
-                    className="theme-select"
-                  >
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-xs text-neutral-500">
-                    Target Value
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={newHabitTargetValue}
-                    onChange={(e) => setNewHabitTargetValue(e.target.value)}
-                    className="theme-input"
-                    placeholder="1"
-                  />
-                </div>
-
-                {newHabitError ? (
-                  <div className="rounded-2xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs text-red-300">
-                    {newHabitError}
-                  </div>
-                ) : (
-                  <div className="text-xs text-neutral-500">
-                    Choose a unique habit name and a target value of at least 1.
-                  </div>
-                )}
-
-                <button
-                  onClick={addHabit}
-                  disabled={Boolean(newHabitError)}
-                  className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Habit
-                </button>
-
-                <button
-                  onClick={requestResetCurrentMonth}
-                  className="theme-button-secondary w-full"
-                >
-                  Reset Month
-                </button>
-              </div>
-
-              <HabitTemplatesCard
-                templates={allHabitTemplates}
-                onApplyTemplate={applyHabitTemplate}
-                onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
-                onDeleteTemplate={deleteCustomHabitTemplate}
-                onExportCustomTemplates={exportCustomHabitTemplates}
-                onImportCustomTemplates={triggerImportCustomTemplates}
-              />
-
-              <div className="theme-card p-5 space-y-3">
-                <div>
-                  <div className="theme-section-title text-base">
-                    Deleted Month Backups
-                  </div>
-                  <div className="theme-section-subtitle text-xs">
-                    Restore previously deleted months or remove old backups
-                    permanently.
-                  </div>
-                </div>
-
-                {isDeletedMonthBackupsLoading ? (
-                  <div className="text-sm text-neutral-500">
-                    Loading deleted backups...
-                  </div>
-                ) : deletedMonthBackups.length > 0 ? (
-                  <div className="space-y-3">
-                    {deletedMonthBackups.map((backup) => (
-                      <div
-                        key={backup.monthKey}
-                        className="theme-summary-card px-4 py-3"
-                      >
-                        <div className="flex flex-col gap-3">
-                          <div>
-                            <div className="text-sm font-medium text-white">
-                              {MONTHS[backup.month - 1]} {backup.year}
-                            </div>
-                            <div className="mt-1 text-xs text-neutral-500">
-                              Deleted{" "}
-                              {backup.deletedAt
-                                ? new Date(backup.deletedAt).toLocaleString()
-                                : "recently"}
-                            </div>
-                          </div>
-
-                          <div className="flex flex-col gap-2 sm:flex-row">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                requestRestoreDeletedMonthBackup(backup)
-                              }
-                              className="theme-button-secondary w-full sm:w-auto"
-                            >
-                              Restore
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() =>
-                                requestDeleteDeletedMonthBackup(backup)
-                              }
-                              className="theme-button-secondary w-full sm:w-auto"
-                            >
-                              Delete Backup
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-sm text-neutral-500">
-                    No deleted month backups yet.
-                  </div>
-                )}
-              </div>
-
-              {showArchivedHabits ? (
-                <ArchivedHabitsPanel
-                  archivedHabits={archivedAnalysisRows}
-                  onRestoreHabit={(habitId) =>
-                    restoreHabit(habitId, { showUndo: true })
-                  }
-                />
-              ) : null}
-            </section>
-
-            <section className="space-y-4 xl:col-span-9">
+          {dashboardSection === "today" ? (
+            <div className="mx-auto max-w-[1200px] space-y-4">
               {showTodayProgress && todaySummary ? (
                 <div className="theme-card p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -4172,7 +3929,11 @@ export default function App() {
                 title="Mental Check-in"
                 subtitle="Quick daily input for mood and motivation."
               />
+            </div>
+          ) : null}
 
+          {dashboardSection === "habits" ? (
+            <div className="mx-auto max-w-[1550px] space-y-4">
               <HabitFilters
                 searchTerm={habitSearchTerm}
                 onChangeSearchTerm={setHabitSearchTerm}
@@ -4264,8 +4025,284 @@ export default function App() {
                   </button>
                 </div>
               )}
-            </section>
-          </div>
+            </div>
+          ) : null}
+
+          {dashboardSection === "planning" ? (
+            <div className="mx-auto max-w-[1050px] space-y-4">
+              <div className="theme-card p-5">
+                <div className="theme-section-title">Habit Tracker</div>
+                <div className="theme-section-subtitle">
+                  {MONTHS[selectedMonthIndex]} {selectedYear}
+                </div>
+              </div>
+
+              <div className="theme-card p-5 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
+                  <CalendarDays className="h-4 w-4" />
+                  Calendar Settings
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                  <button
+                    onClick={goToPreviousMonth}
+                    className="theme-button-secondary justify-center px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <ChevronLeft className="h-4 w-4 shrink-0" />
+                      Previous Month
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={goToCurrentMonth}
+                    className="theme-button-secondary justify-center px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <RotateCcw className="h-4 w-4 shrink-0" />
+                      This Month
+                    </span>
+                  </button>
+
+                  <button
+                    onClick={goToNextMonth}
+                    className="theme-button-secondary justify-center px-4 py-3 text-sm"
+                  >
+                    <span className="inline-flex items-center gap-2 whitespace-nowrap">
+                      <ChevronRight className="h-4 w-4 shrink-0" />
+                      Next Month
+                    </span>
+                  </button>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-xs text-neutral-500">
+                      Year
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) => setSelectedYear(e.target.value)}
+                      className="theme-select"
+                    >
+                      {YEAR_OPTIONS.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs text-neutral-500">
+                      Month
+                    </label>
+                    <select
+                      value={selectedMonthIndex}
+                      onChange={(e) =>
+                        setSelectedMonthIndex(Number(e.target.value))
+                      }
+                      className="theme-select"
+                    >
+                      {MONTHS.map((month, index) => (
+                        <option key={month} value={index}>
+                          {month}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <button
+                  onClick={requestDeleteCurrentMonth}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-red-900/40 bg-red-950/20 px-4 py-3 text-sm font-medium text-red-200 transition duration-150 hover:bg-red-950/35 active:scale-[0.98]"
+                >
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  Delete Current Month
+                </button>
+              </div>
+
+              <div className="theme-card p-5 space-y-3">
+                <div>
+                  <div className="theme-section-title text-base">Add Habit</div>
+                  <div className="theme-section-subtitle text-xs">
+                    Create a new habit for the selected month.
+                  </div>
+                </div>
+
+                <input
+                  value={newHabitName}
+                  onChange={(e) => setNewHabitName(e.target.value)}
+                  placeholder="Habit name"
+                  className="theme-input"
+                />
+
+                <input
+                  value={newHabitIcon}
+                  onChange={(e) => setNewHabitIcon(e.target.value)}
+                  placeholder="Icon, e.g. ✅"
+                  className="theme-input"
+                />
+
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-2 block text-xs text-neutral-500">
+                      Target Type
+                    </label>
+                    <select
+                      value={newHabitTargetType}
+                      onChange={(e) => setNewHabitTargetType(e.target.value)}
+                      className="theme-select"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-xs text-neutral-500">
+                      Target Value
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={newHabitTargetValue}
+                      onChange={(e) => setNewHabitTargetValue(e.target.value)}
+                      className="theme-input"
+                      placeholder="1"
+                    />
+                  </div>
+                </div>
+
+                {newHabitError ? (
+                  <div className="rounded-2xl border border-red-900/40 bg-red-950/20 px-3 py-2 text-xs text-red-300">
+                    {newHabitError}
+                  </div>
+                ) : (
+                  <div className="text-xs text-neutral-500">
+                    Choose a unique habit name and a target value of at least 1.
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  <button
+                    onClick={addHabit}
+                    disabled={Boolean(newHabitError)}
+                    className="theme-button-primary w-full disabled:cursor-not-allowed disabled:bg-neutral-700 disabled:text-neutral-400"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add Habit
+                  </button>
+
+                  <button
+                    onClick={requestResetCurrentMonth}
+                    className="theme-button-secondary w-full"
+                  >
+                    Reset Month
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {dashboardSection === "templates" ? (
+            <div className="mx-auto max-w-[1100px] space-y-4">
+              <HabitTemplatesCard
+                templates={allHabitTemplates}
+                onApplyTemplate={applyHabitTemplate}
+                onSaveCurrentTemplate={saveCurrentHabitsAsTemplate}
+                onDeleteTemplate={deleteCustomHabitTemplate}
+                onExportCustomTemplates={exportCustomHabitTemplates}
+                onImportCustomTemplates={triggerImportCustomTemplates}
+              />
+            </div>
+          ) : null}
+
+          {dashboardSection === "archive" ? (
+            <div className="mx-auto max-w-[1100px] space-y-4">
+              <div className="theme-card p-5 space-y-3">
+                <div>
+                  <div className="theme-section-title text-base">
+                    Deleted Month Backups
+                  </div>
+                  <div className="theme-section-subtitle text-xs">
+                    Restore previously deleted months or remove old backups
+                    permanently.
+                  </div>
+                </div>
+
+                {isDeletedMonthBackupsLoading ? (
+                  <div className="text-sm text-neutral-500">
+                    Loading deleted backups...
+                  </div>
+                ) : deletedMonthBackups.length > 0 ? (
+                  <div className="space-y-3">
+                    {deletedMonthBackups.map((backup) => (
+                      <div
+                        key={backup.monthKey}
+                        className="theme-summary-card px-4 py-3"
+                      >
+                        <div className="flex flex-col gap-3">
+                          <div>
+                            <div className="text-sm font-medium text-white">
+                              {MONTHS[backup.month - 1]} {backup.year}
+                            </div>
+                            <div className="mt-1 text-xs text-neutral-500">
+                              Deleted{" "}
+                              {backup.deletedAt
+                                ? new Date(backup.deletedAt).toLocaleString()
+                                : "recently"}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-col gap-2 sm:flex-row">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                requestRestoreDeletedMonthBackup(backup)
+                              }
+                              className="theme-button-secondary w-full sm:w-auto"
+                            >
+                              Restore
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                requestDeleteDeletedMonthBackup(backup)
+                              }
+                              className="theme-button-secondary w-full sm:w-auto"
+                            >
+                              Delete Backup
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-sm text-neutral-500">
+                    No deleted month backups yet.
+                  </div>
+                )}
+              </div>
+
+              {showArchivedHabits ? (
+                <ArchivedHabitsPanel
+                  archivedHabits={archivedAnalysisRows}
+                  onRestoreHabit={(habitId) =>
+                    restoreHabit(habitId, { showUndo: true })
+                  }
+                />
+              ) : (
+                <DashboardStateCard
+                  title="Archived habits are hidden"
+                  description="Turn on archived habits from Analytics → System → Dashboard Preferences to see this panel."
+                />
+              )}
+            </div>
+          ) : null}
         </div>
 
         <ToastNotice toast={toast} onClose={closeToast} />
