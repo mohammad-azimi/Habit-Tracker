@@ -8,9 +8,11 @@ import {
   Lock,
   LogOut,
   MonitorSmartphone,
-  Server,
+  Moon,
+  Paintbrush,
   Settings,
   SlidersHorizontal,
+  Sun,
   Upload,
 } from "lucide-react";
 import DashboardPreferencesCard from "./DashboardPreferencesCard";
@@ -21,6 +23,11 @@ import ChangePasswordCard from "./ChangePasswordCard";
 import DeleteAccountCard from "./DeleteAccountCard";
 
 const settingSections = [
+  {
+    id: "appearance",
+    label: "Appearance",
+    icon: Paintbrush,
+  },
   {
     id: "preferences",
     label: "Preferences",
@@ -77,8 +84,51 @@ function SettingsSectionTabs({ activeSection, onChangeSection }) {
   );
 }
 
+function ThemeOptionCard({
+  title,
+  description,
+  icon: Icon,
+  isActive,
+  onClick,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-3xl border p-5 text-left transition active:scale-[0.99] ${
+        isActive
+          ? "border-violet-400 bg-violet-300/20 ring-2 ring-violet-300/30"
+          : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+      }`}
+    >
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
+          <Icon className="h-5 w-5 text-violet-300" />
+        </div>
+
+        <div
+          className={`rounded-full px-3 py-1 text-xs font-medium ${
+            isActive
+              ? "bg-violet-300 text-black"
+              : "bg-white/[0.06] text-neutral-400"
+          }`}
+        >
+          {isActive ? "Selected" : "Choose"}
+        </div>
+      </div>
+
+      <div className="text-base font-semibold text-white">{title}</div>
+      <div className="mt-2 text-sm leading-6 text-neutral-500">
+        {description}
+      </div>
+    </button>
+  );
+}
+
 export default function SettingsPage({
   currentUser,
+  appTheme = "dark",
+  onChangeAppTheme,
   onBack,
   onLogout,
 
@@ -105,7 +155,7 @@ export default function SettingsPage({
   onDeleteAccount,
   isDeleting,
 }) {
-  const [activeSection, setActiveSection] = useState("preferences");
+  const [activeSection, setActiveSection] = useState("appearance");
 
   return (
     <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
@@ -158,6 +208,43 @@ export default function SettingsPage({
           activeSection={activeSection}
           onChangeSection={setActiveSection}
         />
+
+        {activeSection === "appearance" ? (
+          <div className="space-y-4">
+            <div className="theme-card p-5">
+              <div className="mb-4">
+                <div className="theme-section-title text-lg">Appearance</div>
+                <div className="theme-section-subtitle text-xs">
+                  Choose between the current dark dashboard style and a soft
+                  light theme inspired by modern mobile fitness apps.
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                <ThemeOptionCard
+                  title="Dark Theme"
+                  description="The original black and violet dashboard theme for focused night use."
+                  icon={Moon}
+                  isActive={appTheme === "dark"}
+                  onClick={() => onChangeAppTheme?.("dark")}
+                />
+
+                <ThemeOptionCard
+                  title="Light Theme"
+                  description="A clean white, lavender, and violet interface similar to the reference mobile design."
+                  icon={Sun}
+                  isActive={appTheme === "light"}
+                  onClick={() => onChangeAppTheme?.("light")}
+                />
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs leading-5 text-neutral-500">
+                Your choice is saved on this device and will be applied
+                automatically the next time you open the app.
+              </div>
+            </div>
+          </div>
+        ) : null}
 
         {activeSection === "preferences" ? (
           <div className="space-y-4">

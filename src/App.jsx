@@ -1056,6 +1056,26 @@ const DEFAULT_DASHBOARD_PREFS = {
 };
 const YEAR_OPTIONS = [2026, 2027, 2028, 2029, 2030, 2031, 2032, 2033, 2034, 2035];
 
+const APP_THEME_KEY = "habit-tracker-app-theme";
+
+function loadAppTheme() {
+  if (typeof window === "undefined") return "dark";
+
+  const savedTheme = localStorage.getItem(APP_THEME_KEY);
+
+  return savedTheme === "light" || savedTheme === "dark" ? savedTheme : "dark";
+}
+
+function applyAppTheme(theme) {
+  if (typeof document === "undefined") return;
+
+  const safeTheme = theme === "light" ? "light" : "dark";
+
+  document.documentElement.classList.remove("theme-light", "theme-dark");
+  document.documentElement.classList.add(`theme-${safeTheme}`);
+  document.documentElement.style.colorScheme = safeTheme;
+}
+
 function loadDashboardPrefs() {
   if (typeof window === "undefined") {
     return DEFAULT_DASHBOARD_PREFS;
@@ -1177,6 +1197,7 @@ export default function App() {
   const [toast, setToast] = useState(null);
   const [analyticsSection, setAnalyticsSection] = useState("overview");
   const [dashboardSection, setDashboardSection] = useState("today");
+  const [appTheme, setAppTheme] = useState(() => loadAppTheme());
   const [newHabitName, setNewHabitName] = useState("");
   const [newHabitIcon, setNewHabitIcon] = useState("✅");
 
@@ -1565,6 +1586,16 @@ export default function App() {
 
     return () => clearTimeout(timeoutId);
   }, [toast]);
+
+  useEffect(() => {
+    applyAppTheme(appTheme);
+
+    try {
+      localStorage.setItem(APP_THEME_KEY, appTheme);
+    } catch (error) {
+      console.error("Failed to save app theme:", error);
+    }
+  }, [appTheme]);
 
   useEffect(() => {
     saveDashboardPrefs({
@@ -4774,6 +4805,8 @@ export default function App() {
           element={
             <SettingsPage
               currentUser={currentUser}
+              appTheme={appTheme}
+              onChangeAppTheme={setAppTheme}
               onBack={() => navigate("/dashboard")}
               onLogout={handleLogout}
               autoScrollToToday={autoScrollToToday}
