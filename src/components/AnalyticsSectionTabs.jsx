@@ -1,13 +1,5 @@
 import React from "react";
-import {
-  Activity,
-  Award,
-  BarChart3,
-  Brain,
-  LineChart,
-  Server,
-  Target,
-} from "lucide-react";
+import { Award, BarChart3, Brain, LineChart, Target } from "lucide-react";
 
 const sections = [
   {
@@ -34,16 +26,6 @@ const sections = [
     id: "achievements",
     label: "Badges",
     icon: Award,
-  },
-  {
-    id: "reminders",
-    label: "Reminders",
-    icon: Activity,
-  },
-  {
-    id: "system",
-    label: "System",
-    icon: Server,
   },
 ];
 

@@ -8,6 +8,7 @@ import {
   LogOut,
   Plus,
   RotateCcw,
+  Settings,
   Trash2,
   UserCircle,
 } from "lucide-react";
@@ -87,18 +88,15 @@ import WeekdayPerformanceCard from "./components/WeekdayPerformanceCard";
 import WeeklyMomentumCard from "./components/WeeklyMomentumCard";
 import habitTemplates from "./data/habitTemplates";
 import HabitTemplatesCard from "./components/HabitTemplatesCard";
-import DashboardPreferencesCard from "./components/DashboardPreferencesCard";
 import FullScreenStatus from "./components/FullScreenStatus";
 import SyncStatusBadge from "./components/SyncStatusBadge";
 import AchievementsCard from "./components/AchievementsCard";
 import TodayReminderCard from "./components/TodayReminderCard";
-import ReminderSettingsCard from "./components/ReminderSettingsCard";
-import PwaInstallCard from "./components/PwaInstallCard";
 import MobileBottomNav from "./components/MobileBottomNav";
 import NetworkStatusBanner from "./components/NetworkStatusBanner";
-import BackendHealthCard from "./components/BackendHealthCard";
 import AnalyticsSectionTabs from "./components/AnalyticsSectionTabs";
 import DashboardSectionTabs from "./components/DashboardSectionTabs";
+import SettingsPage from "./components/SettingsPage";
 
 function getHabitMonthlyGoal(habit, daysInMonth) {
   const targetType = habit?.targetType || "daily";
@@ -2625,6 +2623,18 @@ export default function App() {
           <FileText className="h-4 w-4" />
           Notes & Review
         </button>
+
+        <button
+          onClick={() => navigate("/settings")}
+          className={`${pageNavButtonBase} ${
+            location.pathname === "/settings"
+              ? "bg-white text-black"
+              : "border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+          }`}
+        >
+          <Settings className="h-4 w-4" />
+          Settings
+        </button>
       </div>
     );
 
@@ -4579,52 +4589,6 @@ export default function App() {
                 <AchievementsCard stats={achievementStats} />
               </div>
             ) : null}
-
-            {analyticsSection === "reminders" ? (
-              <div className="mx-auto max-w-[1050px] space-y-4">
-                <ReminderSettingsCard />
-
-                <PwaInstallCard />
-              </div>
-            ) : null}
-
-            {analyticsSection === "system" ? (
-              <div className="mx-auto max-w-[1050px] space-y-4">
-                <BackendHealthCard />
-
-                <DashboardPreferencesCard
-                  autoScrollToToday={autoScrollToToday}
-                  onToggleAutoScrollToToday={() =>
-                    setAutoScrollToToday((prev) => !prev)
-                  }
-                  showArchivedHabits={showArchivedHabits}
-                  onToggleShowArchivedHabits={() =>
-                    setShowArchivedHabits((prev) => !prev)
-                  }
-                  showAdvancedAnalytics={showAdvancedAnalytics}
-                  onToggleShowAdvancedAnalytics={() =>
-                    setShowAdvancedAnalytics((prev) => !prev)
-                  }
-                  showTodayProgress={showTodayProgress}
-                  onToggleShowTodayProgress={() =>
-                    setShowTodayProgress((prev) => !prev)
-                  }
-                  showTopHabits={showTopHabits}
-                  onToggleShowTopHabits={() =>
-                    setShowTopHabits((prev) => !prev)
-                  }
-                  showYearlyOverview={showYearlyOverview}
-                  onToggleShowYearlyOverview={() =>
-                    setShowYearlyOverview((prev) => !prev)
-                  }
-                  showStreakLeaderboard={showStreakLeaderboard}
-                  onToggleShowStreakLeaderboard={() =>
-                    setShowStreakLeaderboard((prev) => !prev)
-                  }
-                  onResetPreferences={resetDashboardPreferences}
-                />
-              </div>
-            ) : null}
           </div>
 
           <ToastNotice toast={toast} onClose={closeToast} />
@@ -4804,6 +4768,51 @@ export default function App() {
         <Route path="/dashboard" element={dashboardPage} />
         <Route path="/analytics" element={analyticsPage} />
         <Route path="/notes-review" element={notesReviewPage} />
+
+        <Route
+          path="/settings"
+          element={
+            <SettingsPage
+              currentUser={currentUser}
+              onBack={() => navigate("/dashboard")}
+              onLogout={handleLogout}
+              autoScrollToToday={autoScrollToToday}
+              onToggleAutoScrollToToday={() =>
+                setAutoScrollToToday((prev) => !prev)
+              }
+              showArchivedHabits={showArchivedHabits}
+              onToggleShowArchivedHabits={() =>
+                setShowArchivedHabits((prev) => !prev)
+              }
+              showAdvancedAnalytics={showAdvancedAnalytics}
+              onToggleShowAdvancedAnalytics={() =>
+                setShowAdvancedAnalytics((prev) => !prev)
+              }
+              showTodayProgress={showTodayProgress}
+              onToggleShowTodayProgress={() =>
+                setShowTodayProgress((prev) => !prev)
+              }
+              showTopHabits={showTopHabits}
+              onToggleShowTopHabits={() => setShowTopHabits((prev) => !prev)}
+              showYearlyOverview={showYearlyOverview}
+              onToggleShowYearlyOverview={() =>
+                setShowYearlyOverview((prev) => !prev)
+              }
+              showStreakLeaderboard={showStreakLeaderboard}
+              onToggleShowStreakLeaderboard={() =>
+                setShowStreakLeaderboard((prev) => !prev)
+              }
+              onResetPreferences={resetDashboardPreferences}
+              onExportAccountData={exportFullAccountJSON}
+              onImportAccountData={triggerImportFullAccount}
+              onChangePassword={handleChangePassword}
+              isChangingPassword={isChangingPassword}
+              onDeleteAccount={requestDeleteAccount}
+              isDeleting={isDeletingAccount}
+            />
+          }
+        />
+
         <Route
           path="/profile"
           element={
@@ -4824,6 +4833,7 @@ export default function App() {
               }}
               onBack={() => navigate("/dashboard")}
               onGoToAnalytics={() => navigate("/analytics")}
+              onGoToSettings={() => navigate("/settings")}
               onLogout={handleLogout}
               onSaveProfile={handleSaveProfile}
               isSavingProfile={isSavingProfile}
