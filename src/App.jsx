@@ -4671,50 +4671,44 @@ export default function App() {
               onRetry={retrySaveNow}
             />
 
-            <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-              <section className="space-y-4 xl:col-span-4">
-                <MonthlySummaryCard
-                  selectedYear={selectedYear}
-                  selectedMonthName={MONTHS[selectedMonthIndex]}
-                  completionPercent={completionPercent}
-                  moodAverage={average(safeMonthData.mood).toFixed(1)}
-                  motivationAverage={average(safeMonthData.motivation).toFixed(
-                    1,
-                  )}
-                  bestHabit={monthlyInsights.bestHabit}
-                  needsAttentionHabit={monthlyInsights.needsAttentionHabit}
-                  strongestCurrentStreakHabit={
-                    monthlyInsights.strongestCurrentStreakHabit
-                  }
-                />
+            <div className="mx-auto max-w-[1100px] space-y-4">
+              <MonthlyReviewCard
+                review={safeMonthData.review}
+                onChangeField={updateMonthlyReviewField}
+              />
 
-                {isPreviousMonthLoading ? (
-                  <DashboardLoadingCard
-                    compact
-                    title="Loading previous month"
-                    lines={3}
-                  />
-                ) : (
-                  <MonthComparisonCard
-                    currentSummary={monthlySummary}
-                    previousSummary={previousMonthSummary}
-                    previousLabel={previousMonthLabel}
-                    isLoading={false}
-                  />
-                )}
-              </section>
+              <MonthlyNotesPanel
+                notes={safeMonthData.notes}
+                onChangeNotes={setMonthlyNotes}
+              />
 
-              <section className="space-y-4 xl:col-span-8">
-                <MonthlyReviewCard
-                  review={safeMonthData.review}
-                  onChangeField={updateMonthlyReviewField}
-                />
+              <MonthlySummaryCard
+                selectedYear={selectedYear}
+                selectedMonthName={MONTHS[selectedMonthIndex]}
+                completionPercent={completionPercent}
+                moodAverage={average(safeMonthData.mood).toFixed(1)}
+                motivationAverage={average(safeMonthData.motivation).toFixed(1)}
+                bestHabit={monthlyInsights.bestHabit}
+                needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+                strongestCurrentStreakHabit={
+                  monthlyInsights.strongestCurrentStreakHabit
+                }
+              />
 
-                <MonthlyNotesPanel
-                  notes={safeMonthData.notes}
-                  onChangeNotes={setMonthlyNotes}
+              {isPreviousMonthLoading ? (
+                <DashboardLoadingCard
+                  compact
+                  title="Loading previous month"
+                  lines={3}
                 />
-              </section>
+              ) : (
+                <MonthComparisonCard
+                  currentSummary={monthlySummary}
+                  previousSummary={previousMonthSummary}
+                  previousLabel={previousMonthLabel}
+                  isLoading={false}
+                />
+              )}
             </div>
           </div>
 
