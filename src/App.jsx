@@ -4354,267 +4354,237 @@ export default function App() {
               onChangeSection={setAnalyticsSection}
             />
 
-            <div className="space-y-4">
+            <div className="mx-auto max-w-6xl space-y-4">
               {analyticsSection === "overview" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-4">
-                    <OverallStatsCard
-                      totalGoal={totalGoal}
-                      totalCompleted={totalCompleted}
-                      totalLeft={totalLeft}
-                      completionPercent={completionPercent}
+                <div className="space-y-4">
+                  <OverallStatsCard
+                    totalGoal={totalGoal}
+                    totalCompleted={totalCompleted}
+                    totalLeft={totalLeft}
+                    completionPercent={completionPercent}
+                  />
+
+                  <MonthlySummaryCard
+                    selectedYear={selectedYear}
+                    selectedMonthName={MONTHS[selectedMonthIndex]}
+                    completionPercent={completionPercent}
+                    moodAverage={average(safeMonthData.mood).toFixed(1)}
+                    motivationAverage={average(
+                      safeMonthData.motivation,
+                    ).toFixed(1)}
+                    bestHabit={monthlyInsights.bestHabit}
+                    needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+                    strongestCurrentStreakHabit={
+                      monthlyInsights.strongestCurrentStreakHabit
+                    }
+                  />
+
+                  {showAdvancedAnalytics ? (
+                    <AnalyticsHighlightsCard
+                      consistencyScore={consistencyScore}
+                      bestDay={bestDaySummary}
+                      strongestGoalType={strongestGoalType}
+                      trendInsight={trendInsight}
                     />
+                  ) : null}
 
-                    <MonthlySummaryCard
-                      selectedYear={selectedYear}
-                      selectedMonthName={MONTHS[selectedMonthIndex]}
-                      completionPercent={completionPercent}
-                      moodAverage={average(safeMonthData.mood).toFixed(1)}
-                      motivationAverage={average(
-                        safeMonthData.motivation,
-                      ).toFixed(1)}
-                      bestHabit={monthlyInsights.bestHabit}
-                      needsAttentionHabit={monthlyInsights.needsAttentionHabit}
-                      strongestCurrentStreakHabit={
-                        monthlyInsights.strongestCurrentStreakHabit
-                      }
+                  {isPreviousMonthLoading ? (
+                    <DashboardLoadingCard
+                      compact
+                      title="Loading previous month"
+                      lines={3}
                     />
-                  </section>
+                  ) : (
+                    <MonthComparisonCard
+                      currentSummary={monthlySummary}
+                      previousSummary={previousMonthSummary}
+                      previousLabel={previousMonthLabel}
+                      isLoading={false}
+                    />
+                  )}
 
-                  <section className="space-y-4 xl:col-span-4">
-                    {showAdvancedAnalytics ? (
-                      <AnalyticsHighlightsCard
-                        consistencyScore={consistencyScore}
-                        bestDay={bestDaySummary}
-                        strongestGoalType={strongestGoalType}
-                        trendInsight={trendInsight}
-                      />
-                    ) : null}
-
-                    {isPreviousMonthLoading ? (
+                  {showYearlyOverview ? (
+                    isYearlyOverviewLoading ? (
                       <DashboardLoadingCard
                         compact
-                        title="Loading previous month"
-                        lines={3}
+                        title="Loading yearly overview"
+                        lines={4}
                       />
                     ) : (
-                      <MonthComparisonCard
-                        currentSummary={monthlySummary}
-                        previousSummary={previousMonthSummary}
-                        previousLabel={previousMonthLabel}
+                      <YearlyOverviewCard
+                        selectedYear={selectedYear}
+                        yearlyData={yearlyOverviewData}
                         isLoading={false}
                       />
-                    )}
-                  </section>
-
-                  <section className="space-y-4 xl:col-span-4">
-                    {showYearlyOverview ? (
-                      isYearlyOverviewLoading ? (
-                        <DashboardLoadingCard
-                          compact
-                          title="Loading yearly overview"
-                          lines={4}
-                        />
-                      ) : (
-                        <YearlyOverviewCard
-                          selectedYear={selectedYear}
-                          yearlyData={yearlyOverviewData}
-                          isLoading={false}
-                        />
-                      )
-                    ) : null}
-                  </section>
+                    )
+                  ) : null}
                 </div>
               ) : null}
 
               {analyticsSection === "progress" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-8">
-                    {activeAnalysisRows.length > 0 ? (
-                      <ProgressCharts
-                        dailyProgress={dailyProgress}
-                        weeklyProgress={weeklyProgress}
-                      />
-                    ) : (
-                      <DashboardStateCard
-                        title="No chart data yet"
-                        description="Add your first habit to start seeing daily and weekly progress charts."
-                      />
-                    )}
+                <div className="space-y-4">
+                  {activeAnalysisRows.length > 0 ? (
+                    <ProgressCharts
+                      dailyProgress={dailyProgress}
+                      weeklyProgress={weeklyProgress}
+                    />
+                  ) : (
+                    <DashboardStateCard
+                      title="No chart data yet"
+                      description="Add your first habit to start seeing daily and weekly progress charts."
+                    />
+                  )}
 
-                    {showAdvancedAnalytics ? (
+                  {showAdvancedAnalytics ? (
+                    <>
                       <WeeklyMomentumCard
                         strongestWeek={weeklyMomentum.strongestWeek}
                         weakestWeek={weeklyMomentum.weakestWeek}
                         trend={weeklyMomentum.trend}
                       />
-                    ) : null}
-                  </section>
 
-                  <section className="space-y-4 xl:col-span-4">
-                    {showAdvancedAnalytics ? (
                       <WeekdayPerformanceCard
                         rows={weekdayPerformance.rows}
                         bestWeekday={weekdayPerformance.bestWeekday}
                         weakestWeekday={weekdayPerformance.weakestWeekday}
                       />
-                    ) : null}
-                  </section>
+                    </>
+                  ) : null}
                 </div>
               ) : null}
 
               {analyticsSection === "habits" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-4">
-                    {showTopHabits ? (
-                      rankedHabits.length > 0 ? (
-                        <TopHabitsCard
-                          habits={rankedHabits}
-                          sortMode={habitSortMode}
-                        />
-                      ) : (
-                        <DashboardStateCard
-                          compact
-                          title="No top habits yet"
-                          description="Your best-performing habits will appear here once you add and track them."
-                        />
-                      )
-                    ) : null}
-                  </section>
-
-                  <section className="space-y-4 xl:col-span-8">
-                    {showStreakLeaderboard ? (
-                      analysisRows.length > 0 ? (
-                        <StreakLeaderboardCard rows={analysisRows} />
-                      ) : (
-                        <DashboardStateCard
-                          compact
-                          title="No streak data yet"
-                          description="Start checking off habits to build streak rankings."
-                        />
-                      )
-                    ) : null}
-
-                    {sortedActiveAnalysisRows.length > 0 ? (
-                      <AnalysisPanel
-                        totalGoal={totalGoal}
-                        totalCompleted={totalCompleted}
-                        totalLeft={totalLeft}
-                        completionPercent={completionPercent}
-                        analysisRows={sortedActiveAnalysisRows}
+                <div className="space-y-4">
+                  {showTopHabits ? (
+                    rankedHabits.length > 0 ? (
+                      <TopHabitsCard
+                        habits={rankedHabits}
+                        sortMode={habitSortMode}
                       />
                     ) : (
                       <DashboardStateCard
-                        title="No analysis available yet"
-                        description="Add active habits and start tracking them to unlock analysis and streak insights."
+                        compact
+                        title="No top habits yet"
+                        description="Your best-performing habits will appear here once you add and track them."
                       />
-                    )}
-                  </section>
-                </div>
-              ) : null}
+                    )
+                  ) : null}
 
-              {analyticsSection === "mental" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-8">
-                    <MentalStateSection
-                      daysInMonth={daysInMonth}
-                      mood={safeMonthData.mood}
-                      motivation={safeMonthData.motivation}
-                      mentalStateData={mentalStateData}
-                      onSetMentalMetric={setMentalMetric}
-                      showChart
-                      title="Mental State & Trend"
-                      subtitle="Track your daily mood and motivation and review the monthly trend."
-                    />
-                  </section>
+                  {showStreakLeaderboard ? (
+                    analysisRows.length > 0 ? (
+                      <StreakLeaderboardCard rows={analysisRows} />
+                    ) : (
+                      <DashboardStateCard
+                        compact
+                        title="No streak data yet"
+                        description="Start checking off habits to build streak rankings."
+                      />
+                    )
+                  ) : null}
 
-                  <section className="space-y-4 xl:col-span-4">
-                    <MonthlySummaryCard
-                      selectedYear={selectedYear}
-                      selectedMonthName={MONTHS[selectedMonthIndex]}
-                      completionPercent={completionPercent}
-                      moodAverage={average(safeMonthData.mood).toFixed(1)}
-                      motivationAverage={average(
-                        safeMonthData.motivation,
-                      ).toFixed(1)}
-                      bestHabit={monthlyInsights.bestHabit}
-                      needsAttentionHabit={monthlyInsights.needsAttentionHabit}
-                      strongestCurrentStreakHabit={
-                        monthlyInsights.strongestCurrentStreakHabit
-                      }
-                    />
-                  </section>
-                </div>
-              ) : null}
-
-              {analyticsSection === "achievements" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-5">
-                    <OverallStatsCard
+                  {sortedActiveAnalysisRows.length > 0 ? (
+                    <AnalysisPanel
                       totalGoal={totalGoal}
                       totalCompleted={totalCompleted}
                       totalLeft={totalLeft}
                       completionPercent={completionPercent}
+                      analysisRows={sortedActiveAnalysisRows}
                     />
-                  </section>
+                  ) : (
+                    <DashboardStateCard
+                      title="No analysis available yet"
+                      description="Add active habits and start tracking them to unlock analysis and streak insights."
+                    />
+                  )}
+                </div>
+              ) : null}
 
-                  <section className="space-y-4 xl:col-span-7">
-                    <AchievementsCard stats={achievementStats} />
-                  </section>
+              {analyticsSection === "mental" ? (
+                <div className="space-y-4">
+                  <MentalStateSection
+                    daysInMonth={daysInMonth}
+                    mood={safeMonthData.mood}
+                    motivation={safeMonthData.motivation}
+                    mentalStateData={mentalStateData}
+                    onSetMentalMetric={setMentalMetric}
+                    showChart
+                    title="Mental State & Trend"
+                    subtitle="Track your daily mood and motivation and review the monthly trend."
+                  />
+
+                  <MonthlySummaryCard
+                    selectedYear={selectedYear}
+                    selectedMonthName={MONTHS[selectedMonthIndex]}
+                    completionPercent={completionPercent}
+                    moodAverage={average(safeMonthData.mood).toFixed(1)}
+                    motivationAverage={average(
+                      safeMonthData.motivation,
+                    ).toFixed(1)}
+                    bestHabit={monthlyInsights.bestHabit}
+                    needsAttentionHabit={monthlyInsights.needsAttentionHabit}
+                    strongestCurrentStreakHabit={
+                      monthlyInsights.strongestCurrentStreakHabit
+                    }
+                  />
+                </div>
+              ) : null}
+
+              {analyticsSection === "achievements" ? (
+                <div className="space-y-4">
+                  <OverallStatsCard
+                    totalGoal={totalGoal}
+                    totalCompleted={totalCompleted}
+                    totalLeft={totalLeft}
+                    completionPercent={completionPercent}
+                  />
+
+                  <AchievementsCard stats={achievementStats} />
                 </div>
               ) : null}
 
               {analyticsSection === "reminders" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-7">
-                    <ReminderSettingsCard />
-                  </section>
+                <div className="space-y-4">
+                  <ReminderSettingsCard />
 
-                  <section className="space-y-4 xl:col-span-5">
-                    <PwaInstallCard />
-                  </section>
+                  <PwaInstallCard />
                 </div>
               ) : null}
 
               {analyticsSection === "system" ? (
-                <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-                  <section className="space-y-4 xl:col-span-5">
-                    <BackendHealthCard />
-                  </section>
+                <div className="space-y-4">
+                  <BackendHealthCard />
 
-                  <section className="space-y-4 xl:col-span-7">
-                    <DashboardPreferencesCard
-                      autoScrollToToday={autoScrollToToday}
-                      onToggleAutoScrollToToday={() =>
-                        setAutoScrollToToday((prev) => !prev)
-                      }
-                      showArchivedHabits={showArchivedHabits}
-                      onToggleShowArchivedHabits={() =>
-                        setShowArchivedHabits((prev) => !prev)
-                      }
-                      showAdvancedAnalytics={showAdvancedAnalytics}
-                      onToggleShowAdvancedAnalytics={() =>
-                        setShowAdvancedAnalytics((prev) => !prev)
-                      }
-                      showTodayProgress={showTodayProgress}
-                      onToggleShowTodayProgress={() =>
-                        setShowTodayProgress((prev) => !prev)
-                      }
-                      showTopHabits={showTopHabits}
-                      onToggleShowTopHabits={() =>
-                        setShowTopHabits((prev) => !prev)
-                      }
-                      showYearlyOverview={showYearlyOverview}
-                      onToggleShowYearlyOverview={() =>
-                        setShowYearlyOverview((prev) => !prev)
-                      }
-                      showStreakLeaderboard={showStreakLeaderboard}
-                      onToggleShowStreakLeaderboard={() =>
-                        setShowStreakLeaderboard((prev) => !prev)
-                      }
-                      onResetPreferences={resetDashboardPreferences}
-                    />
-                  </section>
+                  <DashboardPreferencesCard
+                    autoScrollToToday={autoScrollToToday}
+                    onToggleAutoScrollToToday={() =>
+                      setAutoScrollToToday((prev) => !prev)
+                    }
+                    showArchivedHabits={showArchivedHabits}
+                    onToggleShowArchivedHabits={() =>
+                      setShowArchivedHabits((prev) => !prev)
+                    }
+                    showAdvancedAnalytics={showAdvancedAnalytics}
+                    onToggleShowAdvancedAnalytics={() =>
+                      setShowAdvancedAnalytics((prev) => !prev)
+                    }
+                    showTodayProgress={showTodayProgress}
+                    onToggleShowTodayProgress={() =>
+                      setShowTodayProgress((prev) => !prev)
+                    }
+                    showTopHabits={showTopHabits}
+                    onToggleShowTopHabits={() =>
+                      setShowTopHabits((prev) => !prev)
+                    }
+                    showYearlyOverview={showYearlyOverview}
+                    onToggleShowYearlyOverview={() =>
+                      setShowYearlyOverview((prev) => !prev)
+                    }
+                    showStreakLeaderboard={showStreakLeaderboard}
+                    onToggleShowStreakLeaderboard={() =>
+                      setShowStreakLeaderboard((prev) => !prev)
+                    }
+                    onResetPreferences={resetDashboardPreferences}
+                  />
                 </div>
               ) : null}
             </div>
