@@ -42,7 +42,7 @@ export default function BackendHealthCard() {
 
   return (
     <div className="theme-card p-5">
-      <div className="mb-4 flex items-start justify-between gap-3">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="theme-section-title text-lg">Backend Status</div>
           <div className="theme-section-subtitle text-xs">
@@ -51,7 +51,7 @@ export default function BackendHealthCard() {
         </div>
 
         <div
-          className={`inline-flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium ${
+          className={`inline-flex w-fit items-center gap-2 rounded-2xl border px-3 py-2 text-xs font-medium ${
             isOnline
               ? "border-emerald-900/40 bg-emerald-950/20 text-emerald-200"
               : isChecking
@@ -71,30 +71,36 @@ export default function BackendHealthCard() {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
-        <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-neutral-300">
-          <Server className="h-4 w-4 text-violet-300" />
-          API Connection
+      <div className="grid grid-cols-1 gap-3">
+        <div className="rounded-3xl border border-white/5 bg-white/[0.03] p-4">
+          <div className="mb-3 flex items-center gap-2 text-sm font-semibold text-neutral-300">
+            <Server className="h-4 w-4 text-violet-300" />
+            API Connection
+          </div>
+
+          <div className="rounded-2xl border border-white/5 bg-black/10 px-4 py-3">
+            <div className="text-sm text-neutral-300">{message}</div>
+
+            {lastCheckedAt ? (
+              <div className="mt-2 text-xs text-neutral-600">
+                Last checked: {lastCheckedAt.toLocaleTimeString()}
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        <div className="text-xs leading-5 text-neutral-500">{message}</div>
-
-        {lastCheckedAt ? (
-          <div className="mt-3 text-[11px] text-neutral-600">
-            Last checked: {lastCheckedAt.toLocaleTimeString()}
-          </div>
-        ) : null}
+        <button
+          type="button"
+          onClick={checkHealth}
+          disabled={isChecking}
+          className="theme-button-secondary w-full disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`}
+          />
+          Check Again
+        </button>
       </div>
-
-      <button
-        type="button"
-        onClick={checkHealth}
-        disabled={isChecking}
-        className="theme-button-secondary mt-4 w-full disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        <RefreshCw className={`h-4 w-4 ${isChecking ? "animate-spin" : ""}`} />
-        Check Again
-      </button>
     </div>
   );
 }
