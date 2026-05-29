@@ -87,7 +87,7 @@ export default function AnalysisPanel({
         />
       </div>
 
-      <div className="max-h-[760px] space-y-3 overflow-y-auto pr-1">
+      <div className="space-y-3">
         {analysisRows.length === 0 ? (
           <div className="theme-summary-card p-4 text-sm text-neutral-400">
             No habit analysis available yet.
@@ -140,7 +140,7 @@ export default function AnalysisPanel({
                   </div>
                 </div>
 
-                <div className="mb-4 h-2 w-full overflow-hidden rounded-full bg-neutral-700">
+                <div className="analytics-progress-track mb-4 h-2 w-full overflow-hidden rounded-full bg-neutral-700">
                   <div
                     className={`h-full rounded-full ${getHabitProgressBarClasses(
                       row.progress,

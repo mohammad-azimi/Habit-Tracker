@@ -773,3 +773,109 @@ body {
 .theme-light .text-white\/90 {
   color: rgba(43, 38, 53, 0.82) !important;
 }
+
+/* Analytics light theme polish */
+:root {
+  --analytics-chart-grid: rgba(255, 255, 255, 0.12);
+  --analytics-chart-axis: rgba(212, 212, 216, 0.78);
+  --analytics-chart-line: #fafafa;
+  --analytics-chart-dot-fill: #fafafa;
+  --analytics-chart-dot-stroke: #171717;
+  --analytics-chart-empty-bar: #404040;
+  --analytics-chart-purple: #8b5cf6;
+  --analytics-progress-track: rgba(255, 255, 255, 0.08);
+}
+
+.theme-light {
+  --analytics-chart-grid: rgba(113, 87, 156, 0.18);
+  --analytics-chart-axis: rgba(88, 78, 105, 0.75);
+  --analytics-chart-line: rgba(111, 69, 168, 0.62);
+  --analytics-chart-dot-fill: #ffffff;
+  --analytics-chart-dot-stroke: #6f45a8;
+  --analytics-chart-empty-bar: rgba(113, 87, 156, 0.16);
+  --analytics-chart-purple: #7c4dcc;
+  --analytics-progress-track: rgba(111, 69, 168, 0.10);
+}
+
+/* Recharts readability */
+.theme-light .recharts-cartesian-grid line {
+  stroke: var(--analytics-chart-grid) !important;
+}
+
+.theme-light .recharts-cartesian-axis-tick-value {
+  fill: var(--analytics-chart-axis) !important;
+}
+
+.theme-light .recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+.theme-light .recharts-bar-rectangle path {
+  filter: drop-shadow(0 5px 10px rgba(111, 69, 168, 0.10));
+}
+
+/* Softer analytics panels */
+.theme-light .theme-chart-panel,
+.theme-light .theme-stat-tile,
+.theme-light .theme-summary-card {
+  background:
+    radial-gradient(circle at top, rgba(124, 90, 184, 0.045), transparent 38%),
+    rgba(255, 255, 255, 0.82);
+}
+
+/* Avoid heavy dark bars in light mode */
+.theme-light .bg-neutral-600 {
+  background-color: rgba(111, 69, 168, 0.22) !important;
+}
+
+.theme-light .bg-neutral-700 {
+  background-color: rgba(111, 69, 168, 0.10) !important;
+}
+
+/* Streak leaderboard badges */
+.theme-light .bg-orange-950\/40,
+.theme-light .bg-yellow-950\/40 {
+  background-color: rgba(111, 69, 168, 0.13) !important;
+}
+
+.theme-light .border-orange-900\/40,
+.theme-light .border-yellow-900\/40 {
+  border-color: rgba(111, 69, 168, 0.28) !important;
+}
+
+.theme-light .text-orange-300,
+.theme-light .text-yellow-300 {
+  color: #6f45a8 !important;
+}
+
+/* Achievements unlocked cards */
+.theme-light .border-violet-800\/40 {
+  border-color: rgba(111, 69, 168, 0.30) !important;
+}
+
+.theme-light .bg-violet-950\/20,
+.theme-light .bg-violet-950\/25 {
+  background-color: rgba(111, 69, 168, 0.10) !important;
+}
+
+.theme-light .shadow-\[0_14px_34px_rgba\(139\,92\,246\,0\.10\)\] {
+  box-shadow: 0 14px 34px rgba(111, 69, 168, 0.10) !important;
+}
+
+/* Analytics progress bars */
+.theme-light .analytics-progress-track {
+  background: rgba(111, 69, 168, 0.10);
+}
+
+/* Cleaner internal scrollbars inside analytics cards */
+.theme-light .analytics-scroll-area::-webkit-scrollbar {
+  width: 8px;
+}
+
+.theme-light .analytics-scroll-area::-webkit-scrollbar-track {
+  background: rgba(111, 69, 168, 0.06);
+}
+
+.theme-light .analytics-scroll-area::-webkit-scrollbar-thumb {
+  background: rgba(111, 69, 168, 0.22);
+}

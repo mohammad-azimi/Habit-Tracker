@@ -64,8 +64,8 @@ function renderTrendDot(props) {
       cx={cx}
       cy={cy}
       r={4}
-      fill="#fafafa"
-      stroke="#171717"
+      fill="var(--analytics-chart-dot-fill)"
+      stroke="var(--analytics-chart-dot-stroke)"
       strokeWidth={2}
     />
   );
@@ -228,21 +228,21 @@ export default function YearlyOverviewCard({
                   margin={{ top: 16, right: 12, left: -8, bottom: 0 }}
                 >
                   <CartesianGrid
-                    stroke="#26262a"
+                    stroke="var(--analytics-chart-grid)"
                     strokeDasharray="2 5"
                     vertical={false}
                   />
 
                   <XAxis
                     dataKey="shortMonth"
-                    tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                    tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                   />
 
                   <YAxis
                     domain={yDomain}
-                    tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                    tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                     axisLine={false}
                     tickLine={false}
                     width={35}
@@ -255,7 +255,11 @@ export default function YearlyOverviewCard({
                     {chartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={entry.isEmpty ? "#404040" : "#a78bfa"}
+                        fill={
+                          entry.isEmpty
+                            ? "var(--analytics-chart-empty-bar)"
+                            : "var(--analytics-chart-purple)"
+                        }
                         fillOpacity={entry.isEmpty ? 0.25 : 0.95}
                       />
                     ))}
@@ -265,20 +269,24 @@ export default function YearlyOverviewCard({
                       formatter={(value) =>
                         value === null || value === undefined ? "" : `${value}%`
                       }
-                      style={{ fill: "#d4d4d8", fontSize: 10, fontWeight: 500 }}
+                      style={{
+                        fill: "var(--analytics-chart-axis)",
+                        fontSize: 10,
+                        fontWeight: 600,
+                      }}
                     />
                   </Bar>
 
                   <Line
                     type="monotone"
                     dataKey="chartValue"
-                    stroke="#fafafa"
+                    stroke="var(--analytics-chart-line)"
                     strokeWidth={2.5}
                     dot={renderTrendDot}
                     activeDot={{
                       r: 5,
-                      fill: "#fafafa",
-                      stroke: "#171717",
+                      fill: "var(--analytics-chart-dot-fill)",
+                      stroke: "var(--analytics-chart-dot-stroke)",
                       strokeWidth: 2,
                     }}
                     connectNulls={false}

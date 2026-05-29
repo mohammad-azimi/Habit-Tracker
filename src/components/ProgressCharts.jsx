@@ -54,7 +54,7 @@ function WeeklyPaceTooltip({ active, payload, label }) {
 export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+      <div className="theme-chart-panel p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="font-semibold">Daily Goal Pace</div>
@@ -72,18 +72,18 @@ export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
               margin={{ top: 8, right: 8, left: -10, bottom: 0 }}
             >
               <CartesianGrid
-                stroke="#262626"
+                stroke="var(--analytics-chart-grid)"
                 strokeDasharray="3 3"
                 vertical={false}
               />
               <XAxis
                 dataKey="day"
-                tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 width={35}
@@ -96,7 +96,7 @@ export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
         </div>
       </div>
 
-      <div className="rounded-3xl border border-neutral-800 bg-neutral-900 p-5 shadow-2xl">
+      <div className="theme-chart-panel p-5">
         <div className="mb-4 flex items-center justify-between">
           <div>
             <div className="font-semibold">Weekly Goal Pace</div>
@@ -114,18 +114,18 @@ export default function ProgressCharts({ dailyProgress, weeklyProgress }) {
               margin={{ top: 8, right: 8, left: -10, bottom: 0 }}
             >
               <CartesianGrid
-                stroke="#262626"
+                stroke="var(--analytics-chart-grid)"
                 strokeDasharray="3 3"
                 vertical={false}
               />
               <XAxis
                 dataKey="label"
-                tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
-                tick={{ fill: "#a3a3a3", fontSize: 11 }}
+                tick={{ fill: "var(--analytics-chart-axis)", fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 width={35}
