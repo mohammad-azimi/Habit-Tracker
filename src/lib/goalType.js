@@ -46,14 +46,14 @@ export function getGoalTypeBadgeClasses(targetType) {
   const safeType = normalizeGoalType(targetType);
 
   if (safeType === "daily") {
-    return "border-emerald-700/60 bg-emerald-950/40 text-emerald-300";
+    return "border-emerald-500/40 bg-emerald-500/15 text-emerald-300";
   }
 
   if (safeType === "weekly") {
-    return "border-sky-700/60 bg-sky-950/40 text-sky-300";
+    return "border-sky-500/40 bg-sky-500/15 text-sky-300";
   }
 
-  return "border-violet-700/60 bg-violet-950/40 text-violet-300";
+  return "border-violet-500/40 bg-violet-500/15 text-violet-300";
 }
 
 export function formatGoalTypeLongLabel(targetType, targetValue) {

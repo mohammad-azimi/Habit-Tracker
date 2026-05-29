@@ -4,8 +4,8 @@ import MentalTrendChart from "./MentalTrendChart";
 function MetricRow({ label, values, metricKey, onSetMentalMetric, accent }) {
   const labelClass =
     accent === "violet"
-      ? "border-violet-900/30 bg-violet-950/20 text-violet-200"
-      : "border-sky-900/30 bg-sky-950/20 text-sky-200";
+      ? "mental-metric-label mental-metric-label-violet"
+      : "mental-metric-label mental-metric-label-sky";
 
   return (
     <div
@@ -15,7 +15,7 @@ function MetricRow({ label, values, metricKey, onSetMentalMetric, accent }) {
       }}
     >
       <div
-        className={`rounded-xl border px-3 py-2 text-sm font-medium ${labelClass}`}
+        className={`rounded-xl border px-3 py-2 text-sm font-semibold ${labelClass}`}
       >
         {label}
       </div>
@@ -30,7 +30,7 @@ function MetricRow({ label, values, metricKey, onSetMentalMetric, accent }) {
           onChange={(e) =>
             onSetMentalMetric(metricKey, dayIndex, e.target.value)
           }
-          className="h-10 rounded-xl border border-white/5 bg-black/25 text-center text-sm text-white outline-none transition focus:border-white/10 focus:ring-2 focus:ring-white/10"
+          className="mental-metric-input h-10 rounded-xl border text-center text-sm outline-none transition"
         />
       ))}
     </div>

@@ -613,3 +613,163 @@ body {
   color: #ffffff !important;
   box-shadow: 0 10px 24px rgba(111, 69, 168, 0.2);
 }
+
+/* Light theme polish: dashboard readability */
+.theme-light .bg-emerald-500\/15,
+.theme-light .bg-emerald-950\/20,
+.theme-light .bg-emerald-950\/40 {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+}
+
+.theme-light .border-emerald-500\/35,
+.theme-light .border-emerald-500\/40,
+.theme-light .border-emerald-900\/40 {
+  border-color: rgba(5, 150, 105, 0.32) !important;
+}
+
+.theme-light .text-emerald-200,
+.theme-light .text-emerald-300 {
+  color: #047857 !important;
+}
+
+.theme-light .bg-sky-500\/15,
+.theme-light .bg-sky-950\/20,
+.theme-light .bg-sky-950\/40 {
+  background-color: rgba(14, 165, 233, 0.16) !important;
+}
+
+.theme-light .border-sky-500\/40,
+.theme-light .border-sky-700\/60,
+.theme-light .border-sky-900\/30 {
+  border-color: rgba(2, 132, 199, 0.32) !important;
+}
+
+.theme-light .text-sky-200,
+.theme-light .text-sky-300,
+.theme-light .text-sky-400 {
+  color: #0369a1 !important;
+}
+
+.theme-light .bg-orange-500\/15 {
+  background-color: rgba(249, 115, 22, 0.16) !important;
+}
+
+.theme-light .border-orange-500\/35,
+.theme-light .border-orange-500\/30 {
+  border-color: rgba(234, 88, 12, 0.34) !important;
+}
+
+.theme-light .text-orange-300 {
+  color: #c2410c !important;
+}
+
+.theme-light .bg-red-500\/15,
+.theme-light .bg-red-950\/10,
+.theme-light .bg-red-950\/20,
+.theme-light .bg-red-950\/40 {
+  background-color: rgba(239, 68, 68, 0.12) !important;
+}
+
+.theme-light .border-red-500\/35,
+.theme-light .border-red-500\/30,
+.theme-light .border-red-900\/30,
+.theme-light .border-red-900\/40 {
+  border-color: rgba(220, 38, 38, 0.32) !important;
+}
+
+.theme-light .text-red-200,
+.theme-light .text-red-300 {
+  color: #b91c1c !important;
+}
+
+.theme-light .bg-violet-500\/15,
+.theme-light .bg-violet-950\/10,
+.theme-light .bg-violet-950\/15,
+.theme-light .bg-violet-950\/20,
+.theme-light .bg-violet-950\/30,
+.theme-light .bg-violet-950\/40 {
+  background-color: rgba(111, 69, 168, 0.12) !important;
+}
+
+.theme-light .border-violet-500\/40,
+.theme-light .border-violet-700\/60,
+.theme-light .border-violet-900\/30,
+.theme-light .border-violet-900\/40 {
+  border-color: rgba(111, 69, 168, 0.34) !important;
+}
+
+.theme-light .text-violet-100,
+.theme-light .text-violet-200,
+.theme-light .text-violet-300,
+.theme-light .text-violet-400 {
+  color: #5f3798 !important;
+}
+
+/* Sync badge should be clearer in light mode */
+.theme-light .theme-pill,
+.theme-light [class*="bg-emerald-950"] {
+  font-weight: 600;
+}
+
+/* Mental check-in labels and inputs */
+.mental-metric-label {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.mental-metric-label-violet {
+  border-color: rgba(139, 92, 246, 0.34);
+  background: rgba(139, 92, 246, 0.18);
+  color: #ddd6fe;
+}
+
+.mental-metric-label-sky {
+  border-color: rgba(56, 189, 248, 0.34);
+  background: rgba(56, 189, 248, 0.18);
+  color: #bae6fd;
+}
+
+.mental-metric-input {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.25);
+  color: #ffffff;
+}
+
+.mental-metric-input:focus {
+  border-color: rgba(167, 139, 250, 0.6);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+.theme-light .mental-metric-label-violet {
+  border-color: rgba(111, 69, 168, 0.26);
+  background: rgba(111, 69, 168, 0.12);
+  color: #5f3798;
+}
+
+.theme-light .mental-metric-label-sky {
+  border-color: rgba(14, 165, 233, 0.26);
+  background: rgba(14, 165, 233, 0.13);
+  color: #0369a1;
+}
+
+.theme-light .mental-metric-input {
+  border-color: rgba(113, 87, 156, 0.16);
+  background: rgba(255, 255, 255, 0.72);
+  color: #2b2635;
+}
+
+.theme-light .mental-metric-input:focus {
+  border-color: rgba(111, 69, 168, 0.52);
+  box-shadow: 0 0 0 3px rgba(111, 69, 168, 0.12);
+}
+
+/* Today Focus warning/info bars that had unreadable pale text */
+.theme-light .text-neutral-100,
+.theme-light .text-neutral-50 {
+  color: #2b2635 !important;
+}
+
+.theme-light .text-white\/70,
+.theme-light .text-white\/80,
+.theme-light .text-white\/90 {
+  color: rgba(43, 38, 53, 0.82) !important;
+}

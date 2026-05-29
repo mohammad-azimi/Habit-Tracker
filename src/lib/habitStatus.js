@@ -25,21 +25,21 @@ export function getHabitStatusBadgeClasses(progress) {
   const { tone } = getHabitStatus(progress);
 
   if (tone === "excellent") {
-    return "bg-green-500/15 text-green-300 border border-green-500/30";
+    return "border border-emerald-500/35 bg-emerald-500/15 text-emerald-300";
   }
 
   if (tone === "progress") {
-    return "bg-orange-500/15 text-orange-300 border border-orange-500/30";
+    return "border border-orange-500/35 bg-orange-500/15 text-orange-300";
   }
 
-  return "bg-red-500/15 text-red-300 border border-red-500/30";
+  return "border border-red-500/35 bg-red-500/15 text-red-300";
 }
 
 export function getHabitProgressBarClasses(progress) {
   const { tone } = getHabitStatus(progress);
 
   if (tone === "excellent") {
-    return "bg-green-300";
+    return "bg-emerald-300";
   }
 
   if (tone === "progress") {
@@ -53,7 +53,7 @@ export function getHabitProgressTextClasses(progress) {
   const { tone } = getHabitStatus(progress);
 
   if (tone === "excellent") {
-    return "text-green-300";
+    return "text-emerald-300";
   }
 
   if (tone === "progress") {
