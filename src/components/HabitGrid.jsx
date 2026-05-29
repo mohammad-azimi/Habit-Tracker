@@ -51,18 +51,18 @@ export default function HabitGrid({
     const isToday = idx === todayIndex;
 
     if (checked && isToday) {
-      return "border-white bg-white text-black ring-1 ring-white shadow-[0_0_0_1px_rgba(255,255,255,0.12)]";
+      return "border-violet-400 bg-violet-300 text-black ring-2 ring-violet-300/30 shadow-sm";
     }
 
     if (checked) {
-      return "border-violet-300 bg-violet-300 text-black hover:bg-white";
+      return "border-violet-300 bg-violet-300 text-black hover:bg-violet-200";
     }
 
     if (isToday) {
-      return "border-neutral-500 bg-neutral-900 text-neutral-200 ring-1 ring-neutral-500 hover:bg-neutral-800";
+      return "border-violet-400 bg-violet-950/20 text-violet-200 ring-2 ring-violet-300/30 hover:bg-violet-950/30";
     }
 
-    return "border-white/5 bg-black/25 text-neutral-700 hover:border-white/10 hover:bg-white/[0.04]";
+    return "border-white/5 bg-white/[0.03] text-neutral-500 hover:border-violet-900/40 hover:bg-violet-950/10";
   };
 
   const getDayButtonLabel = (habitName, idx, checked) => {
@@ -124,7 +124,7 @@ export default function HabitGrid({
         <div className={`mb-2 grid ${gridCols} items-center gap-1`}>
           <div
             ref={stickyColumnRef}
-            className="sticky left-0 z-30 rounded-2xl border border-white/5 bg-[linear-gradient(180deg,#1b1b1f_0%,#121216_100%)] px-3 py-2.5 shadow-[12px_0_30px_-18px_rgba(0,0,0,0.85)]"
+            className="sticky left-0 z-30 rounded-2xl border border-white/5 bg-white/[0.08] px-3 py-2.5 shadow-[8px_0_22px_-18px_rgba(78,58,124,0.28)] backdrop-blur-xl"
           >
             <div className="text-xs font-semibold text-white sm:text-sm">
               My Habits
@@ -142,7 +142,7 @@ export default function HabitGrid({
               ref={i === todayIndex ? todayCellRef : null}
               className={`rounded-md py-1 text-center text-[10px] transition ${
                 i === todayIndex
-                  ? "bg-white font-semibold text-black shadow-sm"
+                  ? "bg-violet-300 font-semibold text-black shadow-sm"
                   : "text-neutral-500"
               }`}
             >
@@ -152,14 +152,14 @@ export default function HabitGrid({
         </div>
 
         <div className={`mb-1 grid ${gridCols} gap-1`}>
-          <div className="sticky left-0 z-20 rounded-2xl bg-[linear-gradient(180deg,#16161a_0%,#111115_100%)] shadow-[12px_0_30px_-18px_rgba(0,0,0,0.85)]" />
+          <div className="sticky left-0 z-20 rounded-2xl border border-white/5 bg-white/[0.06] shadow-[8px_0_22px_-18px_rgba(78,58,124,0.22)] backdrop-blur-xl" />
 
           {Array.from({ length: daysInMonth }, (_, i) => (
             <div
               key={i}
               className={`rounded-md py-1 text-center text-[10px] transition ${
                 i === todayIndex
-                  ? "bg-white/[0.08] font-medium text-neutral-100"
+                  ? "bg-violet-950/20 font-medium text-violet-200"
                   : "text-neutral-600"
               }`}
             >
@@ -183,10 +183,10 @@ export default function HabitGrid({
                   onDragOver={(event) => canReorder && onHabitDragOver(event)}
                   onDrop={() => canReorder && onHabitDrop(habit.id)}
                   onDragEnd={() => canReorder && onHabitDragEnd()}
-                  className={`sticky left-0 z-20 overflow-hidden rounded-[26px] border border-white/8 bg-[linear-gradient(180deg,rgba(34,34,39,0.98)_0%,rgba(21,21,25,0.98)_100%)] px-2 py-2.5 text-sm text-neutral-200 shadow-[12px_0_30px_-18px_rgba(0,0,0,0.92)] transition duration-150 sm:px-3 sm:py-3 ${
+                  className={`sticky left-0 z-20 overflow-hidden rounded-[26px] border border-white/5 bg-white/[0.08] px-2 py-2.5 text-sm text-neutral-200 shadow-[8px_0_24px_-18px_rgba(78,58,124,0.30)] backdrop-blur-xl transition duration-150 sm:px-3 sm:py-3 ${
                     draggedHabitId === habit.id && canReorder
                       ? "opacity-60"
-                      : "hover:border-white/10"
+                      : "hover:border-violet-900/40 hover:bg-violet-950/10"
                   }`}
                 >
                   <div className="flex min-w-0 items-start gap-2 sm:gap-3">
@@ -194,7 +194,7 @@ export default function HabitGrid({
                       className={`mt-1 shrink-0 ${
                         canReorder
                           ? "cursor-grab text-neutral-500"
-                          : "cursor-not-allowed text-neutral-700 opacity-50"
+                          : "cursor-not-allowed text-neutral-600 opacity-50"
                       }`}
                       title={
                         canReorder
@@ -226,12 +226,12 @@ export default function HabitGrid({
                               )}
                             </div>
 
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-black/25 px-2 py-1 text-[10px] text-neutral-300 ring-1 ring-white/5 sm:text-[11px]">
+                            <div className="inline-flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.05] px-2 py-1 text-[10px] text-neutral-300 sm:text-[11px]">
                               {habit.actual}/{habit.goal}
                             </div>
 
                             <div
-                              className={`inline-flex items-center gap-1 rounded-xl bg-black/25 px-2 py-1 text-[10px] font-medium ring-1 ring-white/5 sm:text-[11px] ${getHabitProgressTextClasses(
+                              className={`inline-flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.05] px-2 py-1 text-[10px] font-medium sm:text-[11px] ${getHabitProgressTextClasses(
                                 habit.progress,
                               )}`}
                             >
@@ -248,12 +248,12 @@ export default function HabitGrid({
                           </div>
 
                           <div className="mt-2 flex flex-wrap items-center gap-1.5 sm:gap-2">
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-black/25 px-2 py-1 text-[10px] text-neutral-300 ring-1 ring-white/5 sm:text-[11px]">
+                            <div className="inline-flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.05] px-2 py-1 text-[10px] text-neutral-300 sm:text-[11px]">
                               <Flame className="h-3 w-3 text-neutral-400 sm:h-3.5 sm:w-3.5" />
                               Current: {habit.currentStreak ?? 0}d
                             </div>
 
-                            <div className="inline-flex items-center gap-1 rounded-xl bg-black/25 px-2 py-1 text-[10px] text-neutral-300 ring-1 ring-white/5 sm:text-[11px]">
+                            <div className="inline-flex items-center gap-1 rounded-xl border border-white/5 bg-white/[0.05] px-2 py-1 text-[10px] text-neutral-300 sm:text-[11px]">
                               <Trophy className="h-3 w-3 text-neutral-400 sm:h-3.5 sm:w-3.5" />
                               Best: {habit.bestStreak ?? 0}d
                             </div>
@@ -262,9 +262,10 @@ export default function HabitGrid({
 
                         <div className="flex shrink-0 flex-wrap items-center gap-1 sm:flex-nowrap">
                           <button
+                            type="button"
                             onClick={() => onMoveHabitUp(habit.id)}
                             disabled={!canReorder || habitIndex === 0}
-                            className="rounded-lg bg-black/25 p-1 text-neutral-200 ring-1 ring-white/5 transition duration-150 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40 sm:p-1.5"
+                            className="rounded-lg border border-white/5 bg-white/[0.05] p-1 text-neutral-300 transition duration-150 hover:bg-violet-950/20 disabled:cursor-not-allowed disabled:opacity-40 sm:p-1.5"
                             title={
                               canReorder
                                 ? "Move up"
@@ -275,11 +276,12 @@ export default function HabitGrid({
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => onMoveHabitDown(habit.id)}
                             disabled={
                               !canReorder || habitIndex === habits.length - 1
                             }
-                            className="rounded-lg bg-black/25 p-1 text-neutral-200 ring-1 ring-white/5 transition duration-150 hover:bg-white/[0.08] disabled:cursor-not-allowed disabled:opacity-40 sm:p-1.5"
+                            className="rounded-lg border border-white/5 bg-white/[0.05] p-1 text-neutral-300 transition duration-150 hover:bg-violet-950/20 disabled:cursor-not-allowed disabled:opacity-40 sm:p-1.5"
                             title={
                               canReorder
                                 ? "Move down"
@@ -290,24 +292,27 @@ export default function HabitGrid({
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => onStartEditHabit(habit)}
-                            className="rounded-lg bg-black/25 p-1 text-neutral-200 ring-1 ring-white/5 transition duration-150 hover:bg-white/[0.08] sm:p-1.5"
+                            className="rounded-lg border border-white/5 bg-white/[0.05] p-1 text-neutral-300 transition duration-150 hover:bg-violet-950/20 sm:p-1.5"
                             title="Edit habit"
                           >
                             <Pencil className="h-3.5 w-3.5" />
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => onRequestArchiveHabit(habit)}
-                            className="rounded-lg bg-black/25 p-1 text-neutral-200 ring-1 ring-white/5 transition duration-150 hover:bg-amber-900/40 sm:p-1.5"
+                            className="rounded-lg border border-white/5 bg-white/[0.05] p-1 text-neutral-300 transition duration-150 hover:bg-amber-900/40 sm:p-1.5"
                             title="Archive habit"
                           >
                             <ArchiveX className="h-3.5 w-3.5" />
                           </button>
 
                           <button
+                            type="button"
                             onClick={() => onRequestDeleteHabit(habit)}
-                            className="rounded-lg bg-black/25 p-1 text-neutral-200 ring-1 ring-white/5 transition duration-150 hover:bg-red-900/40 sm:p-1.5"
+                            className="rounded-lg border border-white/5 bg-white/[0.05] p-1 text-neutral-300 transition duration-150 hover:bg-red-900/40 sm:p-1.5"
                             title="Delete habit"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -325,7 +330,7 @@ export default function HabitGrid({
                     onClick={() => onToggleHabitDay(habit.id, idx)}
                     aria-label={getDayButtonLabel(habit.name, idx, checked)}
                     title={getDayButtonLabel(habit.name, idx, checked)}
-                    className={`flex h-8 w-8 touch-manipulation items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/40 active:scale-95 sm:h-7 sm:w-7 sm:text-[11px] ${getDayButtonClasses(
+                    className={`flex h-8 w-8 touch-manipulation items-center justify-center rounded-lg border text-xs font-semibold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/40 active:scale-95 sm:h-7 sm:w-7 sm:text-[11px] ${getDayButtonClasses(
                       checked,
                       idx,
                     )}`}
