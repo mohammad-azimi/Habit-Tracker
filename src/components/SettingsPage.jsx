@@ -4,7 +4,6 @@ import {
   BellRing,
   DatabaseBackup,
   Download,
-  LayoutDashboard,
   Lock,
   LogOut,
   MonitorSmartphone,
@@ -57,8 +56,8 @@ const settingSections = [
 
 function SettingsSectionTabs({ activeSection, onChangeSection }) {
   return (
-    <div className="theme-card p-3">
-      <div className="flex gap-2 overflow-x-auto pb-1">
+    <div className="settings-tabs-card theme-card p-2.5">
+      <div className="settings-tabs-scroll flex gap-2 overflow-x-auto">
         {settingSections.map((section) => {
           const Icon = section.icon;
           const isActive = activeSection === section.id;
@@ -68,10 +67,8 @@ function SettingsSectionTabs({ activeSection, onChangeSection }) {
               key={section.id}
               type="button"
               onClick={() => onChangeSection(section.id)}
-              className={`inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium transition active:scale-[0.98] ${
-                isActive
-                  ? "bg-violet-300 text-black"
-                  : "border border-neutral-700 bg-neutral-800 text-neutral-300 hover:bg-neutral-700 hover:text-white"
+              className={`settings-tab-button ${
+                isActive ? "settings-tab-button-active" : ""
               }`}
             >
               <Icon className="h-4 w-4" />
@@ -95,22 +92,18 @@ function ThemeOptionCard({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-3xl border p-5 text-left transition active:scale-[0.99] ${
-        isActive
-          ? "border-violet-400 bg-violet-300/20 ring-2 ring-violet-300/30"
-          : "border-white/5 bg-white/[0.03] hover:bg-white/[0.06]"
+      className={`settings-theme-option ${
+        isActive ? "settings-theme-option-active" : ""
       }`}
     >
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="rounded-2xl border border-white/10 bg-white/[0.05] p-3">
+        <div className="settings-icon-tile">
           <Icon className="h-5 w-5 text-violet-300" />
         </div>
 
         <div
-          className={`rounded-full px-3 py-1 text-xs font-medium ${
-            isActive
-              ? "bg-violet-300 text-black"
-              : "bg-white/[0.06] text-neutral-400"
+          className={`settings-choice-badge ${
+            isActive ? "settings-choice-badge-active" : ""
           }`}
         >
           {isActive ? "Selected" : "Choose"}
@@ -122,6 +115,60 @@ function ThemeOptionCard({
         {description}
       </div>
     </button>
+  );
+}
+
+function SettingsInfoNote({ children }) {
+  return (
+    <div className="settings-info-note text-xs leading-5 text-neutral-500">
+      {children}
+    </div>
+  );
+}
+
+function AccountDataSection({ onExportAccountData, onImportAccountData }) {
+  return (
+    <div className="theme-card p-5">
+      <div className="mb-5 flex items-start gap-3">
+        <div className="settings-icon-tile shrink-0">
+          <DatabaseBackup className="h-5 w-5 text-violet-300" />
+        </div>
+
+        <div>
+          <div className="theme-section-title text-lg">Account Data</div>
+          <div className="theme-section-subtitle text-xs">
+            Export your full account data or restore it from a previous full
+            account backup.
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={onExportAccountData}
+          className="theme-button-secondary w-full"
+        >
+          <Download className="h-4 w-4" />
+          Export Account Data
+        </button>
+
+        <button
+          type="button"
+          onClick={onImportAccountData}
+          className="theme-button-secondary w-full"
+        >
+          <Upload className="h-4 w-4" />
+          Import Account Data
+        </button>
+      </div>
+
+      <SettingsInfoNote>
+        Full account export includes your profile data and all saved month
+        records. Password is not included. Importing an account backup requires
+        confirmation before restore.
+      </SettingsInfoNote>
+    </div>
   );
 }
 
@@ -159,11 +206,11 @@ export default function SettingsPage({
 
   return (
     <div className="app-theme-bg safe-bottom-padding min-h-screen p-4 md:p-8">
-      <div className="mx-auto max-w-[1200px] space-y-6">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto max-w-[1180px] space-y-5 md:space-y-6">
+        <div className="settings-page-header flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="flex items-center gap-3">
-              <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-3">
+              <div className="settings-header-icon">
                 <Settings className="h-6 w-6 text-violet-300" />
               </div>
 
@@ -171,7 +218,7 @@ export default function SettingsPage({
                 <div className="text-3xl font-bold tracking-tight text-white md:text-4xl">
                   Settings
                 </div>
-                <div className="mt-2 text-sm leading-6 text-neutral-400">
+                <div className="mt-2 max-w-3xl text-sm leading-6 text-neutral-400">
                   Manage app preferences, notifications, installation, system
                   status, backups, and account security.
                 </div>
@@ -209,10 +256,10 @@ export default function SettingsPage({
           onChangeSection={setActiveSection}
         />
 
-        {activeSection === "appearance" ? (
-          <div className="space-y-4">
+        <div className="settings-content-stack">
+          {activeSection === "appearance" ? (
             <div className="theme-card p-5">
-              <div className="mb-4">
+              <div className="mb-5">
                 <div className="theme-section-title text-lg">Appearance</div>
                 <div className="theme-section-subtitle text-xs">
                   Choose between the current dark dashboard style and a soft
@@ -238,16 +285,14 @@ export default function SettingsPage({
                 />
               </div>
 
-              <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs leading-5 text-neutral-500">
+              <SettingsInfoNote>
                 Your choice is saved on this device and will be applied
                 automatically the next time you open the app.
-              </div>
+              </SettingsInfoNote>
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        {activeSection === "preferences" ? (
-          <div className="space-y-4">
+          {activeSection === "preferences" ? (
             <DashboardPreferencesCard
               autoScrollToToday={autoScrollToToday}
               onToggleAutoScrollToToday={onToggleAutoScrollToToday}
@@ -265,100 +310,37 @@ export default function SettingsPage({
               onToggleShowStreakLeaderboard={onToggleShowStreakLeaderboard}
               onResetPreferences={onResetPreferences}
             />
-          </div>
-        ) : null}
+          ) : null}
 
-        {activeSection === "notifications" ? (
-          <div className="space-y-4">
-            <ReminderSettingsCard />
-          </div>
-        ) : null}
+          {activeSection === "notifications" ? <ReminderSettingsCard /> : null}
 
-        {activeSection === "app" ? (
-          <div className="space-y-4">
-            <PwaInstallCard />
+          {activeSection === "app" ? (
+            <>
+              <PwaInstallCard />
+              <BackendHealthCard />
+            </>
+          ) : null}
 
-            <BackendHealthCard />
-          </div>
-        ) : null}
-
-        {activeSection === "account" ? (
-          <div className="space-y-4">
-            <div className="theme-card p-5">
-              <div className="mb-4">
-                <div className="flex items-center gap-2 text-sm font-semibold text-neutral-300">
-                  <DatabaseBackup className="h-4 w-4 text-violet-300" />
-                  Account Data
-                </div>
-                <div className="mt-1 text-xs leading-5 text-neutral-500">
-                  Export your full account data or restore it from a previous
-                  full account backup.
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={onExportAccountData}
-                  className="theme-button-secondary w-full"
-                >
-                  <Download className="h-4 w-4" />
-                  Export Account Data
-                </button>
-
-                <button
-                  type="button"
-                  onClick={onImportAccountData}
-                  className="theme-button-secondary w-full"
-                >
-                  <Upload className="h-4 w-4" />
-                  Import Account Data
-                </button>
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-3 text-xs leading-5 text-neutral-500">
-                Full account export includes your profile data and all saved
-                month records. Password is not included. Importing an account
-                backup requires confirmation before restore.
-              </div>
-            </div>
-          </div>
-        ) : null}
-
-        {activeSection === "security" ? (
-          <div className="space-y-4">
-            <ChangePasswordCard
-              onSubmit={onChangePassword}
-              isSubmitting={isChangingPassword}
+          {activeSection === "account" ? (
+            <AccountDataSection
+              onExportAccountData={onExportAccountData}
+              onImportAccountData={onImportAccountData}
             />
+          ) : null}
 
-            <DeleteAccountCard
-              onDeleteAccount={onDeleteAccount}
-              isDeleting={isDeleting}
-            />
-          </div>
-        ) : null}
+          {activeSection === "security" ? (
+            <>
+              <ChangePasswordCard
+                onSubmit={onChangePassword}
+                isSubmitting={isChangingPassword}
+              />
 
-        <div className="theme-card p-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <div className="text-sm font-semibold text-neutral-300">
-                Workspace shortcut
-              </div>
-              <div className="mt-1 text-xs text-neutral-500">
-                Return to your main habit workspace.
-              </div>
-            </div>
-
-            <button
-              type="button"
-              onClick={onBack}
-              className="theme-button-secondary"
-            >
-              <LayoutDashboard className="h-4 w-4" />
-              Open Dashboard
-            </button>
-          </div>
+              <DeleteAccountCard
+                onDeleteAccount={onDeleteAccount}
+                isDeleting={isDeleting}
+              />
+            </>
+          ) : null}
         </div>
       </div>
     </div>
