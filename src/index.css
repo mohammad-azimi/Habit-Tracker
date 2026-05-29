@@ -879,3 +879,228 @@ body {
 .theme-light .analytics-scroll-area::-webkit-scrollbar-thumb {
   background: rgba(111, 69, 168, 0.22);
 }
+
+/* Markdown preview for Monthly Notes */
+.markdown-preview {
+  min-height: 320px;
+  color: #e5e7eb;
+  line-height: 1.75;
+  overflow-wrap: anywhere;
+}
+
+.markdown-preview > *:first-child {
+  margin-top: 0;
+}
+
+.markdown-preview > *:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-preview h1,
+.markdown-preview h2,
+.markdown-preview h3,
+.markdown-preview h4 {
+  margin: 1.4em 0 0.65em;
+  color: #ffffff;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.markdown-preview h1 {
+  padding-bottom: 0.45em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 1.8rem;
+}
+
+.markdown-preview h2 {
+  padding-bottom: 0.35em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  font-size: 1.35rem;
+}
+
+.markdown-preview h3 {
+  font-size: 1.1rem;
+}
+
+.markdown-preview p {
+  margin: 0.8em 0;
+  color: #d4d4d8;
+}
+
+.markdown-preview strong {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.markdown-preview em {
+  color: #f5f3ff;
+}
+
+.markdown-preview a {
+  color: #a78bfa;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.markdown-preview ul,
+.markdown-preview ol {
+  margin: 0.8em 0;
+  padding-left: 1.4rem;
+}
+
+.markdown-preview li {
+  margin: 0.35em 0;
+  color: #d4d4d8;
+}
+
+.markdown-preview input[type="checkbox"] {
+  margin-right: 0.55rem;
+  accent-color: #8b5cf6;
+}
+
+.markdown-preview blockquote {
+  margin: 1em 0;
+  border-left: 4px solid rgba(167, 139, 250, 0.75);
+  border-radius: 0 16px 16px 0;
+  background: rgba(139, 92, 246, 0.10);
+  padding: 0.75rem 1rem;
+  color: #ddd6fe;
+}
+
+.markdown-preview code {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.55rem;
+  background: rgba(0, 0, 0, 0.28);
+  padding: 0.15rem 0.35rem;
+  color: #f5f3ff;
+  font-size: 0.9em;
+}
+
+.markdown-preview pre {
+  margin: 1em 0;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.25rem;
+  background: rgba(0, 0, 0, 0.32);
+  padding: 1rem;
+}
+
+.markdown-preview pre code {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  color: #f5f3ff;
+}
+
+.markdown-preview table {
+  display: block;
+  width: 100%;
+  margin: 1em 0;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.markdown-preview th,
+.markdown-preview td {
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+}
+
+.markdown-preview th {
+  background: rgba(139, 92, 246, 0.16);
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.markdown-preview td {
+  color: #d4d4d8;
+}
+
+.markdown-preview hr {
+  margin: 1.5rem 0;
+  border: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.markdown-preview img {
+  max-width: 100%;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Light mode markdown preview */
+.theme-light .markdown-preview {
+  color: #2b2635;
+}
+
+.theme-light .markdown-preview h1,
+.theme-light .markdown-preview h2,
+.theme-light .markdown-preview h3,
+.theme-light .markdown-preview h4 {
+  color: #24212c;
+}
+
+.theme-light .markdown-preview h1,
+.theme-light .markdown-preview h2 {
+  border-bottom-color: rgba(113, 87, 156, 0.14);
+}
+
+.theme-light .markdown-preview p,
+.theme-light .markdown-preview li,
+.theme-light .markdown-preview td {
+  color: #4a4357;
+}
+
+.theme-light .markdown-preview strong {
+  color: #21172e;
+}
+
+.theme-light .markdown-preview em {
+  color: #5f3798;
+}
+
+.theme-light .markdown-preview a {
+  color: #6f45a8;
+}
+
+.theme-light .markdown-preview blockquote {
+  border-left-color: rgba(111, 69, 168, 0.65);
+  background: rgba(111, 69, 168, 0.08);
+  color: #4a325f;
+}
+
+.theme-light .markdown-preview code {
+  border-color: rgba(113, 87, 156, 0.16);
+  background: rgba(111, 69, 168, 0.08);
+  color: #4a325f;
+}
+
+.theme-light .markdown-preview pre {
+  border-color: rgba(113, 87, 156, 0.16);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.theme-light .markdown-preview pre code {
+  background: transparent;
+  color: #2b2635;
+}
+
+.theme-light .markdown-preview th,
+.theme-light .markdown-preview td {
+  border-color: rgba(113, 87, 156, 0.14);
+}
+
+.theme-light .markdown-preview th {
+  background: rgba(111, 69, 168, 0.10);
+  color: #2b2635;
+}
+
+.theme-light .markdown-preview hr {
+  border-top-color: rgba(113, 87, 156, 0.14);
+}
+
+.theme-light .markdown-preview img {
+  border-color: rgba(113, 87, 156, 0.14);
+}
